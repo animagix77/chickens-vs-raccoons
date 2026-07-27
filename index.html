@@ -224,7 +224,10 @@
     flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 32px);transition:bottom .25s}
   /* mid-fight the sliders do nothing, so the panel steps aside and the
      commander bar takes its corner — tools keep the opposite one, no collisions */
-  body.fighting #panel{transform:translateY(150%);opacity:0;pointer-events:none}
+  /* the panel leaves the moment you press Fight, not when the fight starts —
+     on a phone it covers the whole cinematic intro otherwise. It stays gone
+     through the verdict card and only returns via "Change matchup". */
+  body.live #panel{transform:translateY(150%);opacity:0;pointer-events:none}
   /* the tools keep the bottom-right corner, so the commander bar sits one step
      up from the floor rather than trying to share the row with them */
   body.fighting:not(.reel) #cmdbar{left:16px;transform:none;align-items:flex-start;
@@ -3183,6 +3186,7 @@ function slowmo(dt){
    ============================================================ */
 function startBattle(){
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
+  document.body.classList.add('live');   // slides the setup panel away immediately
   // the opening is a directed shot — if the viewer had grabbed the camera, take it back
   if(DIR.manual){ DIR.manual=false; $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; }
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1;
@@ -3198,6 +3202,7 @@ function startBattle(){
 function standby(){
   musicMode('idle');
   document.body.classList.remove('fighting');
+  document.body.classList.remove('live');   // panel comes back only here
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1; BATTLE.totalKills=0;
   BATTLE.routed=0; recentKills=0; BATTLE.hsx=0; BATTLE.hsz=0;
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
