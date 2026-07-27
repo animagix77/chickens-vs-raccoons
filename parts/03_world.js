@@ -323,8 +323,12 @@ function stepParticles(dt){
 }
 
 /* ============================================================
-   GORE — airborne droplets that land and permanently stain the dirt
+   GORE — airborne droplets that land and permanently stain the dirt.
+   Off by default: plenty of people watching this would rather it
+   weren't there, and the fight reads fine on feathers and dust alone.
+   Every emitter below checks this one flag.
    ============================================================ */
+let GORE=false;
 const STAIN_MAX=3400;
 function splatGeo(seed){
   const bits=[];
@@ -347,6 +351,7 @@ for(let v=0;v<3;v++){
    silently stopping, so the ground never freezes mid-battle */
 let stainN=[0,0,0], stainW=[0,0,0], stainHead=0;
 function addStain(x,z,scale){
+  if(!GORE) return;
   const v=stainHead%3, i=stainW[v]%STAIN_MAX;
   _v.set(x,0.014+v*0.0012,z); _e.set(0,Math.random()*TAU,0); _q.setFromEuler(_e);
   const s=scale*rnd(.75,1.35);
@@ -371,6 +376,8 @@ let dHead=0;
 
 /* dx,dz = direction of the blow, so spray throws the right way */
 function spawnBlood(x,y,z,n,force,dx,dz){
+  /* blood off — a kick of dust stands in, so a hit still reads as a hit */
+  if(!GORE){ if(n>6) spawnPuff(x,Math.max(0.1,y*0.5),z,0.20+n*0.006); return; }
   for(let i=0;i<n;i++){
     const k=dHead++%DROP_MAX;
     D.x[k]=x; D.y[k]=y+rnd(-.1,.2); D.z[k]=z;
@@ -391,9 +398,21 @@ const MI={x:new Float32Array(MIST_MAX),y:new Float32Array(MIST_MAX),z:new Float3
   r:new Float32Array(MIST_MAX),life:new Float32Array(MIST_MAX)};
 let miHead=0;
 function spawnMist(x,y,z,r){
+  if(!GORE) return;
   const k=miHead++%MIST_MAX;
   MI.x[k]=x; MI.y[k]=y; MI.z[k]=z; MI.r[k]=r; MI.life[k]=rnd(.3,.55);
 }
+
+/* toggling off wipes what's already on the field and on the ground, so the
+   switch is a real undo rather than just stopping new marks */
+function setGore(on){
+  GORE=!!on;
+  for(let v=0;v<3;v++) stainIM[v].visible=GORE;
+  dropIM.visible=GORE; mistIM.visible=GORE;
+  if(!GORE){ clearStains(); D.life.fill(0); MI.life.fill(0);
+    dropIM.count=0; mistIM.count=0; }
+}
+setGore(false);
 
 function stepGore(dt){
   let n=0;

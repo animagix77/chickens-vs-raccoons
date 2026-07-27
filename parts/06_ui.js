@@ -212,6 +212,7 @@ function slowmo(dt){
    ============================================================ */
 function startBattle(){
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
+  document.body.classList.add('live');   // slides the setup panel away immediately
   // the opening is a directed shot — if the viewer had grabbed the camera, take it back
   if(DIR.manual){ DIR.manual=false; $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; }
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1;
@@ -227,6 +228,7 @@ function startBattle(){
 function standby(){
   musicMode('idle');
   document.body.classList.remove('fighting');
+  document.body.classList.remove('live');   // panel comes back only here
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1; BATTLE.totalKills=0;
   BATTLE.routed=0; recentKills=0; BATTLE.hsx=0; BATTLE.hsz=0;
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
@@ -391,6 +393,11 @@ $('btnSound').addEventListener('click',()=>{
   soundOn=!soundOn; audioResume();
   $('btnSound').classList.toggle('on',soundOn);
 });
+/* blood ships off. turning it back off mid-fight also scrubs the field clean. */
+$('btnBlood').addEventListener('click',()=>{
+  setGore(!GORE);
+  $('btnBlood').classList.toggle('on',GORE);
+});
 /* browsers need a gesture before any of this makes a sound */
 ['pointerdown','keydown','touchstart'].forEach(ev=>
   addEventListener(ev,audioResume,{once:true,passive:true}));
@@ -414,6 +421,7 @@ addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();$('go').click();}
   if(e.key==='r'||e.key==='R')$('btnReel').click();
   if(e.key==='h'||e.key==='H')document.body.classList.toggle('hideui');
+  if(e.key==='b'||e.key==='B')$('btnBlood').click();
   if(e.key==='Escape') toSetup();
   const c=CMD_DEF.find(d=>d.key===e.key); if(c) cmdFire(c.k);
 });

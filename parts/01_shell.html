@@ -219,10 +219,15 @@
   body.narrow #cmdpts{padding:5px 7px 6px}
   body.short #cmddep{max-height:56px;overflow:hidden}
 
-  #tools{position:absolute;z-index:13;right:16px;bottom:16px;display:flex;gap:6px;transition:bottom .25s}
+  /* five buttons now, so the row is allowed to wrap rather than run off a phone */
+  #tools{position:absolute;z-index:13;right:16px;bottom:16px;display:flex;gap:6px;
+    flex-wrap:wrap;justify-content:flex-end;max-width:calc(100% - 32px);transition:bottom .25s}
   /* mid-fight the sliders do nothing, so the panel steps aside and the
      commander bar takes its corner — tools keep the opposite one, no collisions */
-  body.fighting #panel{transform:translateY(150%);opacity:0;pointer-events:none}
+  /* the panel leaves the moment you press Fight, not when the fight starts —
+     on a phone it covers the whole cinematic intro otherwise. It stays gone
+     through the verdict card and only returns via "Change matchup". */
+  body.live #panel{transform:translateY(150%);opacity:0;pointer-events:none}
   /* the tools keep the bottom-right corner, so the commander bar sits one step
      up from the floor rather than trying to share the row with them */
   body.fighting:not(.reel) #cmdbar{left:16px;transform:none;align-items:flex-start;
@@ -333,6 +338,7 @@
     <button id="btnCam" class="on">Auto Cam</button>
     <button id="btnSound" class="on">Sound</button>
     <button id="btnMusic" class="on">Music</button>
+    <button id="btnBlood">Blood</button>
   </div>
 
   <div id="cmdbar">
