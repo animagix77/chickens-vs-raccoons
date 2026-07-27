@@ -3421,20 +3421,65 @@ $('btnBlood').addEventListener('click',()=>{
 ['pointerdown','keydown','touchstart'].forEach(ev=>
   addEventListener(ev,audioResume,{once:true,passive:true}));
 
-/* manual orbit */
+/* ---------- manual orbit ----------
+   The drag moves the world with your finger: swipe right and the near side of
+   the fight swings right, swipe down and the field tips down as the camera
+   climbs. That's what every map and 3D viewer does, and the horizontal axis
+   used to do the opposite. Both axes are measured as a fraction of the frame
+   height, so one swipe covers the same arc on a phone as on a desktop. */
 const el=renderer.domElement;
-function down(e){DIR.drag=true;DIR.px=(e.touches?e.touches[0].clientX:e.clientX);DIR.py=(e.touches?e.touches[0].clientY:e.clientY);}
+const ORB_YAW=3.4, ORB_TILT=2.4;    // radians across a full-height drag
+let touchId=null, pinchD=0;
+function touchAt(e){
+  if(!e.touches) return {x:e.clientX,y:e.clientY};
+  for(let i=0;i<e.touches.length;i++)
+    if(e.touches[i].identifier===touchId) return {x:e.touches[i].clientX,y:e.touches[i].clientY};
+  return null;
+}
+function pinchGap(e){
+  const a=e.touches[0], b=e.touches[1];
+  return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+}
+function grabCam(){
+  if(DIR.manual) return;
+  DIR.manual=true; $('btnCam').classList.remove('on'); $('btnCam').textContent='Free Cam';
+}
+function down(e){
+  if(e.touches){
+    touchId=e.touches[0].identifier;
+    if(e.touches.length>1){ pinchD=pinchGap(e); DIR.drag=false; return; }
+  }
+  const p=touchAt(e); if(!p) return;
+  DIR.drag=true; DIR.px=p.x; DIR.py=p.y;
+}
 function move(e){
-  if(!DIR.drag)return;
-  const x=(e.touches?e.touches[0].clientX:e.clientX), y=(e.touches?e.touches[0].clientY:e.clientY);
-  DIR.orbA-=(x-DIR.px)*0.006; DIR.orbH=clamp(DIR.orbH+(y-DIR.py)*0.004,0.05,1.45);
-  DIR.px=x;DIR.py=y;
-  if(!DIR.manual){DIR.manual=true;$('btnCam').classList.remove('on');$('btnCam').textContent='Free Cam';}
+  if(e.touches && e.touches.length>1){          // two fingers: pinch to zoom
+    const g=pinchGap(e);
+    if(pinchD>0) DIR.orbD=clamp(DIR.orbD*(pinchD/g),0.12,2.4);
+    pinchD=g; DIR.drag=false; grabCam(); e.preventDefault(); return;
+  }
+  if(!DIR.drag) return;
+  const p=touchAt(e); if(!p) return;
+  const h=Math.max(1,frame.clientHeight);
+  DIR.orbA+=(p.x-DIR.px)/h*ORB_YAW;
+  DIR.orbH=clamp(DIR.orbH+(p.y-DIR.py)/h*ORB_TILT,0.05,1.45);
+  DIR.px=p.x; DIR.py=p.y;
+  grabCam();
   e.preventDefault();
 }
-function up(){DIR.drag=false;}
+/* lifting one finger of a pinch must hand control to the one still down
+   rather than snapping the camera to wherever that finger happens to be */
+function up(e){
+  if(e && e.touches && e.touches.length){
+    touchId=e.touches[0].identifier; pinchD=0;
+    DIR.px=e.touches[0].clientX; DIR.py=e.touches[0].clientY; DIR.drag=true;
+    return;
+  }
+  DIR.drag=false; touchId=null; pinchD=0;
+}
 el.addEventListener('mousedown',down); addEventListener('mousemove',move); addEventListener('mouseup',up);
-el.addEventListener('touchstart',down,{passive:true}); el.addEventListener('touchmove',move,{passive:false}); addEventListener('touchend',up);
+el.addEventListener('touchstart',down,{passive:true}); el.addEventListener('touchmove',move,{passive:false});
+addEventListener('touchend',up); addEventListener('touchcancel',up);
 el.addEventListener('wheel',e=>{DIR.orbD=clamp(DIR.orbD*(1+Math.sign(e.deltaY)*0.1),0.12,2.4);e.preventDefault();},{passive:false});
 addEventListener('keydown',e=>{
   if(e.code==='Space'){e.preventDefault();$('go').click();}
