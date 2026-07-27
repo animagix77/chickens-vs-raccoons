@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chickens vs Raccoons — Battle Simulator</title>
+<style>
+  :root{
+    --hot:#ffb020; --cool:#7fd4ff; --blood:#d8452f; --paper:#f4ead6;
+    --ui:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%;background:#08070a;overflow:hidden;
+    font-family:var(--ui);color:var(--paper);user-select:none}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#08070a}
+  /* NOTE: never transition width/height here — the WebGL canvas is sized in JS and
+     would stretch for the length of the animation. Snap the box, fade the corners. */
+  #frame{position:relative;width:100%;height:100%;overflow:hidden;background:#0b0a0e;
+    transition:border-radius .35s,box-shadow .35s}
+  body.reel #frame{border-radius:14px;box-shadow:0 0 0 1px #ffffff14,0 30px 90px #000a}
+  canvas{display:block;width:100%;height:100%}
+
+  /* ---------- film grade ---------- */
+  #grade{position:absolute;inset:0;pointer-events:none;z-index:5;
+    background:
+      radial-gradient(120% 85% at 50% 42%,transparent 38%,rgba(6,4,10,.55) 100%),
+      linear-gradient(to bottom,rgba(255,190,120,.06),transparent 30%,rgba(20,10,40,.16));
+    mix-blend-mode:multiply;opacity:.95}
+  #grain{position:absolute;inset:-50%;pointer-events:none;z-index:6;opacity:.055;
+    background-image:var(--grain);background-size:180px 180px;animation:gr .7s steps(3) infinite}
+  @keyframes gr{0%{transform:translate(0,0)}33%{transform:translate(-3%,2%)}66%{transform:translate(2%,-3%)}100%{transform:translate(0,0)}}
+
+  /* ---------- HUD ---------- */
+  .hud{position:absolute;z-index:10;pointer-events:none}
+  /* scoreboard + health bar share one absolutely-positioned column so the bar
+     always lands under the counters instead of at the frame's static top */
+  #topui{top:0;left:0;right:0}
+  #scoreboard{padding:16px 18px 0;display:flex;gap:12px;align-items:flex-start}
+  .team{flex:1;min-width:0}
+  .team .nm{font-size:11px;letter-spacing:.22em;text-transform:uppercase;opacity:.75;font-weight:700}
+  .team .ct{font-size:38px;line-height:.92;font-weight:800;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;text-shadow:0 3px 0 rgba(0,0,0,.45)}
+  .team.r{text-align:right}
+  #teamA .ct{color:var(--hot)} #teamB .ct{color:var(--cool)}
+  #clock{flex:0 0 auto;text-align:center;padding-top:4px}
+  #clock .t{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+  #clock .s{font-size:9px;letter-spacing:.24em;opacity:.55;text-transform:uppercase;margin-top:3px}
+  #bar{margin:10px 18px 0;height:7px;border-radius:6px;overflow:hidden;background:#ffffff14;
+    display:flex;box-shadow:inset 0 1px 3px #0007}
+  #barA{background:linear-gradient(180deg,#ffd06a,#f09414);transition:width .28s ease}
+  #barB{background:linear-gradient(180deg,#a9e4ff,#4aa6d8);flex:1}
+
+  /* ---------- kill feed ---------- */
+  #feed{right:16px;top:118px;width:270px;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+  .kf{background:rgba(10,8,14,.62);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    border-left:3px solid var(--blood);padding:5px 9px;border-radius:0 6px 6px 0;font-size:11.5px;
+    line-height:1.32;max-width:100%;animation:kfin .3s cubic-bezier(.2,1.4,.4,1);opacity:.96}
+  .kf b{color:var(--hot)} .kf i{color:var(--cool);font-style:normal}
+  .kf.big{border-left-color:var(--hot);font-size:12.5px;font-weight:700}
+  @keyframes kfin{from{transform:translateX(26px);opacity:0}to{transform:none;opacity:.96}}
+
+  /* ---------- champion nameplate ---------- */
+  #champ{left:50%;top:50%;transform:translate(-50%,-115%);text-align:center;opacity:0;
+    transition:opacity .25s;white-space:nowrap;max-width:calc(100% - 30px);overflow:hidden}
+  #champ .nm{overflow:hidden;text-overflow:ellipsis}
+  body.narrow #champ .nm{font-size:19px}
+  #champ.on{opacity:1}
+  #champ .lb{font-size:9px;letter-spacing:.3em;opacity:.6;text-transform:uppercase}
+  #champ .nm{font-size:26px;font-weight:800;letter-spacing:-.01em;color:var(--hot);
+    text-shadow:0 0 26px rgba(255,176,32,.5),0 3px 0 rgba(0,0,0,.5)}
+  #champ .kc{font-size:11px;letter-spacing:.2em;opacity:.9;text-transform:uppercase;
+    text-shadow:0 2px 6px rgba(0,0,0,.9)}
+
+  /* ---------- cards ---------- */
+  #card{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;pointer-events:none;
+    background:radial-gradient(70% 60% at 50% 50%,rgba(8,6,12,.55),rgba(8,6,12,.9));
+    opacity:0;transition:opacity .4s}
+  #card.on{opacity:1}
+  #card.thin{background:linear-gradient(to top,rgba(8,6,12,.80),rgba(8,6,12,.18) 34%,transparent 58%);
+    justify-content:flex-end;padding-bottom:11%}
+  #card.thin .big{font-size:clamp(24px,5.4vmin,56px)}
+  #card.thin .kick{margin-bottom:9px}
+  #card .kick{font-size:11px;letter-spacing:.42em;opacity:.6;text-transform:uppercase;margin-bottom:14px}
+  #card .big{font-size:clamp(30px,7.5vmin,78px);font-weight:800;line-height:.94;letter-spacing:-.03em;
+    text-transform:uppercase;text-shadow:0 6px 0 rgba(0,0,0,.4)}
+  #card .vs{font-size:clamp(16px,3vmin,26px);color:var(--blood);font-weight:800;letter-spacing:.3em;margin:10px 0}
+  #card .sub{margin-top:20px;font-size:12px;letter-spacing:.2em;opacity:.65;text-transform:uppercase;max-width:80%}
+  #count{font-size:clamp(80px,26vmin,240px);font-weight:800;line-height:1;letter-spacing:-.05em}
+  /* the card itself never eats clicks — only these buttons do, and only after a fight */
+  #cardTrib{display:none;margin-top:22px;font-size:15px;letter-spacing:.05em;
+    color:#e9d7ae;opacity:0;transition:opacity 1.4s ease .7s;
+    font-family:Georgia,'Times New Roman',serif;font-style:italic}
+  #card.trib #cardTrib{display:block}
+  #card.trib.on #cardTrib{opacity:.8}
+  #cardBtns{display:none;gap:10px;margin-top:26px;pointer-events:auto}
+  #card.result #cardBtns{display:flex;flex-wrap:wrap;justify-content:center}
+  #cardBtns button{padding:13px 22px;font-size:11.5px;font-weight:800;letter-spacing:.18em;
+    text-transform:uppercase;border-radius:10px;cursor:pointer;font-family:inherit;
+    border:1px solid #ffffff2e;background:rgba(18,15,24,.72);color:#f4ead6c0;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:.15s}
+  #cardBtns button:hover{background:rgba(38,33,50,.86);color:var(--paper);border-color:#ffffff55}
+  #cardBtns button.prime{background:linear-gradient(180deg,#ff6a3d,#d8452f);color:#fff;
+    border:none;box-shadow:0 4px 0 #8c2418,0 10px 24px #d8452f40}
+  #cardBtns button.prime:hover{filter:brightness(1.08)}
+  #cardBtns button.prime:active{transform:translateY(2px);box-shadow:0 2px 0 #8c2418}
+  body.short #cardBtns{margin-top:18px}
+  body.short #cardBtns button{padding:10px 16px;font-size:10.5px}
+
+  /* ---------- controls ---------- */
+  #panel{position:absolute;z-index:12;left:16px;bottom:16px;width:296px;
+    max-height:calc(100% - 120px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:#ffffff2e transparent;
+    background:rgba(12,10,17,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid #ffffff17;border-radius:14px;padding:14px;
+    box-shadow:0 18px 50px #000a;transition:transform .4s cubic-bezier(.6,0,.2,1),opacity .3s}
+  body.reel #panel,body.hideui #panel{transform:translateY(150%);opacity:0;pointer-events:none}
+  #panel h1{margin:0 0 12px;font-size:13px;letter-spacing:.2em;text-transform:uppercase;opacity:.8;
+    display:flex;justify-content:space-between;align-items:center}
+  #panel h1 span{font-size:9px;opacity:.45;letter-spacing:.14em}
+  .row{margin-bottom:11px}
+  .row label{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.13em;
+    text-transform:uppercase;opacity:.7;margin-bottom:5px}
+  .row label b{opacity:1;font-variant-numeric:tabular-nums;color:var(--paper)}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;
+    background:#ffffff20;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;
+    background:var(--paper);cursor:pointer;border:none;box-shadow:0 2px 6px #0008}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--paper);
+    cursor:pointer;border:none}
+  #sA{background:linear-gradient(90deg,#f09414 0 var(--p,50%),#ffffff20 var(--p,50%))}
+  #sB{background:linear-gradient(90deg,#4aa6d8 0 var(--p,50%),#ffffff20 var(--p,50%))}
+  .seg{display:flex;gap:4px}
+  .seg button{flex:1;padding:7px 2px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:700;border:1px solid #ffffff1c;background:#ffffff0a;color:#f4ead6a0;border-radius:7px;
+    cursor:pointer;transition:.16s;font-family:inherit}
+  .seg button:hover{background:#ffffff14;color:var(--paper)}
+  .seg button.on{background:var(--paper);color:#0d0b12;border-color:var(--paper)}
+  #go{width:100%;margin-top:12px;padding:13px;font-size:14px;font-weight:800;letter-spacing:.2em;
+    text-transform:uppercase;border:none;border-radius:10px;cursor:pointer;font-family:inherit;
+    background:linear-gradient(180deg,#ff6a3d,#d8452f);color:#fff;box-shadow:0 5px 0 #8c2418,0 10px 24px #d8452f4d;
+    transition:.12s}
+  #go:active{transform:translateY(3px);box-shadow:0 2px 0 #8c2418}
+  #go.rst{background:linear-gradient(180deg,#4b4757,#332f3d);box-shadow:0 5px 0 #1a1822}
+  .mini{display:flex;gap:4px;margin-top:9px}
+  .mini button{flex:1;padding:7px 2px;font-size:9px;letter-spacing:.09em;text-transform:uppercase;
+    border:1px solid #ffffff1c;background:#ffffff0a;color:#f4ead6a0;border-radius:7px;cursor:pointer;
+    font-family:inherit;font-weight:700;transition:.16s}
+  .mini button:hover{background:#ffffff14;color:var(--paper)}
+  .mini button.on{background:var(--hot);border-color:var(--hot);color:#1a1206}
+
+  /* ---------- top-right toggles ---------- */
+  /* ---------- roster steppers ---------- */
+  .roster{display:flex;flex-direction:column;gap:3px;max-height:132px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:#ffffff2e transparent;padding-right:2px}
+  .roster::-webkit-scrollbar{width:5px}
+  .roster::-webkit-scrollbar-thumb{background:#ffffff2e;border-radius:4px}
+  .ru{display:flex;align-items:center;gap:5px;font-size:10px;letter-spacing:.06em;
+    text-transform:uppercase;color:#f4ead6a0}
+  .ru .rn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ru.on .rn{color:var(--paper)}
+  .ru button{width:19px;height:19px;line-height:1;border-radius:5px;cursor:pointer;
+    border:1px solid #ffffff1c;background:#ffffff0a;color:#f4ead6b0;font-family:inherit;
+    font-size:11px;font-weight:700;padding:0;transition:.13s}
+  .ru button:hover{background:#ffffff1e;color:var(--paper)}
+  .ru .rv{width:30px;text-align:center;font-variant-numeric:tabular-nums;color:var(--paper);
+    font-weight:700;font-size:10.5px}
+  .ru.on .rv{color:var(--hot)}
+  .ru.foe.on .rv{color:var(--cool)}
+  .row.rost label b{opacity:.5;font-weight:600}
+  .hint{font-size:9.5px;line-height:1.5;letter-spacing:.03em;color:#f4ead671;margin:2px 0 -2px}
+  .hint em{font-style:normal;color:var(--hot);opacity:.85}
+
+  /* ---------- commander bar ---------- */
+  #cmdbar{position:absolute;z-index:14;left:50%;transform:translateX(-50%);bottom:16px;
+    display:none;flex-direction:column;gap:7px;max-width:calc(100% - 24px);align-items:center}
+  body.fighting #cmdbar{display:flex}
+  #cmddep,#cmdact{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;align-items:stretch}
+  #cmddep{gap:5px}
+  /* war chest — the pool every reinforcement is paid out of */
+  #cmdpts{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:6px 10px 7px;border-radius:9px;border:1px solid #ffb02055;
+    background:rgba(40,29,10,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  #cmdpts b{font-size:15px;line-height:1;font-weight:800;color:var(--hot);
+    font-variant-numeric:tabular-nums}
+  #cmdpts span{font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:#f4ead67a;margin-top:3px}
+  /* deploy chips */
+  .dep{position:relative;overflow:hidden;padding:6px 9px 7px;border-radius:9px;
+    border:1px solid #ffffff18;background:rgba(12,10,17,.78);backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);color:#f4ead6;font-family:inherit;cursor:default;
+    display:flex;flex-direction:column;align-items:center;gap:2px;transition:.14s;opacity:.45}
+  .dep .dn{font-size:9px;letter-spacing:.09em;text-transform:uppercase;font-weight:800;
+    white-space:nowrap}
+  .dep .dc{font-size:8px;letter-spacing:.11em;color:#f4ead67a;font-variant-numeric:tabular-nums}
+  .dep.ok{opacity:1;cursor:pointer;border-color:#ffffff3a;background:rgba(28,22,38,.84)}
+  .dep.ok .dc{color:var(--hot)}
+  .dep.ok:hover{background:rgba(52,42,66,.9);transform:translateY(-2px)}
+  .dep.flash{border-color:var(--hot);box-shadow:0 0 18px rgba(255,176,32,.4)}
+  body.hideui #cmdbar{opacity:0;pointer-events:none}
+  .cmd{position:relative;overflow:hidden;min-width:96px;padding:9px 12px 10px;border-radius:11px;
+    border:1px solid #ffffff20;background:rgba(12,10,17,.80);backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);color:#f4ead6;font-family:inherit;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;transition:.14s}
+  .cmd .cn{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:800}
+  .cmd .ck{font-size:8px;letter-spacing:.2em;opacity:.45}
+  .cmd i{position:absolute;left:0;bottom:0;height:3px;background:var(--hot);
+    width:0%;transition:width .12s linear}
+  .cmd.ready{border-color:#ffffff45;background:rgba(30,24,40,.85)}
+  .cmd.ready:hover{background:rgba(52,42,66,.9);transform:translateY(-2px)}
+  .cmd.ready i{width:100%;background:var(--hot)}
+  .cmd.spent{opacity:.42;cursor:default}
+  .cmd.live{border-color:var(--hot);box-shadow:0 0 22px rgba(255,176,32,.35)}
+  body.reel #cmdbar{bottom:74px}
+  body.narrow .cmd{min-width:0;padding:7px 6px 8px;border-radius:9px}
+  body.narrow .cmd .cn{font-size:8.5px;letter-spacing:.07em}
+  body.narrow .dep{padding:5px 6px 6px}
+  body.narrow .dep .dn{font-size:8px;letter-spacing:.04em}
+  body.narrow #cmdpts{padding:5px 7px 6px}
+  body.short #cmddep{max-height:56px;overflow:hidden}
+
+  #tools{position:absolute;z-index:13;right:16px;bottom:16px;display:flex;gap:6px;transition:bottom .25s}
+  /* mid-fight the sliders do nothing, so the panel steps aside and the
+     commander bar takes its corner — tools keep the opposite one, no collisions */
+  body.fighting #panel{transform:translateY(150%);opacity:0;pointer-events:none}
+  /* the tools keep the bottom-right corner, so the commander bar sits one step
+     up from the floor rather than trying to share the row with them */
+  body.fighting:not(.reel) #cmdbar{left:16px;transform:none;align-items:flex-start;
+    bottom:58px;max-width:calc(100% - 32px)}
+  body.fighting:not(.reel) #cmddep,body.fighting:not(.reel) #cmdact{justify-content:flex-start}
+  body.fighting.narrow:not(.reel) #cmdbar{bottom:16px}   /* narrow puts tools up top */
+  body.reel #tools{bottom:16px;right:50%;transform:translateX(50%)}
+  #tools button{padding:8px 11px;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+    font-weight:700;border:1px solid #ffffff1c;background:rgba(12,10,17,.7);backdrop-filter:blur(10px);
+    color:#f4ead6a8;border-radius:8px;cursor:pointer;font-family:inherit;transition:.16s}
+  #tools button:hover{color:var(--paper);background:rgba(30,26,40,.8)}
+  #tools button.on{background:var(--paper);color:#0d0b12;border-color:var(--paper)}
+  #tools{transition:opacity .4s}
+  body.reel.idle #tools{opacity:0;pointer-events:none}
+  body.hideui #tools,body.hideui #scoreboard,body.hideui #bar,
+  body.hideui #feed,body.hideui #champ,body.hideui #fps{opacity:0!important;pointer-events:none}
+  body.reel #scoreboard{padding-top:22px}
+  body.reel #feed{display:none}
+  body.reel #bar{margin-left:14px;margin-right:14px}
+
+  #slowmo{position:absolute;z-index:11;inset:0;pointer-events:none;opacity:0;transition:opacity .18s;
+    box-shadow:inset 0 0 160px rgba(216,69,47,.34);
+    background:repeating-linear-gradient(to bottom,rgba(255,255,255,.03) 0 1px,transparent 1px 3px)}
+  #slowmo.on{opacity:1}
+  /* ---------- responsive: driven by the render frame, not the window ---------- */
+  body.narrow:not(.reel) #tools{bottom:auto;top:13px;right:12px;gap:4px}
+  body.narrow:not(.reel) #tools button{padding:6px 8px;font-size:8.5px;letter-spacing:.07em}
+  body.narrow:not(.reel) #scoreboard{padding-top:52px}
+  body.narrow #panel{width:calc(100% - 24px);left:12px;bottom:12px}
+  body.narrow #feed{display:none}
+  body.narrow .team .ct{font-size:28px}
+
+  body.short #scoreboard{padding:10px 14px 0}
+  body.short .team .ct{font-size:26px}
+  body.short #clock .t{font-size:16px}
+  body.short #bar{margin:7px 14px 0;height:5px}
+  body.short #feed{top:88px;width:240px}
+  body.short #panel{padding:10px 11px;max-height:calc(100% - 88px);overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:#ffffff33 transparent}
+  body.short #panel::-webkit-scrollbar{width:5px}
+  body.short #panel::-webkit-scrollbar-thumb{background:#ffffff33;border-radius:4px}
+  body.short #panel h1{margin-bottom:8px;font-size:11.5px}
+  body.short .row{margin-bottom:7px}
+  body.short .row label{margin-bottom:3px;font-size:9.5px}
+  body.short .seg button{padding:5px 2px}
+  body.short #go{padding:9px;margin-top:8px;font-size:12.5px}
+  /* ---------- buy me a coffee ---------- */
+  .coffee{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;
+    padding:8px 10px;border-radius:9px;text-decoration:none;cursor:pointer;
+    border:1px solid #ffb02036;background:rgba(255,176,32,.07);color:#f4d9a4;
+    font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;font-weight:700;
+    transition:.15s}
+  .coffee:hover{background:rgba(255,176,32,.16);border-color:#ffb02073;color:#ffd58a}
+  .coffee svg{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  /* the one on the verdict card sits under the buttons and stays quiet */
+  .coffee.card{display:none;margin-top:16px;pointer-events:auto;background:none;
+    border-color:transparent;opacity:.6;font-size:9px}
+  #card.result .coffee.card{display:flex}
+  .coffee.card:hover{opacity:1;background:rgba(255,176,32,.1);border-color:#ffb02036}
+  body.short .mini{margin-top:6px}
+  body.short .coffee{margin-top:7px;padding:6px 8px}
+  body.short .mini button{padding:5px 2px;font-size:8.5px}
+  body.short #champ .nm{font-size:21px}
+</style>
+</head>
+<body>
+<div id="stage"><div id="frame">
+  <div id="grade"></div><div id="grain"></div><div id="slowmo"></div>
+
+  <div class="hud" id="topui">
+  <div id="scoreboard">
+    <div class="team" id="teamA"><div class="nm" id="nameA">Roosters</div><div class="ct" id="ctA">0</div></div>
+    <div id="clock"><div class="t" id="tmr">0.0s</div><div class="s" id="phase">Standby</div></div>
+    <div class="team r" id="teamB"><div class="nm">Raccoons</div><div class="ct" id="ctB">0</div></div>
+  </div>
+  <div id="bar"><div id="barA" style="width:50%"></div><div id="barB"></div></div>
+  </div>
+
+  <div class="hud" id="feed"></div>
+
+  <div class="hud" id="champ">
+    <div class="lb">Current Champion</div>
+    <div class="nm" id="champName">—</div>
+    <div class="kc" id="champKills">0 kills</div>
+  </div>
+
+  <div id="card">
+    <div class="kick" id="cardKick"></div>
+    <div class="big" id="cardA"></div>
+    <div class="vs" id="cardVs"></div>
+    <div class="big" id="cardB"></div>
+    <div id="count"></div>
+    <div class="sub" id="cardSub"></div>
+    <div id="cardTrib">for Eenie &amp; Moe</div>
+    <div id="cardBtns">
+      <button id="again" class="prime">Run it back</button>
+      <button id="setup">Change matchup</button>
+    </div>
+    <a class="coffee card" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
+      <span>Buy me a coffee</span>
+    </a>
+  </div>
+
+  <div id="tools">
+    <button id="btnReel">Reel Mode</button>
+    <button id="btnCam" class="on">Auto Cam</button>
+    <button id="btnSound" class="on">Sound</button>
+    <button id="btnMusic" class="on">Music</button>
+  </div>
+
+  <div id="cmdbar">
+    <div id="cmddep"><div id="cmdpts"><b>0</b><span>war chest</span></div></div>
+    <div id="cmdact"></div>
+  </div>
+
+  <div id="panel">
+    <h1>Chickens vs Raccoons <span id="fps">v1.0</span></h1>
+    <div class="row">
+      <label>Birds <b id="vA">1000</b></label>
+      <input type="range" id="sA" min="0" max="4000" step="25" value="1000">
+    </div>
+    <div class="row">
+      <label>Raccoons <b id="vB">100</b></label>
+      <input type="range" id="sB" min="0" max="500" step="5" value="100">
+    </div>
+    <div class="row">
+      <label>Bird type</label>
+      <div class="seg" id="segBird">
+        <button data-v="hen">Hens</button>
+        <button data-v="rooster" class="on">Roosters</button>
+        <button data-v="gamecock">Gamecocks</button>
+      </div>
+    </div>
+    <div class="row">
+      <label>Battlefield</label>
+      <div class="seg" id="segArena">
+        <button data-v="field" class="on">Open Field</button>
+        <button data-v="coop">Night Coop</button>
+      </div>
+    </div>
+    <div class="row rost">
+      <label>Also in the treeline <b id="costB">0</b></label>
+      <div id="rosterFoe" class="roster"></div>
+    </div>
+    <div class="hint">You call the farm in <em>during</em> the fight — the war chest fills
+      while the birds hold the line.</div>
+    <button id="go">Fight</button>
+    <div class="mini">
+      <button data-preset="classic">1000 v 100</button>
+      <button data-preset="massacre">Massacre</button>
+      <button data-preset="even">Fair Fight</button>
+      <button data-preset="silly">Max Chaos</button>
+    </div>
+    <a class="coffee" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
+      <span>Buy me a coffee</span>
+    </a>
+  </div>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
