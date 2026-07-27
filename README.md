@@ -4,7 +4,7 @@ A 3D battle simulator that answers a question nobody asked: how many chickens do
 
 The whole thing is one HTML file. No build step required to play it, no dependencies to install, no network access needed — Three.js is inlined, every sound is synthesized in the browser, every model is generated from primitives at load time. Open `index.html` and it runs.
 
-**[▶ Play it](https://wfhpapa.github.io/chickens-vs-raccoons/)** *(enable GitHub Pages on this repo to activate this link)*
+**[▶ Play it](https://animagix77.github.io/chickens-vs-raccoons/)** *(live once GitHub Pages is enabled for this repo: Settings → Pages → deploy from `main`, root)*
 
 ## What it does
 
