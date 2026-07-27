@@ -1,0 +1,6 @@
+This project bundles Three.js (r128), which is distributed under the MIT
+License. Copyright (c) 2010-2024 three.js authors.
+See https://github.com/mrdoob/three.js for the original source.
+
+The bundled copy lives at src/three.min.js and is inlined into index.html
+by build.py so the simulator runs as a single self-contained file.
