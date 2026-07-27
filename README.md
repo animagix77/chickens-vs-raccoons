@@ -16,6 +16,8 @@ Set a matchup — up to 4000 birds against 500 raccoons, on an open field in day
 
 **Reel mode** crops to 9:16 and hides the chrome, because the point of this was always short-form video.
 
+**Blood is off by default.** Kids watch this. With it off, hits read through feathers and kicked-up dust instead, and the sim plays exactly the same. The Blood button in the corner turns it on — and turning it back off scrubs the field clean rather than just stopping new marks. Keyboard: `B`.
+
 ## Is any of this realistic?
 
 No. The proportions are grounded — a raccoon really is 15–20 lb against a 6–8 lb rooster, real raccoons really do surplus-kill, hens really don't fight back, and donkeys and llamas really are used as livestock guardians — but every combat number is invented and tuned for drama. The real raccoon-to-chicken speed ratio is about 1.7×; the sim uses 1.06×, because a fight where one side simply outruns the other isn't worth watching.
