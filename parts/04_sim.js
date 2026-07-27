@@ -177,6 +177,11 @@ function spawnRoster(list,night){
     }
   }
   for(let i=0;i<N;i++) A.yaw[i]=Math.atan2(-A.x[i],-A.z[i])+rnd(-.3,.3);
+  /* last fight's front-rank depth and contact point must not leak into this one,
+     or the opening shot lurches on its first frame */
+  TC.lead[0]=TC.lead[1]=0;
+  BATTLE.conSeen=0; BATTLE.conAge=9; BATTLE.conN=0;
+  enemyCentroids();
   cmdReset();
 }
 function addAgent(x,z,kindIdx,vr){
@@ -197,6 +202,7 @@ function addAgent(x,z,kindIdx,vr){
 const BATTLE={
   running:false, t:0, over:false, winner:'', timeScale:1, slowT:0,
   deathsWindow:0, windowT:0, cx:0, cz:0, hotX:0, hotZ:0, hotN:0, hsx:0, hsz:0,
+  conX:0, conZ:0, conN:0, conAge:9, conSeen:0,
   champ:-1, totalKills:0, routed:0
 };
 let moraleMul=1, recentKills=0;
@@ -207,7 +213,9 @@ function centroidUpdate(){
   if(n){ BATTLE.cx=sx/n; BATTLE.cz=sz/n; }
 }
 let ecx=[0,0], ecz=[0,0];
-const TC={ax:0,az:0,bx:0,bz:0};
+/* a/b = centre of each army, af/bf = the front rank — where the army is
+   pointed, which is what you want to look at rather than the middle of a crowd */
+const TC={ax:0,az:0,bx:0,bz:0,afx:0,afz:0,bfx:0,bfz:0,lead:[0,0]};
 function enemyCentroids(){
   let ax=0,az=0,an=0,bx=0,bz=0,bn=0;
   for(let i=0;i<N;i++){
@@ -217,6 +225,22 @@ function enemyCentroids(){
   if(an){TC.ax=ax/an;TC.az=az/an;} if(bn){TC.bx=bx/bn;TC.bz=bz/bn;}
   ecx[0]=TC.bx; ecz[0]=TC.bz;
   ecx[1]=TC.ax; ecz[1]=TC.az;
+
+  /* how far the leading edge sits ahead of the centre, along the axis each army
+     faces. Smoothed, because the single furthest bird jitters every frame. */
+  const dax=TC.bx-TC.ax, daz=TC.bz-TC.az, dl=Math.hypot(dax,daz)||1;
+  const ux=dax/dl, uz=daz/dl;
+  let leadA=0, leadB=0;
+  for(let i=0;i<N;i++){
+    if(A.st[i]===2) continue;
+    if(A.team[i]===0){ const d=(A.x[i]-TC.ax)*ux+(A.z[i]-TC.az)*uz; if(d>leadA) leadA=d; }
+    else            { const d=(TC.bx-A.x[i])*ux+(TC.bz-A.z[i])*uz; if(d>leadB) leadB=d; }
+  }
+  TC.lead[0]=lerp(TC.lead[0],leadA,0.06);
+  TC.lead[1]=lerp(TC.lead[1],leadB,0.06);
+  const fa=TC.lead[0]*0.72, fb=TC.lead[1]*0.72;   // just short of the very front
+  TC.afx=TC.ax+ux*fa; TC.afz=TC.az+uz*fa;
+  TC.bfx=TC.bx-ux*fb; TC.bfz=TC.bz-uz*fb;
 }
 
 /* ============================================================
@@ -226,6 +250,10 @@ function stepSim(dt){
   gridBuild(); enemyCentroids(); cmdStep(dt);
   const cells=[-1,0,1];
   let hotBestN=0, hotX=0, hotZ=0;
+  /* the densest point is almost always deep inside the bird mass, which is not
+     where the fight is. Track the centroid of everyone actually in contact with
+     the other side — that's the front, and it's what the camera should watch. */
+  let conX=0, conZ=0, conN=0;
 
   for(let i=0;i<N;i++){
     if(A.st[i]===2){ A.dead[i]+=dt; if(A.rev[i]===2) reviveCheck(i,dt); continue; }
@@ -298,7 +326,7 @@ function stepSim(dt){
     let sx=0,sz=0;
     const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
     const gz=clamp(((A.z[i]+ARENA_R+12)/CS)|0,0,gridW-1);
-    let localN=0;
+    let localN=0, touching=0;
     const myR=mine.rad;
     for(let a=0;a<3;a++)for(let b=0;b<3;b++){
       const cx2=gx+cells[a], cz2=gz+cells[b];
@@ -314,9 +342,11 @@ function stepSim(dt){
           sx+=ox/d*w; sz+=oz/d*w;
         }
         if(d2<9) localN++;
+        if(d2<7.3 && A.team[j]!==A.team[i]) touching=1;
       }
     }
     if(localN>hotBestN){ hotBestN=localN; hotX=A.x[i]; hotZ=A.z[i]; }
+    if(touching){ conX+=A.x[i]; conZ+=A.z[i]; conN++; }
 
     const sepW=1.6+myR*0.9;
     desX+=sx*sepW; desZ+=sz*sepW;
@@ -347,6 +377,11 @@ function stepSim(dt){
   }
 
   BATTLE.hotX=hotX; BATTLE.hotZ=hotZ; BATTLE.hotN=hotBestN;
+  /* hold the last contact point for a moment after the lines separate, so a
+     one-frame gap in the melee doesn't fling the camera back into the flock */
+  BATTLE.conN=conN;
+  if(conN){ BATTLE.conX=conX/conN; BATTLE.conZ=conZ/conN; BATTLE.conAge=0; BATTLE.conSeen=1; }
+  else BATTLE.conAge+=dt;
   moraleTimer-=dt;
   if(moraleTimer<=0){ moraleTimer=0.45; moraleTick(); }
   centroidUpdate();

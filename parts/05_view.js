@@ -752,23 +752,31 @@ function director(dt,real,wall){
   if(DIR.t>DIR.dur && SEQ.phase==='battle') pickShot();
 
   const t=BATTLE.t;
-  // the "hot spot" jitters frame to frame — chase a smoothed version of it
-  const useHot=BATTLE.hotN>8;
+  /* Where to point. Once the lines meet, the contact centroid IS the fight and
+     every shot aims there. Before contact, fall back to the flock's leading edge
+     — the front rank closing the distance, not the middle of the crowd. */
+  let fx,fz;
+  if(BATTLE.conSeen && BATTLE.conAge<2.5){ fx=BATTLE.conX; fz=BATTLE.conZ; }
+  else { fx=TC.afx; fz=TC.afz; }   // not joined yet — watch the front of the flock
   const kh=1-Math.pow(0.30,real);
-  BATTLE.hsx=lerp(BATTLE.hsx,useHot?BATTLE.hotX:BATTLE.cx,kh);
-  BATTLE.hsz=lerp(BATTLE.hsz,useHot?BATTLE.hotZ:BATTLE.cz,kh);
+  BATTLE.hsx=lerp(BATTLE.hsx,fx,kh);
+  BATTLE.hsz=lerp(BATTLE.hsz,fz,kh);
   const hx=BATTLE.hsx, hz=BATTLE.hsz;
+  /* every shot LOOKS at the fight. The wide setups only orbit from a point
+     pulled back toward the middle of the field, so both armies stay in frame
+     while the focal point stays on the clash. */
+  const wx=lerp(BATTLE.cx,hx,0.45), wz=lerp(BATTLE.cz,hz,0.45);
 
   switch(DIR.shot){
     case 'wide':{
       const a=DIR.ang+t*0.09, d=R*1.24*zoom;
-      tx=BATTLE.cx+Math.cos(a)*d; ty=R*0.50; tz=BATTLE.cz+Math.sin(a)*d;
-      ax=BATTLE.cx; ay=0; az=BATTLE.cz; fov=44;
+      tx=wx+Math.cos(a)*d; ty=R*0.50; tz=wz+Math.sin(a)*d;
+      ax=hx; ay=0; az=hz; fov=44;
       break;}
     case 'top':{
-      tx=BATTLE.cx+Math.sin(t*0.16)*R*0.35; ty=R*1.45*zoom;
-      tz=BATTLE.cz+Math.cos(t*0.16)*R*0.35;
-      ax=BATTLE.cx; ay=0; az=BATTLE.cz; fov=42;
+      tx=hx+Math.sin(t*0.16)*R*0.35; ty=R*1.45*zoom;
+      tz=hz+Math.cos(t*0.16)*R*0.35;
+      ax=hx; ay=0; az=hz; fov=42;
       break;}
     case 'low':{
       const a=DIR.ang+DIR.t*0.10, d=(R*0.34+7)*zoom;
@@ -790,19 +798,21 @@ function director(dt,real,wall){
     default:{ // sweep — long dolly across the front
       const p=(DIR.t/DIR.dur)*2-1;
       const a=DIR.ang;
-      tx=BATTLE.cx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.9;
+      tx=wx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.9;
       ty=(NIGHT?3.5:2.0)+Math.sin(DIR.t)*0.3;
-      tz=BATTLE.cz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.9;
-      ax=BATTLE.cx; ay=0.9; az=BATTLE.cz; fov=48;
+      tz=wz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.9;
+      ax=hx; ay=0.9; az=hz; fov=48;   // dolly past the arena, but look at the fight
     }
   }
 
   /* ---------- the opening: walk the line of each army before the bell ---------- */
   if(SEQ.phase==='introA'||SEQ.phase==='introB'){
     const isA=SEQ.phase==='introA';
-    const cx=isA?TC.ax:TC.bx, cz=isA?TC.az:TC.bz;
+    /* aim at the leading edge — the birds at the front of the flock, the ones
+       the viewer is about to watch walk into it — with the mass behind them */
+    const cx=isA?TC.afx:TC.bfx, cz=isA?TC.afz:TC.bfz;
     const p=clamp(SEQ.t/(isA?INTRO_A:INTRO_B),0,1);
-    const ang=Math.atan2(cz,cx)||0;            // outward normal of that army
+    const ang=Math.atan2(isA?TC.az:TC.bz,isA?TC.ax:TC.bx)||0;   // outward normal
     const ca=Math.cos(ang), sa=Math.sin(ang);
     // stand inside the arena facing them, track sideways along the front, push in
     const inset=R*(isA?0.46:0.34)*zoom*(1-p*0.24);
@@ -815,7 +825,7 @@ function director(dt,real,wall){
   }else if(SEQ.phase!=='battle'&&SEQ.phase!=='result'){
     const a=-1.57+Math.sin(t*0.2)*0.25, d=R*1.15*zoom;
     tx=Math.cos(a)*d; ty=R*0.30; tz=Math.sin(a)*d;
-    ax=0; ay=0.6; az=0; fov=42;
+    ax=TC.afx*0.5; ay=0.6; az=TC.afz*0.5; fov=42;
   }
 
   // handheld
