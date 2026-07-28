@@ -2723,6 +2723,8 @@ function audioResume(){
   }
   audioPrime();
   audioBadge();
+  /* the context has only just appeared — start whatever should be playing */
+  if(AC&&AC.state==='running'&&MUS.bus&&MUS.next<AC.currentTime) MUS.next=AC.currentTime+.05;
 }
 /* a visible way back if the browser refused the first time */
 function audioBadge(){
@@ -3121,6 +3123,10 @@ const CHORDS=[
 ];
 /* the hook, in 16ths: null = rest */
 const MOTIF=[0,null,null,2,null,1,null,null,0,null,2,null,1,null,0,null];
+/* The menu air, in quarter notes. Slower and more stepwise than the battle
+   hook because it has to bear repeating while someone fiddles with sliders.
+   3 means the root an octave up. */
+const MENU_AIR=[0,null,1,2,null,1,null,null, 3,null,2,1,null,0,null,null];
 
 function musicInit(){
   MUS.bus=AC.createGain(); MUS.bus.gain.value=0.0001;
@@ -3279,6 +3285,23 @@ function riser(t,dur){
 function schedStep(s,t){
   const st=s%16, chord=CHORDS[(s/32|0)%4], I=MUS.intensity;
 
+  /* The setup screen used to be silent, which made the game feel like it
+     hadn't started yet. A pipe air over a drone: the drone never stops, which
+     is the whole character of the idiom, and the melody wanders above it. */
+  if(MUS.mode==='menu'){
+    if(s%32===0){
+      padChord(t,chord.pad,(60/MUS.bpm)*9,.20);
+      bassNote(t,chord.bass-12,(60/MUS.bpm)*8.5,.34);
+    }
+    if(st===0) taiko(t,.26,54);            // bodhran, felt more than heard
+    if(st===10) taiko(t,.13,60);
+    if(s%4===0){
+      const n=MENU_AIR[(s/4|0)%16];
+      if(n!==null&&n!==undefined)
+        leadNote(t, n>=3?chord.lead[0]+12:chord.lead[n], (60/MUS.bpm)*.88, .24);
+    }
+    return;
+  }
   if(MUS.mode==='tension'){
     if(st===0) taiko(t,.42+I*.2,45);
     if(st===7) taiko(t,.2,45);
@@ -3324,10 +3347,15 @@ function musicTick(){
 }
 
 function musicMode(m){
-  if(!AC) return;
-  if(m==='battle'&&MUS.mode!=='battle'){ MUS.step=0; MUS.next=AC.currentTime+.04; }
-  if(m==='tension'&&MUS.mode!=='tension'){ MUS.step=0; MUS.next=AC.currentTime+.04; }
+  /* Remember the mode even before there's an audio context. standby() runs at
+     boot, long before the first gesture unlocks audio — bailing out here left
+     the menu silent for the whole visit, because nothing called it again. */
+  const fresh=MUS.mode!==m;
   MUS.mode=m;
+  if(!AC) return;
+  if(fresh&&(m==='battle'||m==='tension'||m==='menu')){
+    MUS.step=0; MUS.next=AC.currentTime+.04;
+  }
 }
 function musicCountIn(sec){
   if(!AC) return;
@@ -3364,9 +3392,12 @@ function musicUpdate(dt){
     const heat=clamp(recentKills/22,0,1);
     MUS.target=clamp(.28+prog*.46+heat*.40,0,1);
   }else if(MUS.mode==='tension') MUS.target=.18;
+  /* high enough to open the lead voice — the menu schedules no brass, so
+     that channel being open costs nothing */
+  else if(MUS.mode==='menu') MUS.target=.58;
   else MUS.target=0;
   MUS.intensity+=(MUS.target-MUS.intensity)*Math.min(1,dt*1.1);
-  MUS.bpm=124+MUS.intensity*24;
+  MUS.bpm=MUS.mode==='menu'?96:124+MUS.intensity*24;   // the air wants room
 
   const I=MUS.intensity, T=AC.currentTime, k=.5;
   const set=(g,v)=>g.gain.setTargetAtTime(Math.max(.0001,v),T,k);
@@ -3919,7 +3950,7 @@ function startBattle(){
   audioResume();
 }
 function standby(){
-  musicMode('idle');
+  musicMode('menu');
   document.body.classList.remove('fighting');
   document.body.classList.remove('live');   // panel comes back only here
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1; BATTLE.totalKills=0;
