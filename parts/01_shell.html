@@ -117,6 +117,28 @@
   body.narrow #sndhint{top:auto;bottom:14px}
   body.hideui #sndhint{display:none}
 
+  /* ---------- loading ---------- */
+  #load{position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:0;background:#08070a;
+    transition:opacity .6s ease}
+  body.loaded #load{opacity:0;pointer-events:none}
+  body.loadgone #load{display:none}
+  #loadArt{max-width:min(70vw,340px);max-height:52vh;border-radius:12px;
+    box-shadow:0 20px 60px #000b, 0 0 0 1px #ffffff14;object-fit:contain;
+    opacity:0;transform:scale(.97);transition:opacity .9s ease,transform .9s ease}
+  #loadArt.in{opacity:1;transform:none}
+  #loadName{margin-top:22px;font-size:clamp(19px,3.6vmin,30px);font-weight:800;
+    letter-spacing:-.01em;text-transform:uppercase;color:var(--paper);text-align:center}
+  #loadSub{margin-top:7px;font-size:11px;letter-spacing:.26em;text-transform:uppercase;
+    color:#f4ead67a;text-align:center}
+  #loadBarOuter{margin-top:26px;width:min(62vw,300px);height:5px;border-radius:4px;
+    background:#ffffff16;overflow:hidden}
+  #loadBar{height:100%;width:0%;border-radius:4px;
+    background:linear-gradient(90deg,#ff6a3d,#ffb020);transition:width .25s ease}
+  #loadPct{margin-top:11px;font-size:10px;letter-spacing:.22em;color:#f4ead65e;
+    font-variant-numeric:tabular-nums}
+  body.short #loadArt{max-height:40vh}
+
   /* ---------- how to play ---------- */
   #rules{position:absolute;inset:0;z-index:29;display:none;flex-direction:column;
     align-items:center;justify-content:center;padding:6vmin 6vw;
@@ -380,11 +402,29 @@
   .coffee:hover{background:rgba(255,176,32,.16);border-color:#ffb02073;color:#ffd58a}
   .coffee svg{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;
     stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-  /* the one on the verdict card sits under the buttons and stays quiet */
-  .coffee.card{display:none;margin-top:16px;pointer-events:auto;background:none;
-    border-color:transparent;opacity:.6;font-size:9px}
-  #card.result .coffee.card{display:flex}
-  .coffee.card:hover{opacity:1;background:rgba(255,176,32,.1);border-color:#ffb02036}
+  /* The end card is the one moment someone has just had a good time and is
+     looking straight at the screen, so the ask goes here rather than being
+     whispered. Quiet enough not to sour the ending, loud enough to read. */
+  #endCta{display:none;margin-top:22px;flex-direction:column;align-items:center;
+    gap:11px;pointer-events:auto}
+  #card.result #endCta{display:flex}
+  #endCta .line{font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:#f4ead68f;text-align:center}
+  #endCta .row{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+  #endCta a{display:flex;align-items:center;gap:7px;padding:10px 15px;border-radius:9px;
+    text-decoration:none;cursor:pointer;font-size:10px;letter-spacing:.15em;
+    text-transform:uppercase;font-weight:700;transition:.15s;white-space:nowrap}
+  #endCta a.give{border:1px solid #ffb02052;background:rgba(255,176,32,.12);color:#ffd58a}
+  #endCta a.give:hover{background:rgba(255,176,32,.22);border-color:#ffb020a0}
+  #endCta a.say{border:1px solid #ffffff26;background:#ffffff0a;color:#f4ead6b5}
+  #endCta a.say:hover{background:#ffffff17;color:var(--paper);border-color:#ffffff55}
+  #endCta svg{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;
+    stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  body.short #endCta{margin-top:14px;gap:8px}
+  body.short #endCta a{padding:8px 12px;font-size:9px}
+  body.narrow #endCta .line{font-size:10px}
+  /* the panel one stays as it was */
+  .coffee.card{display:none}
   body.short .mini{margin-top:6px}
   body.short .coffee{margin-top:7px;padding:6px 8px}
   body.short .mini button{padding:5px 2px;font-size:8.5px}
@@ -434,10 +474,27 @@
       <button id="setup">Change matchup</button>
       <button id="share">Copy link</button>
     </div>
-    <a class="coffee card" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
-      <span>Buy me a coffee</span>
-    </a>
+    <div id="endCta">
+      <div class="line">Enjoyed the carnage?</div>
+      <div class="row">
+        <a class="give" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
+          <span>Buy me a coffee</span>
+        </a>
+        <a class="say" id="ctaMail" href="#" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg>
+          <span>Suggest a matchup</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div id="load">
+    <img id="loadArt" alt="Eenie and Moe">
+    <div id="loadName">Eenie &amp; Moe</div>
+    <div id="loadSub">They didn't make it</div>
+    <div id="loadBarOuter"><div id="loadBar"></div></div>
+    <div id="loadPct">Loading</div>
   </div>
 
   <button id="sndhint">Tap for sound</button>

@@ -147,6 +147,12 @@ function spawnRoster(list,night){
   let total=0; rows.forEach(r=>total+=r.n);
   total=Math.max(1,total);
 
+  /* pick the polygon budget before any kit gets built, and throw away the
+     cached kits if the tier moved — they bake the primitives in at build time */
+  if(setDetail(detailFor(total))){
+    for(const k in KIT_CACHE) delete KIT_CACHE[k];
+  }
+
   const R=clamp(Math.sqrt(total*3.4/Math.PI)+10, 20, 78);
   buildArena(R,night); gridInit();
 

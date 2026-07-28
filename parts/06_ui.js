@@ -162,6 +162,17 @@ function verdict(who,how){
         ' raccoons standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
+  /* Build the mail link at verdict time so the subject carries the fight the
+     person just watched — a suggestion is far more useful with that context,
+     and it saves them describing it. */
+  const mail=$('ctaMail');
+  if(mail){
+    const sub='Chickens vs Raccoons — '+CFG.birds+' '+LABEL[CFG.kind]+' vs '+CFG.coons+' raccoons';
+    const body='Something I would like to see in the simulator:\n\n\n'+
+      '---\nThe fight I just watched: '+fightURL();
+    mail.href='mailto:animagix@mac.com?subject='+encodeURIComponent(sub)+
+      '&body='+encodeURIComponent(body);
+  }
   callGrade(who);
   sting(who==='birds'?'win':'lose');
   musicFinish(who==='birds');
@@ -553,6 +564,9 @@ AUDIO_EV.forEach(ev=>addEventListener(ev,audioPoke,{passive:true}));
 /* iOS suspends the context when you leave the tab and doesn't always restore it */
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) audioResume(); });
 $('sndhint').addEventListener('click',e=>{ e.stopPropagation(); audioResume(); });
+/* the Music and Sound buttons have to move the recorded beds too */
+['btnMusic','btnSound'].forEach(id=>{ const el=$(id); if(el) el.addEventListener('click',()=>setTimeout(trackSync,0)); });
+loadAssets();
 setInterval(audioBadge,1500);
 
 /* ---------- manual orbit ----------

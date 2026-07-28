@@ -115,13 +115,33 @@ if(window.ResizeObserver){
 const _v=new THREE.Vector3(), _q=new THREE.Quaternion(), _e=new THREE.Euler(), _s=new THREE.Vector3();
 const _m=new THREE.Matrix4(), _m2=new THREE.Matrix4();
 
-const G = {
-  sph : new THREE.SphereGeometry(1,9,6),
-  sphLo:new THREE.SphereGeometry(1,6,4),
-  cyl : new THREE.CylinderGeometry(1,1,1,6),
-  cone: new THREE.ConeGeometry(1,1,6),
-  box : new THREE.BoxGeometry(1,1,1)
-};
+/* Detail tiers. Every animal is built from these five primitives, so the
+   segment counts here are the whole polygon budget. At a thousand-plus units
+   nothing on screen is more than a few pixels across and the extra segments
+   are pure cost — a rooster is under 5 metres tall on a 40 metre field.
+   The instanced meshes are frustumCulled=false, so every unit is drawn every
+   frame whether or not you can see it; that makes this the highest-leverage
+   knob in the renderer. */
+const G_TIER=[
+  { sph:[1,9,6], sphLo:[1,6,4], cyl:[1,1,1,6], cone:[1,1,6] },   // 0 full
+  { sph:[1,7,5], sphLo:[1,5,3], cyl:[1,1,1,5], cone:[1,1,5] },   // 1 crowded
+  { sph:[1,5,4], sphLo:[1,4,3], cyl:[1,1,1,4], cone:[1,1,4] }    // 2 a mob
+];
+const G = { box:new THREE.BoxGeometry(1,1,1) };
+let DETAIL=-1;
+function setDetail(level){
+  level=clamp(level|0,0,G_TIER.length-1);
+  if(level===DETAIL) return false;
+  DETAIL=level;
+  const t=G_TIER[level];
+  ['sph','sphLo'].forEach(k=>{ G[k]=new THREE.SphereGeometry(...t[k]); });
+  G.cyl =new THREE.CylinderGeometry(...t.cyl);
+  G.cone=new THREE.ConeGeometry(...t.cone);
+  return true;                       // caller must rebuild anything cached
+}
+setDetail(0);
+/* how crowded is too crowded */
+function detailFor(total){ return total>1500?2:(total>650?1:0); }
 
 /** build a coloured, transformed, non-indexed piece */
 function P(base,color,px,py,pz,rx,ry,rz,sx,sy,sz){

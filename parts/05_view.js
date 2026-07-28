@@ -159,6 +159,7 @@ function audioResume(){
   }
   audioPrime();
   audioBadge();
+  decodeAssets();
   /* the context has only just appeared — start whatever should be playing */
   if(AC&&AC.state==='running'&&MUS.bus&&MUS.next<AC.currentTime) MUS.next=AC.currentTime+.05;
 }
@@ -342,6 +343,13 @@ const VOX={
     wave:'square', pitch:[[.06,1.5],[.3,1.22],[1,.55]], vib:[rnd(14,24),rnd(45,95)],
     noise:.26, noiseF:3600, form:[[rnd(1300,1700),3,1],[rnd(2900,3500),5,.6]]}); },
   roar(d,v){ const t=AC.currentTime;                  // bear: the big one
+    if(BUF.roar){
+      const src=AC.createBufferSource(); src.buffer=BUF.roar;
+      src.playbackRate.value=rnd(.93,1.08);            // so repeats don't tell
+      const g=AC.createGain(); g.gain.value=v*1.5;
+      src.connect(g); g.connect(d); src.start(t);
+      return;
+    }
     vox(d,t,{f0:rnd(68,104),dur:rnd(1.0,1.45),vol:.38*v, glide:.68,
       pitch:[[.08,1.22],[.45,1.05],[1,.66]], am:rnd(17,26), vib:[rnd(4,8),rnd(4,10)],
       noise:.20, noiseF:420,
@@ -483,6 +491,140 @@ function sting(kind){
     f.frequency.setValueAtTime(2200,t); f.frequency.exponentialRampToValueAtTime(160,t+.7);
     s.connect(f); f.connect(env(d,t,.06,.75,.24)); s.start(t); s.stop(t+.85);
   }
+}
+
+
+/* ============================================================
+   SAMPLED AUDIO
+
+   The synthesized voices and the procedural score still do all the work by
+   default — that is what keeps the game playable from a single file with no
+   network. These samples layer on top when they are reachable. If a fetch
+   fails, or the page is opened straight off disk where relative fetches don't
+   resolve, nothing breaks: SAMPLED stays false and the synth carries on.
+   ============================================================ */
+const ASSET_BASE='assets/';
+const ASSET_LIST=[
+  ['menu',    'audio/menu.mp3'],
+  ['tension', 'audio/tension.mp3'],
+  ['battle',  'audio/battle.mp3'],
+  ['battlehi','audio/battlehi.mp3'],
+  ['victory', 'audio/victory.mp3'],
+  ['defeat',  'audio/defeat.mp3'],
+  ['roar',    'audio/roar.mp3']
+];
+const RAW={}, BUF={};
+let SAMPLED=false, assetsFetched=false, decoding=false;
+
+function assetProgress(f,label){
+  const bar=$('loadBar'), pct=$('loadPct');
+  if(bar) bar.style.width=Math.round(clamp(f,0,1)*100)+'%';
+  if(pct) pct.textContent=label||(Math.round(clamp(f,0,1)*100)+'%');
+}
+/* real byte progress where the server reports a length, file count otherwise */
+async function fetchOne(url,onBytes){
+  const r=await fetch(url);
+  if(!r.ok) throw new Error(r.status+' '+url);
+  const len=+(r.headers.get('content-length')||0);
+  if(!r.body||!len) { const b=await r.arrayBuffer(); onBytes(b.byteLength,b.byteLength); return b; }
+  const reader=r.body.getReader(); const chunks=[]; let got=0;
+  for(;;){
+    const {done,value}=await reader.read();
+    if(done) break;
+    chunks.push(value); got+=value.length; onBytes(value.length,len);
+  }
+  const out=new Uint8Array(got); let off=0;
+  for(const c of chunks){ out.set(c,off); off+=c.length; }
+  return out.buffer;
+}
+async function loadAssets(){
+  const art=$('loadArt');
+  if(art){
+    art.onload=()=>art.classList.add('in');
+    art.onerror=()=>art.style.display='none';
+    art.src=ASSET_BASE+'img/eeniemoe.jpg';
+  }
+  /* Weight the bar by the real sizes so it doesn't stall on the big beds.
+     Unknown lengths fall back to counting files. */
+  let total=0, done=0, files=0;
+  try{
+    const bufs=await Promise.all(ASSET_LIST.map(async ([k,rel])=>{
+      const b=await fetchOne(ASSET_BASE+rel,(n,len)=>{
+        if(!total) total=0;
+        total=Math.max(total,0); done+=n;
+        assetProgress(done/Math.max(done+1,ASSET_TOTAL_GUESS));
+      });
+      files++;
+      return [k,b];
+    }));
+    bufs.forEach(([k,b])=>RAW[k]=b);
+    assetsFetched=true;
+    assetProgress(1,'Ready');
+  }catch(e){
+    /* offline, file://, or the assets simply aren't deployed — carry on */
+    assetsFetched=false;
+    assetProgress(1,'Ready');
+  }
+  loadDone();
+}
+const ASSET_TOTAL_GUESS=4400000;   // roughly the folder size; only drives the bar
+
+const LOAD_T0=Date.now(), LOAD_MIN=1500;
+function loadDone(){
+  /* On a fast connection 4MB arrives in a blink and the card becomes a
+     flicker, which reads as a glitch rather than a title. Hold it briefly. */
+  const wait=Math.max(0,LOAD_MIN-(Date.now()-LOAD_T0));
+  setTimeout(()=>{
+    document.body.classList.add('loaded');
+    setTimeout(()=>document.body.classList.add('loadgone'),700);
+  },wait);
+}
+/* decoding needs a context, which only exists after a gesture */
+async function decodeAssets(){
+  if(!AC||decoding||!assetsFetched||SAMPLED) return;
+  decoding=true;
+  try{
+    await Promise.all(Object.keys(RAW).map(k=>
+      AC.decodeAudioData(RAW[k].slice(0)).then(b=>{ BUF[k]=b; }).catch(()=>{})
+    ));
+    SAMPLED=!!(BUF.menu||BUF.battle);
+    if(SAMPLED) trackSync();
+  }catch(e){}
+  decoding=false;
+}
+
+/* ---------- the sampled music player ---------- */
+const TRK={bus:null, on:{}, want:null};
+function trackBus(){
+  if(!TRK.bus){ TRK.bus=AC.createGain(); TRK.bus.gain.value=1; TRK.bus.connect(master); }
+  return TRK.bus;
+}
+function trackStart(name,vol,loop){
+  if(!BUF[name]||TRK.on[name]) return;
+  const src=AC.createBufferSource(); src.buffer=BUF[name]; src.loop=loop!==false;
+  const g=AC.createGain(); g.gain.value=0.0001;
+  src.connect(g); g.connect(trackBus()); src.start(0);
+  g.gain.setTargetAtTime(vol,AC.currentTime,.6);
+  TRK.on[name]={src,g};
+  if(!src.loop) src.onended=()=>{ delete TRK.on[name]; };
+}
+function trackStop(name,fade){
+  const t=TRK.on[name]; if(!t) return;
+  delete TRK.on[name];
+  t.g.gain.setTargetAtTime(.0001,AC.currentTime,fade||.5);
+  try{ t.src.stop(AC.currentTime+(fade||.5)*5); }catch(e){}
+}
+function trackStopAll(fade){ Object.keys(TRK.on).forEach(k=>trackStop(k,fade)); }
+/* put the right bed under whatever the game is currently doing */
+function trackSync(){
+  if(!SAMPLED||!AC) return;
+  const m=MUS.mode, want=(!MUS.on||!soundOn)?null:
+    m==='menu'?'menu': m==='tension'?'tension': m==='battle'?'battle': null;
+  if(want===TRK.want) return;
+  TRK.want=want;
+  ['menu','tension','battle','battlehi'].forEach(k=>{ if(k!==want&&k!=='battlehi') trackStop(k,.5); });
+  if(want==='battle'){ trackStart('battle',.85,true); trackStart('battlehi',.0001,true); }
+  else { trackStop('battle',.5); trackStop('battlehi',.5); if(want) trackStart(want,.8,true); }
 }
 
 /* ---------- per-frame mix + the background barnyard ---------- */
@@ -719,6 +861,9 @@ function riser(t,dur){
 
 /* ---------- the arrangement ---------- */
 function schedStep(s,t){
+  /* the recorded beds replace the procedural score outright — two of them at
+     once would fight each other, and neither would win */
+  if(SAMPLED) return;
   const st=s%16, chord=CHORDS[(s/32|0)%4], I=MUS.intensity;
 
   /* The setup screen used to be silent, which made the game feel like it
@@ -792,6 +937,7 @@ function musicMode(m){
   if(fresh&&(m==='battle'||m==='tension'||m==='menu')){
     MUS.step=0; MUS.next=AC.currentTime+.04;
   }
+  trackSync();
 }
 function musicCountIn(sec){
   if(!AC) return;
@@ -802,6 +948,12 @@ function musicFinish(won){
   if(!AC) return;
   const t=AC.currentTime+.05, beat=60/MUS.bpm;
   musicMode('idle');
+  if(SAMPLED){
+    trackStopAll(.45);
+    TRK.want=null;
+    trackStart(won?'victory':'defeat',.9,false);
+    return;                       // the recorded cue is the whole ending
+  }
   if(won){
     braam(t,38,1.5,.5);
     /* picardy third — the flock earns a major chord */
@@ -836,6 +988,11 @@ function musicUpdate(dt){
   MUS.bpm=MUS.mode==='menu'?96:124+MUS.intensity*24;   // the air wants room
 
   const I=MUS.intensity, T=AC.currentTime, k=.5;
+  /* the recorded intensity stem rides the same curve the synth brass did */
+  if(SAMPLED&&TRK.on.battlehi)
+    TRK.on.battlehi.g.gain.setTargetAtTime(Math.max(.0001,clamp((I-.30)/.42,0,1)*.85),T,1.2);
+  if(SAMPLED&&TRK.bus)
+    TRK.bus.gain.setTargetAtTime(live?1:.0001,T,.4);
   const set=(g,v)=>g.gain.setTargetAtTime(Math.max(.0001,v),T,k);
   set(MUS.g.bass ,clamp((I-.04)/.18,0,1));
   set(MUS.g.brass,clamp((I-.26)/.26,0,1)*.95);
@@ -906,14 +1063,21 @@ function renderAgents(){
     _v.set(A.x[i],y,A.z[i]); _s.set(1,1,1);
     _m.compose(_v,_q,_s);
 
-    const ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
-    const c=Math.cos(ang), s2=Math.sin(ang), py=kit.y, pz=kit.z;
-    _mL.set(1,0,0,0,
-            0,c,-s2, py-c*py+s2*pz,
-            0,s2, c, pz-s2*py-c*pz,
-            0,0,0,1);
-    _mF.multiplyMatrices(_m,_mL);
-    sq.push(A.vr[i],_m,_mF);
+    /* The limb transform is a matrix build plus a multiply for every agent,
+       every frame. In a mob you cannot resolve a chicken's legs anyway, so
+       above the top detail tier the limbs simply ride the body. */
+    if(DETAIL>=2){
+      sq.push(A.vr[i],_m,_m);
+    }else{
+      const ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
+      const c=Math.cos(ang), s2=Math.sin(ang), py=kit.y, pz=kit.z;
+      _mL.set(1,0,0,0,
+              0,c,-s2, py-c*py+s2*pz,
+              0,s2, c, pz-s2*py-c*pz,
+              0,0,0,1);
+      _mF.multiplyMatrices(_m,_mL);
+      sq.push(A.vr[i],_m,_mF);
+    }
 
     if(sN<6000){
       const sc=u.rad*(bird?0.46:0.55)*(st===2?0.8:1)*(A.fy[i]>0.4?0.6:1);
