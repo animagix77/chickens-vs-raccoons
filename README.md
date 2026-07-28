@@ -22,6 +22,8 @@ Set a matchup — up to 4000 birds against 500 raccoons, on an open field in day
 
 **Detail tiers.** Every animal is built from five primitives, so their segment counts are the entire polygon budget. Past 650 units the tier drops, past 1500 it drops again, and above that the limbs stop being transformed separately since you cannot resolve a chicken's legs in a mob anyway. Measured: 5.86M triangles down to 3.78M at 1100 units, and 10.56M down to 4.56M at 2200. The instanced meshes are deliberately `frustumCulled=false`, which means every unit is drawn every frame whether or not it's on screen — that's what makes polygon count the highest-leverage knob in the renderer.
 
+**Hawks are hawks now.** The hawk kit used to be the chicken builder with a smaller comb, and no unit in the game had `aa` — meaning nothing on the ground could target a flier, so hawks were literally unkillable. They now have a raptor model and a soar cycle: high and circling they can't be touched and can't attack, then they stoop, hunt along the ground, and climb out. Reach into the sky is height-dependent rather than absolute, so anything low enough to bite is low enough to be bitten. Measured over 22 seconds: they spend about a fifth of their time below the line, and 11 of 12 died to hens.
+
 **Everything has a voice.** Twenty animals, each with three: what it says charging onto the field, what it says when something connects and it lives, and what it says unprompted mid-fight. A dog barks constantly, a bear roars every few seconds, a hen only ever reacts. All of it is synthesized — a buzzy source at the animal's pitch pushed through parallel bandpass resonators standing in for a throat, where the difference between a goat and a donkey is mostly vibrato rate and where those resonances sit. Two separate voice budgets keep a thousand dying birds from becoming white noise, and an audibility floor stops a death sixty metres away from spending budget a nearer one should get.
 
 **Call it before the countdown.** Pick a side on the matchup card. It locks when the countdown hits zero, and the verdict tells you whether you were right and how you're doing across the session. Most people are confident and wrong, which is the entire appeal.
@@ -55,6 +57,7 @@ The headline matchup is genuinely balanced on a knife edge:
 |---|---|---|
 | 850 roosters v 100 raccoons | 0 of 5 | wiped out, ~50 raccoons still standing |
 | **1000 roosters v 100 raccoons** | **6 of 13** | ~32s, ~46 birds left |
+| Max chaos (2500 roosters + the farm v 300 raccoons, 30 foxes, 20 coyotes, 40 possums, 20 hawks, a bear) | 7 of 7 | ~37s |
 | 1200 roosters v 100 raccoons | 5 of 5 | ~560 birds walk away |
 
 Hens are not roosters. A thousand of them lose to a hundred raccoons every time, and the raccoons take **zero** casualties doing it. In the night coop, 1200 hens against 60 raccoons is the same story.
@@ -79,6 +82,8 @@ The durability numbers are now grounded too, which they weren't at first. Health
 The first pass got this badly wrong in a way worth recording. A 50kg goat had less health than a 7kg raccoon. A 700kg bull had less than a farm dog and swung for less damage than its target had health, so it could stand in a crowd of raccoons for ten seconds and kill none of them. Fixing it meant halving every predator's health and halving the three flock birds' damage together, which leaves flock-versus-raccoon exactly where it was — the answers above are unchanged — while doubling what a bull or a donkey is worth.
 
 The swing was the other half of the bear problem, and it was a bug rather than a balance choice. Cleave scanned a fixed three-by-three block of the spatial hash — about 3.6 metres — while the bear's reach was 4.6, so most of its arc was silently ignored and the largest animal on the field connected with almost nothing. The scan is now sized from the actual radius.
+
+Max chaos is the clearest illustration of why farms keep guardian animals at all. It used to be a slaughter, and the reason was structural rather than balance: the predator list spawned at the whistle while every ally sat behind the war chest waiting to be bought, so only one side ever got reinforcements. The farm turns out now, at the size a real farm actually is — forty guinea fowl and one bull, not the reverse, with guardian llamas and donkeys in pairs because that is how they are kept. That handful of large animals swings it completely, which is the entire argument for owning them.
 
 What is *not* realistic is speed and scale. The real raccoon-to-chicken speed ratio is about 1.7×; the sim uses 1.06×, because a fight where one side simply outruns the other isn't worth watching. And a real bear would never be brought down by any number of chickens.
 

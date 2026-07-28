@@ -866,6 +866,59 @@ function buildBird(o){
   return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s)};
 }
 
+/* A hawk is not a chicken with a small comb. It reads as a raptor because of
+   proportion, not detail: one long straight wing line, a body that tapers to
+   a fanned tail, a head that sits forward instead of upright, and no comb or
+   wattle at all. Wings go in the flap group so the existing limb animation
+   beats them; when the bird is soaring the sim holds that animation still and
+   the wings simply lock out flat. */
+function buildHawk(o){
+  const F=o.feather, W=o.wingC||o.feather, T=o.tail, B=o.beak||'#e8b022', K='#131118';
+  const s=o.scale;
+  const core=[
+    // body: a tapered wedge, nose down
+    P(G.sph,F, 0,.50,.02, -.18,0,0, .105,.115,.235),
+    P(G.sph,F, 0,.535,-.14, -.10,0,0, .085,.088,.145),
+    // shoulders, where the wings hinge
+    P(G.sph,W, .10,.545,.05, 0,0,-.25, .062,.070,.115),
+    P(G.sph,W,-.10,.545,.05, 0,0, .25, .062,.070,.115),
+    // head pushed forward, low and level — the raptor signature
+    P(G.sph,o.hood||F, 0,.565,.235, 0,0,0, .078,.076,.082),
+    // hooked beak: a short cone plus a down-turned tip
+    P(G.cone,B, 0,.555,.315, 1.42,0,0, .034,.075,.034),
+    P(G.cone,B, 0,.532,.335, 2.05,0,0, .026,.045,.026),
+    // eyes, set forward for binocular vision
+    P(G.sphLo,'#f6c542', .050,.585,.283, 0,0,0, .028,.028,.022),
+    P(G.sphLo,'#f6c542',-.050,.585,.283, 0,0,0, .028,.028,.022),
+    P(G.sphLo,K, .058,.586,.300, 0,0,0, .015,.015,.012),
+    P(G.sphLo,K,-.058,.586,.300, 0,0,0, .015,.015,.012),
+    // legs tucked back under the body, talons forward
+    P(G.cyl,B, .058,.395,-.02, .55,0,0, .017,.135,.017),
+    P(G.cyl,B,-.058,.395,-.02, .55,0,0, .017,.135,.017),
+    P(G.cone,K, .058,.330,.045, 2.5,0,0, .020,.070,.020),
+    P(G.cone,K,-.058,.330,.045, 2.5,0,0, .020,.070,.020)
+  ];
+  const flap=[
+    // primaries: long, straight, swept slightly back
+    P(G.sph,W, .40,.555,-.02, 0,-.16,-.06, .245,.030,.115),
+    P(G.sph,W,-.40,.555,-.02, 0, .16, .06, .245,.030,.115),
+    // inner wing, thicker where it meets the body
+    P(G.sph,F, .195,.552,.015, 0,-.10,-.10, .105,.042,.135),
+    P(G.sph,F,-.195,.552,.015, 0, .10, .10, .105,.042,.135),
+    // wingtip feathers splayed like fingers
+    P(G.cone,T, .615,.552,-.055, -1.50,-.30,0, .052,.155,.026),
+    P(G.cone,T,-.615,.552,-.055, -1.50, .30,0, .052,.155,.026),
+    // fanned tail
+    P(G.cone,T, 0,.515,-.245, -1.42,0,0, .155,.300,.036),
+    P(G.cone,T, .075,.515,-.235, -1.46,0,.20, .085,.255,.030),
+    P(G.cone,T,-.075,.515,-.235, -1.46,0,-.20,.085,.255,.030)
+  ];
+  const gc=mergeAll(core), gf=mergeAll(flap);
+  gc.scale(s,s,s); gf.scale(s,s,s);
+  /* hinge at the shoulders, so the beat pivots the whole wing */
+  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.55*s,.02*s)};
+}
+
 /* ---------- the raccoon ---------- */
 function buildCoon(o){
   const GY=o.gy, DK=o.dk, LT=o.lt, K='#131118';
@@ -1174,7 +1227,7 @@ const UNITS=[
 {k:'coyote',   team:1, voice:'howl', hurtv:'growl', cry:['howl',.16], label:'Coyotes',    hp:390, dmg:44,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
   build:'quad',kit:'coyote', pack:1, blurb:'Never arrives alone.'},
 {k:'hawk',     team:1, voice:'screech', hurtv:'screech', cry:['screech',.14], label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
-  build:'bird',kit:'hawk', fly:2.6, blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
+  build:'bird',kit:'hawk', fly:2.6, soar:[7.2,0.85,8.5,2.6], blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
 {k:'bear',     team:1, voice:'roar', hurtv:'huff', cry:['roar',.26], label:'Bear',       hp:11000,dmg:420,rate:1.15,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
   build:'quad',kit:'bear', shove:6.0, boss:1, sweep:[6.4,16,19,9.0], blurb:'This is no longer a raccoon problem.'}
 ];
@@ -1194,8 +1247,9 @@ const KITS={
                  {feather:'#5a5f52',wingC:'#6a6f60',tail:'#3f4438',red:'#1a1a1a',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.52,spur:0}].map(buildBird),
   turkey:   ()=>[{feather:'#3a2f26',wingC:'#4a3c30',tail:'#5a4a38',red:'#d0403a',comb:1.7,tailUp:.05,tailW:2.0,tailL:1.5,scale:1.45,spur:0},
                  {feather:'#2b241d',wingC:'#3a3128',tail:'#4a3e30',red:'#c8382f',comb:1.8,tailUp:.05,tailW:2.1,tailL:1.55,scale:1.48,spur:0}].map(buildBird),
-  hawk:     ()=>[{feather:'#6b533a',wingC:'#8a6c48',tail:'#4a3a28',red:'#e8b022',comb:.1,tailUp:.55,tailW:1.4,tailL:.9,scale:1.05,spur:1},
-                 {feather:'#514436',wingC:'#6f5c46',tail:'#3c3226',red:'#e8b022',comb:.1,tailUp:.55,tailW:1.4,tailL:.9,scale:1.02,spur:1}].map(buildBird),
+  /* red-tailed and a darker morph */
+  hawk:     ()=>[{feather:'#6b533a',wingC:'#7d6244',tail:'#a8482a',hood:'#5a4632',beak:'#e8b022',scale:1.15},
+                 {feather:'#4a3d30',wingC:'#5c4d3c',tail:'#7a4030',hood:'#3a3126',beak:'#e0a820',scale:1.10}].map(buildHawk),
 
   cat:   ()=>[{body:'#3b3a40',dark:'#2a292e',legs:'#33323a',muzzle:'#c9c4bc',ear:'prick',tail:'bush',tailC:'#2a292e',
                len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:1.0,eye:'#bfe36a'},
@@ -2042,7 +2096,8 @@ const A={
      did it, so the landing can be credited to them */
   vy:new Float32Array(MAXA), tum:new Float32Array(MAXA),
   spin:new Float32Array(MAXA), lby:new Int32Array(MAXA),
-  vt:new Float32Array(MAXA)         // when this one last used its voice
+  vt:new Float32Array(MAXA),        // when this one last used its voice
+  cyc:new Float32Array(MAXA)        // fliers: where they are in the soar cycle
 };
 let N=0;
 let aliveA=0, aliveB=0, initA=0, initB=0, panicCount=0;
@@ -2239,6 +2294,7 @@ function addAgent(x,z,kindIdx,vr){
   A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
   A.vy[i]=0; A.tum[i]=0; A.spin[i]=0; A.lby[i]=-1; A.vt[i]=-9;
+  A.cyc[i]=SR()*9;                  // stagger them so they don't dive as one
   return i;
 }
 
@@ -2311,11 +2367,15 @@ function stepSim(dt){
     const dimmed=(!isAlly&&CMD.light>0)?1:0;
     A.cd[i]-=dt*(hasted?1.35:1)*(dimmed?0.65:1);
     A.hit[i]=Math.max(0,A.hit[i]-dt);
-    if(mine.fly) A.fy[i]=mine.fly+Math.sin(BATTLE.t*2.2+i)*0.35;
+    const wasHigh=A.fy[i]>SKY_LINE;
+    const diving=mine.fly?flierStep(i,mine,dt):false;
+    if(mine.soar&&wasHigh&&A.fy[i]<=SKY_LINE) sfx('stoop',A.x[i],A.z[i],'cry');
+    /* high and circling: no target, no attack, and nothing can touch it */
+    if(mine.fly&&!diving&&A.fy[i]>SKY_LINE){ A.tgt[i]=-1; A.cd[i]=Math.max(A.cd[i],.25); }
 
     /* ---------- retarget ---------- */
     let tg=A.tgt[i];
-    if(tg>=0 && (A.st[tg]===2 || A.team[tg]===A.team[i] || (UNITS[A.kind[tg]].fly && !mine.aa))) tg=-1;
+    if(tg>=0 && (A.st[tg]===2 || A.team[tg]===A.team[i] || outOfReach(tg,mine))) tg=-1;
     if(tg<0 || ((i+((BATTLE.t*20)|0))&15)===0){
       let best=-1,bd=1e9;
       const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
@@ -2329,7 +2389,7 @@ function stepSim(dt){
           for(let k=cCount[c];k<cCount[c+1];k++){
             const j=cItems[k];
             if(A.team[j]===A.team[i]||A.st[j]===2) continue;
-            if(UNITS[A.kind[j]].fly && !mine.aa) continue;   // can't reach the sky
+            if(outOfReach(j,mine)) continue;                // still out of reach
             const d=(A.x[j]-A.x[i])**2+(A.z[j]-A.z[i])**2;
             if(d<bd){bd=d;best=j;}
           }
@@ -2521,7 +2581,7 @@ function attack(i,tg,mine,dist){
       for(let k=cCount[c];k<cCount[c+1] && extra>0;k++){
         const j=cItems[k];
         if(j===tg||A.st[j]===2||A.team[j]===A.team[i]) continue;
-        if(UNITS[A.kind[j]].fly&&!mine.aa) continue;
+        if(outOfReach(j,mine)) continue;
         const ddx=A.x[j]-A.x[i], ddz=A.z[j]-A.z[i];
         if(ddx*ddx+ddz*ddz<cr2){
           hurt(j,dmg*(sw?0.72:0.62),i,false);
@@ -2547,6 +2607,8 @@ function attack(i,tg,mine,dist){
   }
   if(SR()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
   sfx(crit?'spur':(mine.build==='bird'?'peck':'slash'), A.x[tg], A.z[tg]);
+  if(mine.sweep&&SR()<0.5) sfx('bonecrack',A.x[tg],A.z[tg]);
+  else if(mine.dmg>200&&SR()<0.25) sfx('bonecrack',A.x[tg],A.z[tg]);
 }
 
 /* A heavy enough swing doesn't push a chicken, it throws it. Force is divided
@@ -2566,6 +2628,7 @@ function launch(j,dx,dz,force,up,by){
   A.spin[j]=srnd(-11,11); A.tum[j]=0;
   A.lby[j]=by; A.hit[j]=0.3;
   spawnFeathers(A.x[j],0.75,A.z[j],u.build==='bird'?4:2,1.9);
+  if(u.build==='bird'&&SR()<0.55) sfx('wingbeat',A.x[j],A.z[j],'cry');
 }
 /* returns true when the agent is still in the air and should be left alone */
 function airborne(i,dt){
@@ -2584,6 +2647,7 @@ function airborne(i,dt){
     A.fy[i]=0; A.vy[i]=0; A.tum[i]=0; A.spin[i]=0;
     A.vx[i]*=0.12; A.vz[i]*=0.12;
     spawnPuff(A.x[i],0.12,A.z[i],0.30);
+    if(speed>6) sfx('landthud',A.x[i],A.z[i]);
     if(A.st[i]!==2 && speed>7){
       const by=A.lby[i]>=0?A.lby[i]:i;
       hurt(i, A.hpMax[i]*clamp((speed-7)/16,0,0.55), by, false);
@@ -2594,6 +2658,35 @@ function airborne(i,dt){
   return true;
 }
 
+/* A hawk that never comes down is not a threat, it is weather. The soar
+   cycle gives the flock a window: high and circling it cannot be touched and
+   cannot attack, then it drops, kills, and climbs out. Reach into the sky is
+   height-dependent rather than absolute, so anything low enough to bite is
+   low enough to be bitten. */
+const SKY_LINE=1.7;
+function outOfReach(j,mine){
+  const u=UNITS[A.kind[j]];
+  return u.fly && !mine.aa && A.fy[j]>SKY_LINE;
+}
+function flierStep(i,mine,dt){
+  const so=mine.soar;
+  if(!so) { A.fy[i]=mine.fly+Math.sin(BATTLE.t*2.2+i)*0.35; return false; }
+  const [cruise,strike,period,dive]=so;
+  A.cyc[i]=(A.cyc[i]+dt)%period;
+  const t=A.cyc[i];
+  let want, diving=false;
+  if(t<dive*0.45){                      // stoop: fall out of the sky
+    want=lerp(cruise,strike,clamp(t/(dive*0.45),0,1)); diving=true;
+  }else if(t<dive){                     // level out and hunt along the ground
+    want=strike; diving=true;
+  }else if(t<dive+1.5){                 // climb back out
+    want=lerp(strike,cruise,clamp((t-dive)/1.5,0,1));
+  }else{                                // circle, untouchable, biding
+    want=cruise+Math.sin(BATTLE.t*1.6+i)*0.45;
+  }
+  A.fy[i]+=(want-A.fy[i])*Math.min(1,dt*3.4);
+  return diving;
+}
 function shove(j,dx,dz,f){
   if(UNITS[A.kind[j]].boss) return;
   const l=Math.hypot(dx,dz)||1;
@@ -2611,7 +2704,10 @@ function hurt(j,dmg,by,crit){
        one under sustained attack doesn't machine-gun, and pulled from its own
        small budget so the whole flock can't drown everything else. */
     const uh=UNITS[A.kind[j]];
-    if(BATTLE.t-A.vt[j]>srnd(.75,1.5) && SR()<(uh.build==='bird'?.55:.30)){
+    /* Birds are the joke, so they get a much shorter leash than anything
+       else — a coop under attack should be a wall of indignant chicken. */
+    if(BATTLE.t-A.vt[j]>(uh.build==='bird'?srnd(.30,.70):srnd(.75,1.5))
+       && SR()<(uh.build==='bird'?.85:.30)){
       A.vt[j]=BATTLE.t;
       sfx(uh.hurtv||(uh.build==='bird'?'bawk':'chitter'),A.x[j],A.z[j],'cry');
     }
@@ -3011,6 +3107,50 @@ const VOX={
     for(let i=0;i<2+((Math.random()*2)|0);i++)
       nz(d,t+i*rnd(.13,.19),.09,'lowpass',rnd(380,620),0,.20*v,rnd(.5,.8));
   },
+
+  /* ---------- more of the barnyard ---------- */
+  wingbeat(d,v){ const t=AC.currentTime;      // heavy, close, panicked
+    for(let i=0;i<4;i++){
+      const tt=t+i*rnd(.075,.115);
+      nz(d,tt,.07,'lowpass',rnd(380,760),0,.19*v,rnd(.55,.95));
+      nz(d,tt+.018,.04,'bandpass',rnd(1200,2100),1.2,.07*v,1);
+    }
+  },
+  stoop(d,v){ const t=AC.currentTime;         // a raptor falling out of the sky
+    const f=AC.createBiquadFilter(); f.type='bandpass'; f.Q.value=1.5;
+    f.frequency.setValueAtTime(600,t);
+    f.frequency.exponentialRampToValueAtTime(3600,t+.42);
+    const src=AC.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    const g=env(d,t,.10,.44,.22*v);
+    src.connect(f); f.connect(g); src.start(t); src.stop(t+.55);
+  },
+  scuffle(d,v){ const t=AC.currentTime;       // bodies and dirt, the crowd sound
+    for(let i=0;i<3;i++)
+      nz(d,t+i*rnd(.04,.09),.06,'bandpass',rnd(500,1400),.9,.11*v,rnd(.7,1.3));
+  },
+  feathers(d,v){ const t=AC.currentTime;      // a burst coming apart
+    for(let i=0;i<5;i++)
+      nz(d,t+i*rnd(.02,.055),.045,'highpass',rnd(2600,5200),0,.075*v,rnd(.8,1.5));
+  },
+  bonecrack(d,v){ const t=AC.currentTime;     // the big animals connecting
+    nz(d,t,.035,'bandpass',rnd(900,1600),5.5,.26*v,rnd(.9,1.2));
+    const o=AC.createOscillator(); o.type='triangle';
+    o.frequency.setValueAtTime(rnd(180,260),t);
+    o.frequency.exponentialRampToValueAtTime(60,t+.09);
+    o.connect(env(d,t,.002,.10,.20*v)); o.start(t); o.stop(t+.16);
+  },
+  dirt(d,v){ nz(d,AC.currentTime,.13,'lowpass',rnd(240,420),0,.15*v,rnd(.6,1)); },
+  landthud(d,v){ const t=AC.currentTime;      // a thrown bird arriving
+    VOX.thud(d,v*1.15,t);
+    VOX.feathers(d,v*.8);
+    nz(d,t+.01,.09,'lowpass',rnd(300,520),0,.13*v,.8);
+  },
+  yelp(d,v){ vox(d,AC.currentTime,{f0:rnd(430,720),dur:.16,vol:.24*v,
+    pitch:[[.1,1.8],[1,.5]], noise:.16, noiseF:2800,
+    form:[[rnd(1000,1350),4,1],[rnd(2400,2900),6,.6]]}); },
+  warble(d,v){ vox(d,AC.currentTime,{f0:rnd(520,760),dur:rnd(.30,.48),vol:.20*v,
+    pitch:[[.3,1.25],[.7,.9],[1,1.1]], vib:[rnd(9,15),rnd(40,90)], noise:.07,
+    form:[[1250,5,1],[2700,7,.5]]}); },
   screech(d,v){ const t=AC.currentTime;              // raptor
     vox(d,t,{f0:rnd(1100,1650),dur:rnd(.45,.65),vol:.26*v, wave:'sawtooth',
       glide:.62, pitch:[[.05,1.35],[.3,1.1],[1,.5]], vib:[rnd(30,48),rnd(80,170)],
@@ -3280,7 +3420,7 @@ function audioUpdate(dt){
   musicUpdate(dt);
   recentKills*=Math.exp(-dt*1.6);
   sfxTokens=Math.min(9,sfxTokens+dt*20);
-  voxTokens=Math.min(6,voxTokens+dt*7);
+  voxTokens=Math.min(9,voxTokens+dt*12);
   master.gain.setTargetAtTime(soundOn?0.85:0.0001, AC.currentTime, 0.25);
   if(!soundOn) return;
 
@@ -3298,8 +3438,10 @@ function audioUpdate(dt){
     const i=(Math.random()*N)|0;
     if(A.st[i]!==2){
       const bird=A.team[i]===0;
-      const k=bird ? (A.st[i]===1 ? (Math.random()<.45?'cackle':'squawk') : (Math.random()<.82?'buk':'squawk'))
-                   : (Math.random()<.55?'chitter':(Math.random()<.6?'growl':'hiss'));
+      const r=Math.random();
+      const k=bird ? (A.st[i]===1 ? (r<.34?'cackle':r<.62?'squawk':r<.82?'bawk':'wingbeat')
+                                  : (r<.55?'buk':r<.74?'squawk':r<.88?'warble':'scuffle'))
+                   : (r<.42?'chitter':r<.62?'growl':r<.78?'hiss':r<.9?'yelp':'scuffle');
       sfx(k,A.x[i],A.z[i],true);
     }
   }
@@ -3703,6 +3845,14 @@ function renderAgents(){
       pitch=-clamp(sp*0.045,0,0.26)+Math.sin(A.ph[i]*2)*(bird?0.028:0.02);
       if(A.hit[i]>0){ roll=Math.sin(A.hit[i]*70)*0.28; pitch+=0.12; }
       amp=st===1?(bird?0.62:0.40):(bird?0.24:0.16); fr=st===1?11:5.2;
+      /* A soaring raptor holds its wings still and banks; it only beats them
+         to climb or when it is about to hit something. */
+      if(u.soar){
+        const high=A.fy[i]>1.7;
+        amp=high?0.03:0.55; fr=high?1.2:13;
+        roll+=Math.sin(BATTLE.t*0.9+i)*(high?0.34:0.12);
+        pitch+=high?-0.05:0.30;                    // nose down in the stoop
+      }
     }
 
     const yaw=A.yaw[i]+(st===1?Math.sin(A.ph[i]*3.1)*0.28:0);
@@ -3904,7 +4054,7 @@ const LABEL=(()=>{ const m={}; UNITS.forEach(u=>m[u.k]=u.label); return m; })();
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},seed:0};
+let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
 
 /* ============================================================
@@ -3932,6 +4082,7 @@ function fightURL(){
   return location.origin+location.pathname+'?'+encodeFight();
 }
 function decodeFight(){
+  CFG.allies={};                     // a link never carries a preset's allies
   const q=new URLSearchParams(location.search);
   if(!q.has('s')&&!q.has('b')) return false;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
@@ -3953,6 +4104,8 @@ function pushFightURL(){
 function rosterList(){
   const L=[{k:CFG.kind,n:CFG.birds},{k:'coon',n:CFG.coons}];
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
+  /* presets can field the whole farm at the whistle, not just the flock */
+  for(const k in CFG.allies) if(CFG.allies[k]>0) L.push({k,n:CFG.allies[k]});
   return L;
 }
 
@@ -4330,12 +4483,22 @@ const PRESETS={
   classic :{birds:1000,coons:100,kind:'rooster', arena:'field',foes:{}},
   massacre:{birds:1200,coons:60, kind:'hen',     arena:'coop', foes:{possum:20}},
   even    :{birds:485, coons:100,kind:'gamecock',arena:'field',foes:{fox:8,coyote:4}},
+  /* Max chaos was a slaughter because only one side got reinforcements: the
+     predator list spawned at the whistle while every ally sat behind the war
+     chest waiting to be bought. The farm turns out now — but at the size a
+     real farm actually is, not at whatever number made the fight even. You
+     keep forty guinea fowl and one bull, not the reverse, and guardian llamas
+     and donkeys are kept singly or in pairs because that is how they work.
+     The result is measured, not chosen. */
   silly   :{birds:2500,coons:300,kind:'rooster', arena:'field',
-            foes:{fox:30,coyote:20,possum:40,hawk:20,bear:1}}
+            foes:{fox:30,coyote:20,possum:40,hawk:20,bear:1},
+            allies:{guinea:40,goose:20,turkey:25,cat:5,capybara:4,goat:12,
+                    pig:10,llama:2,donkey:2,dog:2,bull:1}}
 };
 document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',()=>{
   const P=PRESETS[b.dataset.preset];
   EXTRA_B.forEach(k=>CFG.foes[k]=P.foes[k]||0);
+  CFG.allies=P.allies||{};
   CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
   syncSliders(); startBattle();
 }));
