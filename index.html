@@ -107,6 +107,58 @@
   body.short #cardBtns{margin-top:18px}
   body.short #cardBtns button{padding:10px 16px;font-size:10.5px}
 
+  /* ---------- the story ---------- */
+  #story{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:8vmin 7vw;
+    background:radial-gradient(60% 60% at 50% 45%,rgba(6,5,9,.86),rgba(4,3,6,.97));
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    opacity:0;transition:opacity .6s}
+  body.story #story{display:flex}
+  body.story.storyIn #story{opacity:1}
+  #story .nm{font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(30px,6.6vmin,58px);color:#f0e2c0;letter-spacing:.01em;margin-bottom:26px}
+  #story p{max-width:30em;margin:0 0 15px;font-size:clamp(13px,2.1vmin,16.5px);
+    line-height:1.72;color:#f4ead6be;letter-spacing:.012em}
+  #story p.last{color:#f4ead6;margin-top:9px}
+  #story .rule{width:52px;height:1px;background:#ffb02055;margin:22px 0 26px}
+  #storyGo{margin-top:12px;padding:14px 30px;font-size:11.5px;font-weight:800;
+    letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
+    font-family:inherit;border:none;color:#fff;
+    background:linear-gradient(180deg,#ff6a3d,#d8452f);
+    box-shadow:0 4px 0 #8c2418,0 10px 24px #d8452f40;transition:.15s}
+  #storyGo:hover{filter:brightness(1.08)}
+  #storyGo:active{transform:translateY(2px);box-shadow:0 2px 0 #8c2418}
+  #storySkip{margin-top:16px;background:none;border:none;cursor:pointer;font-family:inherit;
+    font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#f4ead657}
+  #storySkip:hover{color:#f4ead6a8}
+  .storyLink{display:block;width:100%;margin-top:9px;background:none;border:none;cursor:pointer;
+    font-family:inherit;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+    color:#f4ead652;padding:2px 0}
+  .storyLink:hover{color:#f4ead6a0}
+
+  /* ---------- call the winner ---------- */
+  #callBar{display:none;flex-direction:column;align-items:center;gap:9px;margin-top:24px;
+    pointer-events:auto}
+  #card.callable #callBar{display:flex}
+  #callBar .ck{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:#f4ead67a}
+  #callBtns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+  .callb{padding:11px 20px;font-size:11px;font-weight:800;letter-spacing:.13em;
+    text-transform:uppercase;border-radius:10px;cursor:pointer;font-family:inherit;
+    border:1px solid #ffffff26;background:rgba(16,13,22,.7);color:#f4ead6b0;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:.14s}
+  .callb:hover{background:rgba(38,33,50,.85);color:var(--paper)}
+  .callb[data-s="birds"].on{background:var(--hot);border-color:var(--hot);color:#1a1206}
+  .callb[data-s="coons"].on{background:var(--cool);border-color:var(--cool);color:#08131a}
+  #callBar.locked .callb{cursor:default;opacity:.5}
+  #callBar.locked .callb.on{opacity:1}
+  #callNote{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#f4ead65c}
+  #callScore{margin-top:14px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:700;display:none}
+  #card.result #callScore.on{display:block}
+  #callScore.hit{color:#7fd48a} #callScore.miss{color:#e0705c}
+  body.short #callBar{margin-top:14px;gap:6px}
+  body.short .callb{padding:9px 14px;font-size:10px}
+
   /* ---------- controls ---------- */
   #panel{position:absolute;z-index:12;left:16px;bottom:16px;width:296px;
     max-height:calc(100% - 120px);overflow-y:auto;
@@ -323,14 +375,35 @@
     <div id="count"></div>
     <div class="sub" id="cardSub"></div>
     <div id="cardTrib">for Eenie &amp; Moe</div>
+    <div id="callBar">
+      <div class="ck">Call it</div>
+      <div id="callBtns">
+        <button class="callb" data-s="birds">The flock</button>
+        <button class="callb" data-s="coons">The raccoons</button>
+      </div>
+      <div id="callNote">Locks when the countdown ends</div>
+    </div>
+    <div id="callScore"></div>
     <div id="cardBtns">
       <button id="again" class="prime">Run it back</button>
       <button id="setup">Change matchup</button>
+      <button id="share">Copy link</button>
     </div>
     <a class="coffee card" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
       <span>Buy me a coffee</span>
     </a>
+  </div>
+
+  <div id="story">
+    <div class="nm">Eenie &amp; Moe</div>
+    <p>A family of raccoons raided the coop in the middle of the night.</p>
+    <p class="last">Eenie and Moe didn't make it.</p>
+    <div class="rule"></div>
+    <p>So this is a simulator built to answer the question that comes after it:
+       how many chickens would it have taken?</p>
+    <button id="storyGo">Find out</button>
+    <button id="storySkip">Skip</button>
   </div>
 
   <div id="tools">
@@ -378,6 +451,7 @@
     <div class="hint">You call the farm in <em>during</em> the fight — the war chest fills
       while the birds hold the line.</div>
     <button id="go">Fight</button>
+    <button class="storyLink" id="storyOpen">Why this exists</button>
     <div class="mini">
       <button data-preset="classic">1000 v 100</button>
       <button data-preset="massacre">Massacre</button>
@@ -409,9 +483,41 @@
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b) => v<a?a:(v>b?b:v);
 const lerp  = (a,b,t) => a+(b-a)*t;
-const rnd   = (a,b) => a+Math.random()*(b-a);
-const pick  = a => a[(Math.random()*a.length)|0];
 const TAU   = Math.PI*2;
+
+/* ============================================================
+   TWO RANDOM STREAMS
+
+   A shared seed has to reproduce a fight exactly, on any machine, at any
+   frame rate. That only works if the numbers the simulation draws depend
+   on nothing but the simulation itself — so the draws are split in two.
+
+   SR() is the fight. It is advanced only inside the fixed-timestep sim
+   step, so after N steps the state is identical everywhere.
+
+   VR() is everything you merely look at: camera shake, blood spatter,
+   music, clouds. It is drawn a different number of times on a fast
+   machine than a slow one, which is exactly why it must never touch the
+   sim's stream.
+   ============================================================ */
+function mulberry(seed){
+  let a=seed>>>0;
+  return function(){
+    a=(a+0x6D2B79F5)|0;
+    let t=Math.imul(a^(a>>>15),1|a);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+let SR=mulberry((Math.random()*4294967296)>>>0);          // simulation
+const VR=mulberry((Math.random()*4294967296)>>>0);        // cosmetic
+function seedSim(n){ SR=mulberry(n>>>0); }
+/* cosmetic helpers — anything that changes only how the fight looks */
+const rnd   = (a,b) => a+VR()*(b-a);
+const pick  = a => a[(VR()*a.length)|0];
+/* simulation helpers — anything that changes who wins */
+const srnd  = (a,b) => a+SR()*(b-a);
+const spick = a => a[(SR()*a.length)|0];
 
 /* ---------- film grain (procedural, keeps file self-contained) ---------- */
 (function grain(){
@@ -804,48 +910,97 @@ function buildQuad(o){
    team 1 wants what's inside it. Roles matter more than numbers:
    line-holders soak, chargers knock things over, support buffs,
    heroes frighten, and one or two units break the rules entirely.
+
+   ---- how the health numbers were set ----
+   The flock and the raccoon are the fixed point: those four rows are the
+   original balance everything else was tuned against, and they are left
+   alone. Every other animal is derived from them.
+
+   Durability scales as mass^0.75 — the usual structural exponent, which
+   keeps a 700kg bull meaningfully tougher than a 3kg rooster without
+   making it 200x tougher — times a factor for what the animal actually
+   is. A raccoon is 7kg and has 545hp, which sets the scale at ~127 per
+   unit of mass^0.75 for a predator that hunts for a living. Prey mammals
+   get roughly half that: they have the mass but not the weapons.
+
+   This is what the old numbers got wrong. A 50kg goat had 260hp while a
+   7kg raccoon had 545, and a 700kg bull had less health than a farm dog.
+   Under the model a goat is 1050, a bull is 9500, and a black bear —
+   180kg of apex predator with a hide nothing on a farm can open — is
+   13500 rather than 6000. It should take a very long time to bring one
+   down with chickens, because it would.
+
+   Damage follows the same shape. The reference again is the raccoon: 27
+   damage over 7kg^0.75 is 6.28 per unit, times a factor for the weapon.
+   A donkey kick and a bull's horns are not "a bit more than a chicken
+   peck" — they are lethal to a 7kg animal in one or two connections, and
+   the numbers now say so. This was the other half of what was wrong: a
+   700kg bull was swinging for 90 against a target with 545 health, so it
+   could stand in a crowd of raccoons for ten seconds and kill none of them.
+
+   One more thing had to move. A 7kg raccoon carrying 545 health was the
+   real anomaly — it is why a 210kg donkey looked feeble against a dozen of
+   them. Halving every predator's health while halving the three flock
+   birds' damage leaves flock-versus-predator time-to-kill exactly where it
+   was, so the published answers still hold, but it doubles how much a bull
+   or a donkey is worth against them. That is the correction: the flock was
+   never mispriced against raccoons, the livestock was.
+
+   The headline matchup sits on a cliff, not a slope: at 1000 roosters
+   against 100 raccoons, 4.2 damage loses almost every time and 4.4 wins
+   almost every time. Mass battles compound small advantages, so the
+   coin-flip everyone quotes lives in a band about a tenth of a point wide.
+   Rooster damage is pinned at 4.3 for exactly that reason — nudge it and
+   the famous answer stops being interesting.
+
+   Masses used (kg): hen 2.5, rooster 3.5, guinea 1.3, goose 5.5,
+   turkey 8, cat 4.5, capybara 55, goat 50, pig 90, llama 160,
+   donkey 210, dog 50, bull 700, raccoon 7, possum 4, fox 5,
+   coyote 12, hawk 1.1, black bear 180.
    ============================================================ */
 const UNITS=[
 /* ---------------- the flock ---------------- */
-{k:'hen',      team:0, label:'Hens',       hp:42,  dmg:2.2, rate:1.05,reach:1.15,speed:3.3, accel:9,  nerve:0.26,cleave:1,rad:0.72,cost:1,
+{k:'hen',      team:0, label:'Hens',       hp:42,  dmg:1.1, rate:1.05,reach:1.15,speed:3.3, accel:9,  nerve:0.26,cleave:1,rad:0.72,cost:1,
   build:'bird',kit:'hen',   blurb:'No spurs. No plan. No idea.'},
-{k:'rooster',  team:0, label:'Roosters',   hp:70,  dmg:8.2, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
+{k:'rooster',  team:0, label:'Roosters',   hp:70,  dmg:4.3, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
   build:'bird',kit:'rooster',crit:[0.08,1.9], blurb:'Loud, territorial, armed at the ankle.'},
-{k:'gamecock', team:0, label:'Gamecocks',  hp:93,  dmg:11.5,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
+{k:'gamecock', team:0, label:'Gamecocks',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
   build:'bird',kit:'gamecock',crit:[0.17,2.4], blurb:'Bred for exactly one thing.'},
-{k:'guinea',   team:0, label:'Guinea fowl',hp:34,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
+{k:'guinea',   team:0, label:'Guinea fowl',hp:42,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
   build:'bird',kit:'guinea', rally:[6.5,0.55], blurb:'Useless in a fight. Screams before anyone else notices.'},
 {k:'goose',    team:0, label:'Geese',      hp:210, dmg:14,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
   build:'bird',kit:'goose', shove:1.5, blurb:'Genuinely wants to fight you. Always has.'},
-{k:'turkey',   team:0, label:'Turkeys',    hp:190, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
+{k:'turkey',   team:0, label:'Turkeys',    hp:240, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
   build:'bird',kit:'turkey', blurb:'Enormous. Slow. Weirdly confident.'},
-{k:'cat',      team:0, label:'Barn cats',  hp:90,  dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
+{k:'cat',      team:0, label:'Barn cats',  hp:235, dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
   build:'quad',kit:'cat', crit:[0.30,2.2], blurb:'Will help. Will not be thanked.'},
-{k:'goat',     team:0, label:'Goats',      hp:260, dmg:30,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
+{k:'capybara', team:0, label:'Capybaras', hp:1900,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
+  build:'quad',kit:'capybara', calm:[9.0,0.60], blurb:'Will not fight. Will not panic. Will not move.'},
+{k:'goat',     team:0, label:'Goats',      hp:1050,dmg:94,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
   build:'quad',kit:'goat', shove:3.4, blurb:'Arrives head-first. Only knows the one move.'},
-{k:'pig',      team:0, label:'Pigs',       hp:340, dmg:20,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
+{k:'pig',      team:0, label:'Pigs',       hp:1850,dmg:92,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
   build:'quad',kit:'pig', blurb:'Not a guardian animal. Simply large and hungry.'},
-{k:'llama',    team:0, label:'Llamas',     hp:380, dmg:26,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
+{k:'llama',    team:0, label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
   build:'quad',kit:'llama', ranged:1, blurb:'A real livestock guardian. Spits with intent.'},
-{k:'donkey',   team:0, label:'Donkeys',    hp:520, dmg:62,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
+{k:'donkey',   team:0, label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
   build:'quad',kit:'donkey', shove:3.0, blurb:'Farmers use these on purpose. Kicks like a truck.'},
-{k:'dog',      team:0, label:'Farm dogs',  hp:620, dmg:55,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
+{k:'dog',      team:0, label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
   build:'quad',kit:'dog', fear:9.0, blurb:'The reason most nights end quietly.'},
-{k:'bull',     team:0, label:'Bulls',      hp:900, dmg:90,  rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
+{k:'bull',     team:0, label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
   build:'quad',kit:'bull', shove:5.5, blurb:'A bad idea that works.'},
 
 /* ---------------- what comes out of the treeline ---------------- */
-{k:'coon',     team:1, label:'Raccoons',   hp:545, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
+{k:'coon',     team:1, label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
   build:'quad',kit:'coon', blurb:'Hands. Teeth. No respect for property lines.'},
-{k:'possum',   team:1, label:'Possums',    hp:260, dmg:18,  rate:0.90,reach:1.55,speed:3.4, accel:10, nerve:0.10,cleave:1,rad:1.00,cost:5,
+{k:'possum',   team:1, label:'Possums',    hp:115, dmg:18,  rate:0.90,reach:1.55,speed:3.4, accel:10, nerve:0.10,cleave:1,rad:1.00,cost:5,
   build:'quad',kit:'possum', playDead:1, blurb:'Dies immediately. Gets up again. Repeat.'},
-{k:'fox',      team:1, label:'Foxes',      hp:300, dmg:34,  rate:0.60,reach:1.60,speed:6.0, accel:19, nerve:0.70,cleave:1,rad:1.00,cost:12,
+{k:'fox',      team:1, label:'Foxes',      hp:180, dmg:32,  rate:0.60,reach:1.60,speed:6.0, accel:19, nerve:0.70,cleave:1,rad:1.00,cost:12,
   build:'quad',kit:'fox', crit:[0.20,2.0], blurb:'Takes one bird and leaves. Then comes back.'},
-{k:'coyote',   team:1, label:'Coyotes',    hp:480, dmg:38,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
+{k:'coyote',   team:1, label:'Coyotes',    hp:390, dmg:44,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
   build:'quad',kit:'coyote', pack:1, blurb:'Never arrives alone.'},
-{k:'hawk',     team:1, label:'Hawks',      hp:180, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
+{k:'hawk',     team:1, label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
   build:'bird',kit:'hawk', fly:2.6, blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
-{k:'bear',     team:1, label:'Bear',       hp:6000,dmg:180, rate:1.40,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:5,rad:2.40,cost:60,
+{k:'bear',     team:1, label:'Bear',       hp:11000,dmg:420,rate:1.40,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
   build:'quad',kit:'bear', shove:6.0, boss:1, blurb:'This is no longer a raccoon problem.'}
 ];
 const UI_=(()=>{ const m={}; UNITS.forEach((u,i)=>{u.i=i; m[u.k]=i;}); return m; })();
@@ -871,6 +1026,14 @@ const KITS={
                len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:1.0,eye:'#bfe36a'},
               {body:'#b8823f',dark:'#8a6030',legs:'#a5743a',muzzle:'#e8dcc4',ear:'prick',tail:'bush',tailC:'#8a6030',
                len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:.97,eye:'#e0c14a'}].map(buildQuad),
+  /* long, low, barrel-shaped, almost no legs, blunt square head — and no
+     tail at all, which is most of why a capybara reads as a capybara */
+  capybara:()=>[{body:'#7d5a36',dark:'#5a4026',legs:'#6a4a2c',muzzle:'#9c7c52',ear:'round',tail:'stub',
+                 tailC:'#5a4026',blunt:1,
+                 len:.54,high:.32,wide:.25,leg:.19,legR:.055,neck:.09,neckA:-.1,head:.16,snout:.15,scale:1.18,eye:'#3a2a18'},
+                {body:'#94693e',dark:'#6b4b2b',legs:'#7d5832',muzzle:'#b08c5e',ear:'round',tail:'stub',
+                 tailC:'#6b4b2b',blunt:1,
+                 len:.54,high:.32,wide:.25,leg:.19,legR:.055,neck:.09,neckA:-.1,head:.16,snout:.15,scale:1.15,eye:'#3a2a18'}].map(buildQuad),
   goat:  ()=>[{body:'#e6e0d2',dark:'#b8b0a0',legs:'#c9c2b2',muzzle:'#f2ece0',ear:'flop',tail:'stub',horn:'goat',
                len:.46,high:.38,wide:.19,leg:.34,legR:.042,neck:.22,head:.13,snout:.14,scale:1.05},
               {body:'#57493c',dark:'#3d332a',legs:'#4a3f34',muzzle:'#cbbfa8',ear:'flop',tail:'stub',horn:'goat',
@@ -955,10 +1118,15 @@ function buildArena(R,night){
   if(night){
     scene.background=null;
     scene.fog=new THREE.FogExp2(0,0.0055); scene.fog.color.setHex(0x0e1422).convertSRGBToLinear();
-    hemi.color.setHex(0x2c3a58); hemi.groundColor.setHex(0x181008); hemi.intensity=0.16;
-    sun.color.setHex(0x9dbaf0); sun.intensity=0.34; SUN_OFF.set(-34,62,-30);
-    rim.color.setHex(0x4a6fa0); rim.intensity=0.10;
-    bulb.intensity=26; bulb.distance=R*3.4; bulb.decay=1.6; bulb.position.set(0,R*0.26,0);
+    hemi.color.setHex(0x2a3a58); hemi.groundColor.setHex(0x1c1409); hemi.intensity=0.21;
+    sun.color.setHex(0x9db6e2); sun.intensity=0.34; SUN_OFF.set(-34,62,-30);
+    rim.color.setHex(0x486a9c); rim.intensity=0.13;
+    /* One bare bulb over a dirt floor. It was flooding the whole arena at 26
+       with a soft falloff, which is why night looked blown out rather than
+       lit — a quarter of the power with true inverse-square decay makes it
+       pool under the fixture and leave the edges to the moon. */
+    bulb.color.setHex(0xffc98a);
+    bulb.intensity=6.0; bulb.distance=R*2.8; bulb.decay=1.85; bulb.position.set(0,R*0.24,0);
     SKY_U.uSun.value.set(-0.34,0.62,-0.30).normalize();
   }else{
     scene.background=null;
@@ -1520,9 +1688,24 @@ function bakeEnv(night){
 }
 
 /* day / night dressing for the sky itself */
+/* The grade was tuned for daylight and then reused after dark, so the bulb
+   and the moon both punched straight through the bloom threshold. Night gets
+   its own: less exposure, a higher threshold so only the bulb itself blooms,
+   and a deeper vignette to keep the eye in the middle of the coop. */
+function setGrade(night){
+  if(typeof matComp==='undefined'||!matComp) return;
+  const u=matComp.uniforms;
+  u.uExposure.value = night?0.88:0.95;
+  u.uBloom.value    = night?0.22:0.30;
+  u.uVig.value      = night?0.44:0.40;
+  u.uSat.value      = night?0.97:1.10;   // the bulb goes orange fast; pull it back
+  u.uContrast.value = night?1.06:1.075;
+  if(typeof matBright!=='undefined'&&matBright) matBright.uniforms.uThresh.value = night?1.30:1.10;
+}
 function setSky(night){
   SKY_U.uNight.value=night?1:0;
   SKY_U.uCover.value=night?0.34:0.52;
+  setGrade(night);
   bakeEnv(night);
 }
 
@@ -1726,16 +1909,17 @@ const CMD_DEF=[
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
 const DEPLOY=[
-  {k:'guinea',n:8, cost:10},
-  {k:'goose', n:6, cost:14},
-  {k:'turkey',n:5, cost:12},
-  {k:'cat',   n:6, cost:12},
-  {k:'goat',  n:4, cost:15},
-  {k:'pig',   n:4, cost:14},
-  {k:'llama', n:3, cost:17},
-  {k:'donkey',n:3, cost:21},
-  {k:'bull',  n:1, cost:25},
-  {k:'dog',   n:2, cost:28}
+  {k:'guinea',  n:8, cost:8},
+  {k:'goose',   n:6, cost:12},
+  {k:'turkey',  n:5, cost:12},
+  {k:'cat',     n:6, cost:14},
+  {k:'capybara',n:2, cost:16},
+  {k:'goat',    n:3, cost:20},
+  {k:'pig',     n:2, cost:20},
+  {k:'llama',   n:2, cost:24},
+  {k:'donkey',  n:1, cost:26},
+  {k:'dog',     n:1, cost:28},
+  {k:'bull',    n:1, cost:44}
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
@@ -1748,8 +1932,8 @@ function deploy(d){
   if(!SQUADS[u.i]) return false;
   const base=Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
-    const a=base+rnd(-0.30,0.30), r=ARENA_R*rnd(0.86,0.95);
-    const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(Math.random()*KIT_PIV[u.i].length)|0);
+    const a=base+srnd(-0.30,0.30), r=ARENA_R*srnd(0.86,0.95);
+    const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*KIT_PIV[u.i].length)|0);
     A.yaw[j]=Math.atan2(-A.x[j],-A.z[j]);
     aliveA++; initA++;
     spawnPuff(A.x[j],0.2,A.z[j],0.3);
@@ -1764,8 +1948,8 @@ function cmdFire(k){
   if(k==='horn'){ CMD.horn=d.dur; sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
   if(k==='feed'){
-    CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+rnd(-4,4); CMD.feedZ=BATTLE.cz+rnd(-4,4);
-    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+rnd(-1.4,1.4),0.15,CMD.feedZ+rnd(-1.4,1.4),0.22);
+    CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+srnd(-4,4); CMD.feedZ=BATTLE.cz+srnd(-4,4);
+    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+srnd(-1.4,1.4),0.15,CMD.feedZ+srnd(-1.4,1.4),0.22);
     sfx('buk',CMD.feedX,CMD.feedZ);
   }
   CMD.cd[k]=d.cool||1e9;
@@ -1780,7 +1964,7 @@ function cmdStep(dt){
     CMD.ptAcc+=dt*PTS_RATE;
     while(CMD.ptAcc>=1){ CMD.ptAcc-=1; CMD.pts=Math.min(PTS_CAP,CMD.pts+1); }
   }
-  if(CMD.feedT>0 && Math.random()<dt*8) spawnPuff(CMD.feedX+rnd(-1,1),0.12,CMD.feedZ+rnd(-1,1),0.16);
+  if(CMD.feedT>0 && SR()<dt*8) spawnPuff(CMD.feedX+srnd(-1,1),0.12,CMD.feedZ+srnd(-1,1),0.16);
 }
 function cmdReset(){
   CMD.horn=CMD.light=CMD.feedT=0;
@@ -1832,15 +2016,22 @@ function spawnRoster(list,night){
     for(let i=0;i<row.n;i++){
       const t=row.n<2?0.5:i/(row.n-1);
       let a,r;
-      if(u.team===0){ a=lerp(-2.30,-0.86,t)+rnd(-.14,.14); r=lerp(R*0.28,R*0.88,Math.sqrt(Math.random())); }
-      else          { a=rnd(0.52,2.10);                      r=lerp(R*0.40,R*0.86,Math.sqrt(Math.random())); }
-      addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(Math.random()*kits.length)|0);
+      if(u.team===0){ a=lerp(-2.30,-0.86,t)+srnd(-.14,.14); r=lerp(R*0.28,R*0.88,Math.sqrt(SR())); }
+      else          { a=srnd(0.52,2.10);                      r=lerp(R*0.40,R*0.86,Math.sqrt(SR())); }
+      addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*kits.length)|0);
       if(u.team===0){ aliveA++; initA++; } else { aliveB++; initB++; }
     }
   }
-  for(let i=0;i<N;i++) A.yaw[i]=Math.atan2(-A.x[i],-A.z[i])+rnd(-.3,.3);
-  /* last fight's front-rank depth and contact point must not leak into this one,
-     or the opening shot lurches on its first frame */
+  for(let i=0;i<N;i++) A.yaw[i]=Math.atan2(-A.x[i],-A.z[i])+srnd(-.3,.3);
+  /* Nothing may survive from the previous fight. Anything left over shifts
+     when the morale tick lands, and because that tick draws from the seeded
+     stream, a stale timer is enough to make the same seed play out
+     differently the second time you run it. */
+  moraleTimer=0; recentKills=0; moraleMul=1;
+  BATTLE.totalKills=0; BATTLE.champ=-1; BATTLE.routed=0;
+  BATTLE.deathsWindow=0; BATTLE.windowT=0;
+  BATTLE.hotX=0; BATTLE.hotZ=0; BATTLE.hotN=0; BATTLE.hsx=0; BATTLE.hsz=0;
+  BATTLE.cx=0; BATTLE.cz=0;
   TC.lead[0]=TC.lead[1]=0;
   BATTLE.conSeen=0; BATTLE.conAge=9; BATTLE.conN=0;
   enemyCentroids();
@@ -1850,10 +2041,10 @@ function addAgent(x,z,kindIdx,vr){
   const u=UNITS[kindIdx], i=N++;
   if(i>=MAXA) { N=MAXA; return MAXA-1; }
   A.x[i]=x; A.z[i]=z; A.vx[i]=0; A.vz[i]=0;
-  A.hp[i]=A.hpMax[i]=u.hp*rnd(.9,1.12);
-  A.cd[i]=rnd(0,.5); A.tgt[i]=-1; A.team[i]=u.team; A.vr[i]=vr; A.kind[i]=kindIdx;
+  A.hp[i]=A.hpMax[i]=u.hp*srnd(.9,1.12);
+  A.cd[i]=srnd(0,.5); A.tgt[i]=-1; A.team[i]=u.team; A.vr[i]=vr; A.kind[i]=kindIdx;
   A.st[i]=0; A.kills[i]=0; A.name[i]=null;
-  A.ph[i]=Math.random()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
+  A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
   return i;
 }
@@ -1867,7 +2058,7 @@ const BATTLE={
   conX:0, conZ:0, conN:0, conAge:9, conSeen:0,
   champ:-1, totalKills:0, routed:0
 };
-let moraleMul=1, recentKills=0;
+let moraleMul=1, recentKills=0, moraleTimer=0;
 
 function centroidUpdate(){
   let sx=0,sz=0,n=0;
@@ -2049,7 +2240,9 @@ function stepSim(dt){
   centroidUpdate();
 }
 
-let moraleTimer=0;
+const CALM_MAX=24;
+const CALM_X=new Float32Array(CALM_MAX), CALM_Z=new Float32Array(CALM_MAX),
+      CALM_R=new Float32Array(CALM_MAX), CALM_S=new Float32Array(CALM_MAX);
 function moraleTick(){
   const fracA=initA?aliveA/initA:1, fracB=initB?aliveB/initB:1;
   const nightMul=NIGHT?2.35:1;
@@ -2062,6 +2255,15 @@ function moraleTick(){
   let rallied=CMD.feedT>0?0.35:0;
   for(let i=0;i<N;i++){ if(A.st[i]===2) continue;
     const u=UNITS[A.kind[i]]; if(u.rally) rallied=Math.max(rallied,u.rally[1]*0.35); }
+  /* capybaras don't fight, they just refuse to be worried, and birds standing
+     near one hold. A real herd works this way — the calm ones are the reason
+     the rest don't scatter. Radius-based, so where you drop it matters. */
+  let calmN=0;
+  for(let i=0;i<N;i++){ if(A.st[i]===2) continue;
+    const u=UNITS[A.kind[i]]; if(!u.calm) continue;
+    CALM_X[calmN]=A.x[i]; CALM_Z[calmN]=A.z[i];
+    CALM_R[calmN]=u.calm[0]*u.calm[0]; CALM_S[calmN]=u.calm[1];
+    if(++calmN>=CALM_MAX) break; }
 
   for(let i=0;i<N;i++){
     if(A.st[i]===2||A.st[i]===1) continue;
@@ -2072,10 +2274,17 @@ function moraleTick(){
     const pressure=(1-frac)*(isAlly?nightMul:1);
     const wounded=1-A.hp[i]/A.hpMax[i];
     const scared=isAlly?fearA:fearB;
-    let p=(1-clamp(u.nerve+(isAlly?rallied:0),0,1))*(pressure*0.85+wounded*0.5+scared)*0.42;
+    let steady=isAlly?rallied:0;
+    if(isAlly&&calmN){
+      for(let c=0;c<calmN;c++){
+        const dx=A.x[i]-CALM_X[c], dz=A.z[i]-CALM_Z[c];
+        if(dx*dx+dz*dz<CALM_R[c]){ steady=Math.max(steady,CALM_S[c]); break; }
+      }
+    }
+    let p=(1-clamp(u.nerve+steady,0,1))*(pressure*0.85+wounded*0.5+scared)*0.42;
     if(isAlly && aliveB>0 && aliveA/Math.max(1,aliveB)<3) p*=1.5;
-    if(Math.random()<p){ A.st[i]=1; A.panicT[i]=rnd(2.6,6.5); panicCount++;
-      if(isAlly&&Math.random()<0.05) sfx('cackle',A.x[i],A.z[i]); }
+    if(SR()<p){ A.st[i]=1; A.panicT[i]=srnd(2.6,6.5); panicCount++;
+      if(isAlly&&SR()<0.05) sfx('cackle',A.x[i],A.z[i]); }
   }
 }
 
@@ -2085,10 +2294,10 @@ function moraleTick(){
 function attack(i,tg,mine,dist){
   const wild=A.st[i]===1?1.28:1;
   const dimmed=(mine.team===1&&CMD.light>0)?0.55:1;
-  A.cd[i]=mine.rate*rnd(.82,1.2)*wild;
-  let dmg=mine.dmg*rnd(.8,1.25)/wild*dimmed*(CMD.horn>0&&mine.team===0?1.15:1);
+  A.cd[i]=mine.rate*srnd(.82,1.2)*wild;
+  let dmg=mine.dmg*srnd(.8,1.25)/wild*dimmed*(CMD.horn>0&&mine.team===0?1.15:1);
   let crit=false;
-  if(mine.crit && Math.random()<mine.crit[0]){ dmg*=mine.crit[1]; crit=true; }
+  if(mine.crit && SR()<mine.crit[0]){ dmg*=mine.crit[1]; crit=true; }
   if(mine.pack){                                   // coyotes hit harder in company
     let n=0; for(let k=cCount[cellOf(A.x[i],A.z[i])];k<cCount[cellOf(A.x[i],A.z[i])+1];k++){
       const j=cItems[k]; if(A.kind[j]===A.kind[i]&&j!==i) n++; }
@@ -2124,7 +2333,7 @@ function attack(i,tg,mine,dist){
   if(mine.ranged){                                  // the spit travels
     for(let s=1;s<=4;s++) spawnPuff(lerp(A.x[i],A.x[tg],s/5),1.0,lerp(A.z[i],A.z[tg],s/5),0.13);
   }
-  if(Math.random()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
+  if(SR()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
   sfx(crit?'spur':(mine.build==='bird'?'peck':'slash'), A.x[tg], A.z[tg]);
 }
 
@@ -2152,19 +2361,19 @@ function hurt(j,dmg,by,crit){
   spawnBlood(A.x[j],hy,A.z[j],u.rad>1.1?18:13,1.35,kdx/kl,kdz/kl);
   spawnMist(A.x[j],hy,A.z[j],u.rad>1.1?0.6:0.42);
   addStain(A.x[j],A.z[j],clamp(u.rad*0.55,0.4,1.5));
-  if(Math.random()<0.45) spawnPuff(A.x[j],0.1,A.z[j],0.34);
-  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=pick(A.team[by]===0?BIRD_NAMES:COON_NAMES);
+  if(SR()<0.45) spawnPuff(A.x[j],0.1,A.z[j],0.34);
+  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=spick(A.team[by]===0?BIRD_NAMES:COON_NAMES);
   if(BATTLE.champ<0 || A.kills[by]>A.kills[BATTLE.champ]) BATTLE.champ=by;
   killFeed(by,j,crit);
   sfx(u.build==='bird'?'birddeath':'coondeath', A.x[j], A.z[j]);
   if(u.fly) A.fy[j]=0;                              // it drops
 }
 function reviveCheck(i,dt){
-  if(A.dead[i]<rnd(2.4,2.6)) return;
+  if(A.dead[i]<srnd(2.4,2.6)) return;
   A.rev[i]=0; A.st[i]=0; A.dead[i]=0;
   A.hp[i]=A.hpMax[i]*0.55; A.hit[i]=0;
   sfx('hiss',A.x[i],A.z[i]);
-  if(Math.random()<0.3) killFeedRaw('<i>a possum</i> was not, in fact, dead');
+  if(SR()<0.3) killFeedRaw('<i>a possum</i> was not, in fact, dead');
 }
 
 
@@ -3028,6 +3237,7 @@ function showCard(o){
   card.classList.toggle('thin',!!o.thin);
   card.classList.toggle('result',!!o.result);
   card.classList.toggle('trib',!!o.trib);
+  card.classList.toggle('callable',!!o.call);
   $('cardKick').textContent=o.kick||'';
   $('cardA').textContent=o.a||'';
   $('cardVs').textContent=o.vs||'';
@@ -3044,13 +3254,96 @@ const LABEL=(()=>{ const m={}; UNITS.forEach(u=>m[u.k]=u.label); return m; })();
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{}};
+let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
+
+/* ============================================================
+   THE SEED
+
+   A fight is fully described by the matchup plus one 32-bit number, so a
+   link can carry the whole thing and land on the same result for whoever
+   opens it. Everything the simulation draws comes from this seed and
+   nothing else — see the two random streams in the core.
+
+   The address bar is rewritten whenever a fight starts, so copying the
+   URL is always the fight you are looking at.
+   ============================================================ */
+function newSeed(){ CFG.seed=(Math.random()*4294967296)>>>0; }
+newSeed();
+let seedHeld=false;          // a seed that arrived in a link is used once, then released
+
+function encodeFight(){
+  const q=['b='+CFG.birds,'c='+CFG.coons,'k='+CFG.kind,'a='+CFG.arena,'s='+CFG.seed.toString(36)];
+  const f=EXTRA_B.filter(k=>CFG.foes[k]>0).map(k=>k+':'+CFG.foes[k]);
+  if(f.length) q.push('f='+f.join(','));
+  return q.join('&');
+}
+function fightURL(){
+  return location.origin+location.pathname+'?'+encodeFight();
+}
+function decodeFight(){
+  const q=new URLSearchParams(location.search);
+  if(!q.has('s')&&!q.has('b')) return false;
+  const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
+  const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,500);
+  const k=q.get('k'); if(k&&UI_[k]!==undefined&&UNITS[UI_[k]].team===0) CFG.kind=k;
+  const a=q.get('a'); if(a==='coop'||a==='field') CFG.arena=a;
+  EXTRA_B.forEach(x=>CFG.foes[x]=0);
+  (q.get('f')||'').split(',').forEach(pair=>{
+    const [x,n]=pair.split(':');
+    if(EXTRA_B.indexOf(x)>=0) CFG.foes[x]=clamp(parseInt(n,10)||0,0,200);
+  });
+  const sd=parseInt(q.get('s')||'',36);
+  if(!isNaN(sd)){ CFG.seed=sd>>>0; seedHeld=true; }
+  return true;
+}
+function pushFightURL(){
+  try{ history.replaceState(null,'','?'+encodeFight()); }catch(e){}
+}
 function rosterList(){
   const L=[{k:CFG.kind,n:CFG.birds},{k:'coon',n:CFG.coons}];
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
   return L;
 }
+
+/* ============================================================
+   CALLING IT
+
+   The whole appeal of this thing is that people are confident and wrong,
+   so give them somewhere to be wrong out loud. A pick is taken during the
+   matchup card, locked when the countdown ends — no changing your mind
+   once you've seen the first ten seconds — and graded on the verdict.
+   ============================================================ */
+const CALL={pick:null, locked:false, right:0, wrong:0};
+function callReset(){
+  CALL.pick=null; CALL.locked=false;
+  $('callScore').classList.remove('on','hit','miss');
+  callSync();
+}
+function callSync(){
+  const bar=$('callBar');
+  bar.classList.toggle('locked',CALL.locked);
+  for(const b of $('callBtns').children) b.classList.toggle('on',b.dataset.s===CALL.pick);
+  $('callNote').textContent = CALL.locked
+    ? (CALL.pick? 'Locked in: '+(CALL.pick==='birds'?'the flock':'the raccoons') : 'No call this round')
+    : 'Locks when the countdown ends';
+}
+function callPick(side){
+  if(CALL.locked) return;
+  CALL.pick = CALL.pick===side ? null : side;
+  sting('beep'); callSync();
+}
+function callGrade(who){
+  const el=$('callScore');
+  if(!CALL.pick){ el.classList.remove('on','hit','miss'); return; }
+  const hit = who===CALL.pick;
+  if(hit) CALL.right++; else CALL.wrong++;
+  el.className='on '+(hit?'hit':'miss');
+  el.textContent=(hit?'You called it':'You called it wrong')+
+    '  ·  '+CALL.right+'\u2013'+CALL.wrong+' this session';
+}
+[...$('callBtns').children].forEach(b=>
+  b.addEventListener('click',e=>{ e.stopPropagation(); callPick(b.dataset.s); }));
 
 function setPhase(p){
   SEQ.phase=p; SEQ.t=0; DIR.snap=(p!=='result');   // let the final shot ride
@@ -3070,10 +3363,12 @@ function setPhase(p){
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
       a:CFG.birds+' '+LABEL[CFG.kind].toUpperCase(), vs:'VS', b:CFG.coons+' RACCOONS',
-      sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field'});
+      sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field',
+      call:true});
   }
-  if(p==='count'){ musicCountIn(3.4); showCard({count:'3'}); }
-  if(p==='battle'){ hideCard(); BATTLE.running=true; BATTLE.t=0; clearFeed(); pickShot();
+  if(p==='count'){ musicCountIn(3.4); showCard({count:'3',call:true}); }
+  if(p==='battle'){ hideCard(); CALL.locked=true; callSync();
+    BATTLE.running=true; BATTLE.t=0; clearFeed(); pickShot();
     document.body.classList.add('fighting');
     musicMode('battle'); if(AC) braam(AC.currentTime+0.02,38,1.1,0.45); }
 }
@@ -3095,6 +3390,7 @@ function verdict(who,how){
         ' raccoons standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
+  callGrade(who);
   sting(who==='birds'?'win':'lose');
   musicFinish(who==='birds');
   setPhase('result');
@@ -3196,7 +3492,7 @@ function checkWin(dt){
   if(initB>0&&aliveB<=0){ verdict('birds','The flock holds the field'); return; }
   if(initA>0&&aliveA<=0){ verdict('coons','Total poultry failure'); return; }
   // nothing has died in a while — somebody has effectively won
-  if(BATTLE.totalKills===lastKills) stallT+=0.4; else { stallT=0; lastKills=BATTLE.totalKills; }
+  if(BATTLE.totalKills===lastKills) stallT+=0.4; else { stallT=0; lastKills=BATTLE.totalKills; }   // sim seconds
   const strongerBirds=(aliveA/Math.max(1,initA))>(aliveB/Math.max(1,initB));
   if(stallT>9){ verdict(strongerBirds?'birds':'coons','The killing simply stopped'); return; }
   if(BATTLE.t>120) verdict(strongerBirds?'birds':'coons','Called on time');
@@ -3236,8 +3532,14 @@ function startBattle(){
   if(DIR.manual){ DIR.manual=false; $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; }
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1;
   BATTLE.totalKills=0; BATTLE.timeScale=1; BATTLE.slowT=0; BATTLE.deathsWindow=0; BATTLE.routed=0; recentKills=0; BATTLE.hsx=0; BATTLE.hsz=0;
-  routT=0; slowCool=0; stallT=0; lastKills=-1;
+  routT=0; slowCool=0; stallT=0; lastKills=-1; simAcc=0;
   clearParticles(); clearFeed(); champEl.classList.remove('on');
+  /* a linked fight uses the seed it arrived with, exactly once; every run
+     after that rolls a fresh one so "run it back" is a genuinely new fight */
+  if(!seedHeld) newSeed(); else seedHeld=false;
+  seedSim(CFG.seed);
+  pushFightURL();
+  callReset();
   spawnRoster(rosterList(),CFG.arena==='coop');
   camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
   setPhase('introA');
@@ -3251,6 +3553,8 @@ function standby(){
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1; BATTLE.totalKills=0;
   BATTLE.routed=0; recentKills=0; BATTLE.hsx=0; BATTLE.hsz=0;
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
+  seedSim(CFG.seed);                 // standby is a preview of the fight you'd get
+  callReset();
   spawnRoster(rosterList(),CFG.arena==='coop');
   SEQ.phase='idle'; SEQ.t=0;
   $('go').textContent='Fight'; $('go').classList.remove('rst');
@@ -3390,6 +3694,39 @@ function toSetup(){
 $('again').addEventListener('click',e=>{ e.stopPropagation(); startBattle(); });
 $('setup').addEventListener('click',e=>{ e.stopPropagation(); toSetup(); });
 
+/* the fight you just watched, as a link that replays it exactly */
+$('share').addEventListener('click',e=>{
+  e.stopPropagation();
+  const url=fightURL(), btn=$('share');
+  const done=ok=>{ btn.textContent=ok?'Link copied':'Copy failed'; sting(ok?'beep':'lose');
+    setTimeout(()=>{ btn.textContent='Copy link'; },1800); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>done(true),()=>done(false));
+  }else{
+    /* older mobile browsers: the textarea trick still works */
+    try{
+      const t=document.createElement('textarea');
+      t.value=url; t.style.position='fixed'; t.style.opacity='0';
+      document.body.appendChild(t); t.select();
+      done(document.execCommand('copy')); t.remove();
+    }catch(err){ done(false); }
+  }
+});
+
+/* ---------- the story ---------- */
+function storyShow(){
+  document.body.classList.add('story');
+  requestAnimationFrame(()=>document.body.classList.add('storyIn'));
+}
+function storyHide(){
+  document.body.classList.remove('storyIn');
+  setTimeout(()=>document.body.classList.remove('story'),620);
+  audioResume();
+}
+$('storyGo').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); });
+$('storySkip').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); });
+$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); storyShow(); });
+
 $('go').addEventListener('click',()=>{
   if(BATTLE.running||SEQ.phase==='title'||SEQ.phase==='count') standby();
   else startBattle();
@@ -3486,7 +3823,7 @@ addEventListener('keydown',e=>{
   if(e.key==='r'||e.key==='R')$('btnReel').click();
   if(e.key==='h'||e.key==='H')document.body.classList.toggle('hideui');
   if(e.key==='b'||e.key==='B')$('btnBlood').click();
-  if(e.key==='Escape') toSetup();
+  if(e.key==='Escape'){ if(document.body.classList.contains('story')) storyHide(); else toSetup(); }
   const c=CMD_DEF.find(d=>d.key===e.key); if(c) cmdFire(c.k);
 });
 
@@ -3504,6 +3841,8 @@ poke();
    MAIN LOOP
    ============================================================ */
 let last=performance.now(), fpsAcc=0, fpsN=0;
+const SIM_DT=1/60;
+let simAcc=0;
 function loop(now){
   requestAnimationFrame(loop);
   const raw=(now-last)/1000; last=now;
@@ -3514,7 +3853,17 @@ function loop(now){
   slowmo(real);
   const dt=real*BATTLE.timeScale;
 
-  if(BATTLE.running&&!BATTLE.over){ BATTLE.t+=dt; stepSim(dt); checkWin(real); }
+  /* The sim runs on a fixed step so a shared seed lands on the same result
+     everywhere. dt is clamped to 0.05 upstream, so this is at most three
+     steps a frame and never drops one — the number of steps, and therefore
+     the fight, does not depend on the machine. Slow-motion changes how much
+     sim time a wall second buys, not the sequence of steps themselves. */
+  if(BATTLE.running&&!BATTLE.over){
+    simAcc+=dt;
+    while(simAcc>=SIM_DT && !BATTLE.over){
+      BATTLE.t+=SIM_DT; stepSim(SIM_DT); checkWin(SIM_DT); simAcc-=SIM_DT;
+    }
+  }
   else if(SEQ.phase!=='battle'){ idleSway(dt); }
 
   stepParticles(dt);
@@ -3545,9 +3894,12 @@ function idleSway(dt){
    BOOT
    ============================================================ */
 buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
+/* a link that carries a fight skips the preamble and goes straight to it */
+const LINKED=decodeFight();
 syncSliders();
 resize();
 standby();
+if(!LINKED) storyShow();
 camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
 requestAnimationFrame(loop);
 

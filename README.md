@@ -1,30 +1,75 @@
 # Chickens vs Raccoons
 
-A 3D battle simulator that answers a question nobody asked: how many chickens does it take to beat a raccoon?
+A family of raccoons raided the coop in the middle of the night. Eenie and Moe didn't make it.
 
-The whole thing is one HTML file. No build step required to play it, no dependencies to install, no network access needed — Three.js is inlined, every sound is synthesized in the browser, every model is generated from primitives at load time. Open `index.html` and it runs.
+So this is a simulator built to answer the question that comes after it: how many chickens would it have taken?
 
 **[▶ Play it](https://animagix77.github.io/chickens-vs-raccoons/)**
 
+The whole thing is one HTML file. No build step required to play it, no dependencies to install, no network access needed — Three.js is inlined, every sound is synthesized in the browser, every model is generated from primitives at load time. Open `index.html` and it runs.
+
 ## What it does
 
-Set a matchup — up to 4000 birds against 500 raccoons, on an open field in daylight or inside a coop at night — and watch it play out with a cinematic camera that hunts for the best angle on its own. Then command the farm live.
+Set a matchup — up to 4000 birds against 500 raccoons, on an open field in daylight or inside a coop at night — and watch it play out with a cinematic camera that holds on the front of the flock before contact and on the clash line once the fight joins. Then command the farm live.
 
-**The war chest.** You don't pick your reinforcements up front. A points pool fills while the fight runs, and a bar of deploy chips lets you spend it as things develop: 8 guinea fowl for 10 points, 4 goats for 15, a bull for 25, two farm dogs for 28. Animals walk in from your line and join the fight immediately. Over a typical match you'll get three or four packets, so it's a real decision rather than a menu.
+**The war chest.** You don't pick your reinforcements up front. A points pool fills while the fight runs, and a bar of deploy chips lets you spend it as things develop: eight guinea fowl for 8 points, two capybaras for 16, a donkey for 26, a bull for 44. Animals walk in from your line and join the fight immediately. Over a typical match you'll get four or five packets, so it's a real decision rather than a menu.
 
 **Three abilities**, each on a cooldown: sound the horn (everything you own moves and swings faster), scatter feed (birds converge and hold their nerve), and the floodlight (predators flinch, hit softer, swing slower).
+
+**Call it before the countdown.** Pick a side on the matchup card. It locks when the countdown hits zero, and the verdict tells you whether you were right and how you're doing across the session. Most people are confident and wrong, which is the entire appeal.
+
+**Every fight has a link.** The matchup and a seed live in the URL, so a fight can be sent to someone and it replays exactly — same spawns, same crits, same result, on any machine at any frame rate. Copy link is on the verdict card.
 
 **Reel mode** crops to 9:16 and hides the chrome, because the point of this was always short-form video.
 
 **Blood is off by default.** Kids watch this. With it off, hits read through feathers and kicked-up dust instead, and the sim plays exactly the same. The Blood button in the corner turns it on — and turning it back off scrubs the field clean rather than just stopping new marks. Keyboard: `B`.
 
+## What the simulator actually says
+
+Every number below is measured, not asserted — the sim is deterministic, so these are repeatable. Each figure is the share of seeded runs the birds won, under the game's own verdict rules.
+
+The original question, gamecocks against a single raccoon:
+
+| Gamecocks | Birds win |
+|---|---|
+| 4 | 0 of 9 |
+| 5 | 1 of 9 |
+| 6 | 6 of 9 |
+| **7** | **9 of 9** |
+
+**Seven.** Six is a coin flip that usually comes off. Five almost never does.
+
+The headline matchup is genuinely balanced on a knife edge:
+
+| Matchup | Birds win | Typical result |
+|---|---|---|
+| 850 roosters v 100 raccoons | 0 of 5 | wiped out, ~50 raccoons still standing |
+| **1000 roosters v 100 raccoons** | **6 of 11** | ~33s, ~50 birds and ~8 raccoons left |
+| 1200 roosters v 100 raccoons | 5 of 5 | ~560 birds walk away |
+
+Hens are not roosters. A thousand of them lose to a hundred raccoons every time, and the raccoons take **zero** casualties doing it. In the night coop, 1200 hens against 60 raccoons is the same story.
+
+And a black bear is not a raccoon problem:
+
+| Hens | Result |
+|---|---|
+| 200 | bear wins, 52s |
+| 400 | bear wins, 98s |
+| 600 | bear falls, 375 hens survive |
+
 ## Is any of this realistic?
 
-No. The proportions are grounded — a raccoon really is 15–20 lb against a 6–8 lb rooster, real raccoons really do surplus-kill, hens really don't fight back, and donkeys and llamas really are used as livestock guardians — but every combat number is invented and tuned for drama. The real raccoon-to-chicken speed ratio is about 1.7×; the sim uses 1.06×, because a fight where one side simply outruns the other isn't worth watching.
+Partly, and it's worth being exact about which parts.
 
-For what it's worth, the sim's answer to the original question is **seven**. Five gamecocks lose to a single raccoon every time, six win about 90% of the time, seven win always.
+The behaviour is grounded. Raccoons really do surplus-kill. Hens really don't fight back. Donkeys and llamas really are used as livestock guardians. Guinea fowl really do raise the alarm before anything else notices. Capybaras really are that calm.
 
-And 1000 roosters against 100 raccoons is a genuine coin flip.
+The durability numbers are now grounded too, which they weren't at first. Health scales as mass^0.75 — the usual structural exponent — times a factor for what the animal actually is, with predators worth roughly twice a prey mammal of the same weight because they have the weapons. The raccoon anchors the scale. Damage follows the same shape: a donkey's kick and a bull's horns are lethal to a 7kg animal in one or two connections, and the numbers say so now.
+
+The first pass got this badly wrong in a way worth recording. A 50kg goat had less health than a 7kg raccoon. A 700kg bull had less than a farm dog and swung for less damage than its target had health, so it could stand in a crowd of raccoons for ten seconds and kill none of them. Fixing it meant halving every predator's health and halving the three flock birds' damage together, which leaves flock-versus-raccoon exactly where it was — the answers above are unchanged — while doubling what a bull or a donkey is worth.
+
+What is *not* realistic is speed and scale. The real raccoon-to-chicken speed ratio is about 1.7×; the sim uses 1.06×, because a fight where one side simply outruns the other isn't worth watching. And a real bear would never be brought down by any number of chickens.
+
+Masses used, in kilograms: hen 2.5, rooster 3.5, guinea fowl 1.3, goose 5.5, turkey 8, barn cat 4.5, capybara 55, goat 50, pig 90, llama 160, donkey 210, farm dog 50, bull 700, raccoon 7, possum 4, fox 5, coyote 12, hawk 1.1, black bear 180.
 
 ## How it's built
 
@@ -33,6 +78,7 @@ And 1000 roosters against 100 raccoons is a genuine coin flip.
 | Renderer | Three.js r128, inlined |
 | Geometry | Procedural — primitives merged into instanced meshes with baked vertex colors |
 | Agents | Structure-of-arrays storage, counting-sort spatial hash for neighbor queries |
+| Determinism | Two separate random streams and a fixed 60Hz sim step, so a seed reproduces a fight anywhere |
 | Lighting | PBR materials, ACES filmic tone mapping, PMREM environment, tracked sun shadow frustum |
 | Post | Custom chain — HDR target → bright pass → 4 blur passes → composite with grade, vignette, chromatic aberration and grain |
 | Sky | Shader dome with two fbm cloud layers, sun disc, stars and moon |
@@ -40,6 +86,8 @@ And 1000 roosters against 100 raccoons is a genuine coin flip.
 | Music | Procedural, 16th-note lookahead scheduler decoupled from frame rate, D minor i–VI–III–VII with adaptive layer gating |
 
 Everything runs in one thread at 60 FPS with a thousand-plus animated units.
+
+The two random streams are the load-bearing idea behind shareable links. One stream feeds the simulation and is advanced only inside the fixed step, so after N steps the state is identical everywhere. The other feeds everything you merely look at — camera shake, blood spatter, music, clouds — which is drawn a different number of times on a fast machine than a slow one, and so must never touch the first.
 
 ## Working on it
 
@@ -53,14 +101,14 @@ That writes `index.html`. The part files are ordinary HTML and JS with no module
 
 | File | What's in it |
 |---|---|
-| `parts/01_shell.html` | Markup, all CSS, HUD, setup panel, commander bar |
-| `parts/02_core.js` | Renderer, lights, geometry helpers, bird builders |
-| `parts/02b_quad.js` | One parameterized builder covering all eleven quadrupeds |
-| `parts/02c_units.js` | The 19-unit roster table and its stats |
+| `parts/01_shell.html` | Markup, all CSS, HUD, setup panel, commander bar, story card |
+| `parts/02_core.js` | Renderer, lights, the two random streams, geometry helpers, bird builders |
+| `parts/02b_quad.js` | One parameterized builder covering all twelve quadrupeds |
+| `parts/02c_units.js` | The 20-unit roster table, its stats, and how they were derived |
 | `parts/03_world.js` | Arena, terrain, props, particles, blood and gore |
 | `parts/04_sim.js` | Combat, steering, morale, the commander and deploy system |
 | `parts/05_view.js` | Sound engine, music engine, kill feed, camera director |
-| `parts/06_ui.js` | Sequencer, controls, main loop |
+| `parts/06_ui.js` | Sequencer, seeds and links, calling the winner, controls, main loop |
 | `parts/07_sky.js` | Sky shader, environment bake, post-processing chain |
 
 ## Support
