@@ -114,7 +114,9 @@
     border:1px solid #ffb02060;background:rgba(40,29,10,.9);color:#ffd58a;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
   #sndhint.on{display:block}
-  body.narrow #sndhint{top:auto;bottom:14px}
+  /* under the scoreboard, never over the panel or the coffee button */
+  body.narrow #sndhint{top:104px;bottom:auto}
+  body.short #sndhint{top:76px}
   body.hideui #sndhint{display:none}
 
   /* ---------- loading ---------- */
