@@ -291,7 +291,7 @@ function stepSim(dt){
     const isAlly=mine.team===0;
     const hasted=(isAlly&&CMD.horn>0)?1:0;
     const dimmed=(!isAlly&&CMD.light>0)?1:0;
-    A.cd[i]-=dt*(hasted?1.35:1)*(dimmed?0.65:1);
+    A.cd[i]-=dt*(hasted?1.35:1)*(dimmed?(1-0.35*floodPower()):1);
     A.hit[i]=Math.max(0,A.hit[i]-dt);
     const wasHigh=A.fy[i]>SKY_LINE;
     const diving=mine.fly?flierStep(i,mine,dt):false;
@@ -473,7 +473,9 @@ function moraleTick(){
    ============================================================ */
 function attack(i,tg,mine,dist){
   const wild=A.st[i]===1?1.28:1;
-  const dimmed=(mine.team===1&&CMD.light>0)?0.55:1;
+  /* a floodlight blinds a raccoon at midnight and barely troubles one at
+     noon, so the strength follows the arena rather than being flat */
+  const dimmed=(mine.team===1&&CMD.light>0)?(1-0.45*floodPower()):1;
   A.cd[i]=mine.rate*srnd(.82,1.2)*wild;
   let dmg=mine.dmg*srnd(.8,1.25)/wild*dimmed*(CMD.horn>0&&mine.team===0?1.15:1);
   let crit=false;

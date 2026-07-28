@@ -701,6 +701,7 @@ function loop(now){
   director(dt,real,wall);
   hud(real);
   audioUpdate(real);
+  worldFxUpdate(real);
 
   fpsAcc+=real; fpsN++;
   if(fpsAcc>0.5){ $('fps').textContent=(fpsN/fpsAcc).toFixed(0)+' FPS · '+N+' UNITS'; fpsAcc=0; fpsN=0; }

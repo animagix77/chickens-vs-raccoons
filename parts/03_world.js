@@ -181,6 +181,66 @@ function buildArena(R,night){
 /* ============================================================
    INSTANCED SQUAD RENDERER
    ============================================================ */
+/* ============================================================
+   THE FLOODLIGHT
+
+   This had no visual at all — the ability changed the numbers and nothing
+   else, which is why it never felt like it did anything. It is a spotlight
+   on a pole now, with a pool of light on the dirt under it.
+
+   It is also deliberately weak in daylight, because that is the truth about
+   floodlights: switching one on at noon accomplishes very little. The night
+   coop is where it earns its cooldown, and that gives the two arenas
+   genuinely different tactics instead of the same button twice.
+   ============================================================ */
+const floodLight=new THREE.SpotLight(0xf2f6ff,0,120,Math.PI*0.26,0.42,1.1);
+floodLight.position.set(0,46,0);
+floodLight.target.position.set(0,0,0);
+scene.add(floodLight); scene.add(floodLight.target);
+
+/* the pool it throws, as a soft additive disc so it reads even where the
+   spotlight falloff is subtle */
+const floodPoolTex=(()=>{
+  const c=document.createElement('canvas'); c.width=c.height=128;
+  const g=c.getContext('2d').createRadialGradient(64,64,0,64,64,64);
+  /* cool and restrained — the post chain has a bright pass on it, and warm
+     white on pale dirt blooms straight to a white screen */
+  g.addColorStop(0,'rgba(206,224,255,0.80)');
+  g.addColorStop(.42,'rgba(186,208,246,0.30)');
+  g.addColorStop(1,'rgba(170,196,240,0)');
+  const x=c.getContext('2d'); x.fillStyle=g; x.fillRect(0,0,128,128);
+  const t=new THREE.CanvasTexture(c); return t;
+})();
+const floodPool=new THREE.Mesh(
+  new THREE.CircleGeometry(1,40),
+  new THREE.MeshBasicMaterial({map:floodPoolTex,transparent:true,opacity:0,
+    depthWrite:false,blending:THREE.AdditiveBlending}));
+floodPool.rotation.x=-Math.PI/2; floodPool.position.y=0.04;
+floodPool.renderOrder=-1; scene.add(floodPool);
+
+let floodLvl=0;
+/* how much good a floodlight actually does, given how light it already is */
+function floodPower(){ return NIGHT?1:0.34; }
+function floodStep(dt,on,cx,cz){
+  const want=on?floodPower():0;
+  /* snaps on like a switch, fades off like a filament */
+  floodLvl+=(want-floodLvl)*Math.min(1,dt*(want>floodLvl?9:2.4));
+  const lit=floodLvl>0.002;
+  floodLight.visible=lit; floodPool.visible=lit;
+  if(!lit) return;
+  const r=Math.min(26,ARENA_R*0.62);
+  floodLight.position.set(cx,46,cz);
+  floodLight.target.position.set(cx,0,cz);
+  floodLight.target.updateMatrixWorld();
+  floodLight.intensity=floodLvl*(NIGHT?8.5:3.2);
+  floodPool.position.set(cx,0.04,cz);
+  floodPool.scale.setScalar(r);
+  /* a faint mains hum in the flicker, strongest at night */
+  const flick=1+Math.sin(BATTLE.t*37)*0.03+Math.sin(BATTLE.t*11.3)*0.02;
+  floodPool.material.opacity=floodLvl*(NIGHT?0.30:0.07)*flick;
+  hemi.intensity=(NIGHT?0.21:0.20)+floodLvl*(NIGHT?0.12:0.03);
+}
+
 class Squad{
   constructor(kits,max){
     this.kits=kits; this.max=max;

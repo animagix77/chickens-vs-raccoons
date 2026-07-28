@@ -686,6 +686,10 @@ function trackSync(){
 }
 
 /* ---------- per-frame mix + the background barnyard ---------- */
+function worldFxUpdate(dt){
+  floodStep(dt, CMD.light>0, BATTLE.cx, BATTLE.cz);
+}
+
 function audioUpdate(dt){
   if(!AC) return;
   musicUpdate(dt);
