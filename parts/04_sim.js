@@ -112,7 +112,7 @@ function deploy(d){
 function cmdFire(k){
   if(!cmdReady(k)) return false;
   const d=CMD_DEF.find(c=>c.k===k);
-  if(k==='horn'){ CMD.horn=d.dur; sting('go'); }
+  if(k==='horn'){ CMD.horn=d.dur; if(!oneShot('horn',0.95)) sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
   if(k==='feed'){
     CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+srnd(-4,4); CMD.feedZ=BATTLE.cz+srnd(-4,4);

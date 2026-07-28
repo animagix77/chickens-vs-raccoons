@@ -567,7 +567,8 @@ const ASSET_LIST=[
   ['battlehi','audio/battlehi.mp3'],
   ['victory', 'audio/victory.mp3'],
   ['defeat',  'audio/defeat.mp3'],
-  ['roar',    'audio/roar.mp3']
+  ['roar',    'audio/roar.mp3'],
+  ['horn',    'audio/horn.mp3']
 ];
 const RAW={}, BUF={};
 let SAMPLED=false, assetsFetched=false, decoding=false;
@@ -649,6 +650,19 @@ async function decodeAssets(){
     if(SAMPLED) trackSync();
   }catch(e){}
   decoding=false;
+}
+
+/* A recorded one-shot, played dry through the master so the distance and
+   panning machinery doesn't touch it — these are interface sounds, not
+   things happening at a place on the field. Returns false when the sample
+   isn't there, so every caller can fall back to its synthesized version. */
+function oneShot(name,vol){
+  if(!AC||!BUF[name]||!soundOn) return false;
+  const src=AC.createBufferSource(); src.buffer=BUF[name];
+  src.playbackRate.value=rnd(.985,1.015);
+  const g=AC.createGain(); g.gain.value=vol==null?0.9:vol;
+  src.connect(g); g.connect(master); src.start(0);
+  return true;
 }
 
 /* ---------- the sampled music player ---------- */
