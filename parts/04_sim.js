@@ -64,16 +64,17 @@ const CMD_DEF=[
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
 const DEPLOY=[
-  {k:'guinea',n:8, cost:10},
-  {k:'goose', n:6, cost:14},
-  {k:'turkey',n:5, cost:12},
-  {k:'cat',   n:6, cost:12},
-  {k:'goat',  n:4, cost:15},
-  {k:'pig',   n:4, cost:14},
-  {k:'llama', n:3, cost:17},
-  {k:'donkey',n:3, cost:21},
-  {k:'bull',  n:1, cost:25},
-  {k:'dog',   n:2, cost:28}
+  {k:'guinea',  n:8, cost:8},
+  {k:'goose',   n:6, cost:12},
+  {k:'turkey',  n:5, cost:12},
+  {k:'cat',     n:6, cost:14},
+  {k:'capybara',n:2, cost:16},
+  {k:'goat',    n:3, cost:20},
+  {k:'pig',     n:2, cost:20},
+  {k:'llama',   n:2, cost:24},
+  {k:'donkey',  n:1, cost:26},
+  {k:'dog',     n:1, cost:28},
+  {k:'bull',    n:1, cost:44}
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
@@ -86,8 +87,8 @@ function deploy(d){
   if(!SQUADS[u.i]) return false;
   const base=Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
-    const a=base+rnd(-0.30,0.30), r=ARENA_R*rnd(0.86,0.95);
-    const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(Math.random()*KIT_PIV[u.i].length)|0);
+    const a=base+srnd(-0.30,0.30), r=ARENA_R*srnd(0.86,0.95);
+    const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*KIT_PIV[u.i].length)|0);
     A.yaw[j]=Math.atan2(-A.x[j],-A.z[j]);
     aliveA++; initA++;
     spawnPuff(A.x[j],0.2,A.z[j],0.3);
@@ -102,8 +103,8 @@ function cmdFire(k){
   if(k==='horn'){ CMD.horn=d.dur; sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
   if(k==='feed'){
-    CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+rnd(-4,4); CMD.feedZ=BATTLE.cz+rnd(-4,4);
-    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+rnd(-1.4,1.4),0.15,CMD.feedZ+rnd(-1.4,1.4),0.22);
+    CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+srnd(-4,4); CMD.feedZ=BATTLE.cz+srnd(-4,4);
+    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+srnd(-1.4,1.4),0.15,CMD.feedZ+srnd(-1.4,1.4),0.22);
     sfx('buk',CMD.feedX,CMD.feedZ);
   }
   CMD.cd[k]=d.cool||1e9;
@@ -118,7 +119,7 @@ function cmdStep(dt){
     CMD.ptAcc+=dt*PTS_RATE;
     while(CMD.ptAcc>=1){ CMD.ptAcc-=1; CMD.pts=Math.min(PTS_CAP,CMD.pts+1); }
   }
-  if(CMD.feedT>0 && Math.random()<dt*8) spawnPuff(CMD.feedX+rnd(-1,1),0.12,CMD.feedZ+rnd(-1,1),0.16);
+  if(CMD.feedT>0 && SR()<dt*8) spawnPuff(CMD.feedX+srnd(-1,1),0.12,CMD.feedZ+srnd(-1,1),0.16);
 }
 function cmdReset(){
   CMD.horn=CMD.light=CMD.feedT=0;
@@ -170,15 +171,22 @@ function spawnRoster(list,night){
     for(let i=0;i<row.n;i++){
       const t=row.n<2?0.5:i/(row.n-1);
       let a,r;
-      if(u.team===0){ a=lerp(-2.30,-0.86,t)+rnd(-.14,.14); r=lerp(R*0.28,R*0.88,Math.sqrt(Math.random())); }
-      else          { a=rnd(0.52,2.10);                      r=lerp(R*0.40,R*0.86,Math.sqrt(Math.random())); }
-      addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(Math.random()*kits.length)|0);
+      if(u.team===0){ a=lerp(-2.30,-0.86,t)+srnd(-.14,.14); r=lerp(R*0.28,R*0.88,Math.sqrt(SR())); }
+      else          { a=srnd(0.52,2.10);                      r=lerp(R*0.40,R*0.86,Math.sqrt(SR())); }
+      addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*kits.length)|0);
       if(u.team===0){ aliveA++; initA++; } else { aliveB++; initB++; }
     }
   }
-  for(let i=0;i<N;i++) A.yaw[i]=Math.atan2(-A.x[i],-A.z[i])+rnd(-.3,.3);
-  /* last fight's front-rank depth and contact point must not leak into this one,
-     or the opening shot lurches on its first frame */
+  for(let i=0;i<N;i++) A.yaw[i]=Math.atan2(-A.x[i],-A.z[i])+srnd(-.3,.3);
+  /* Nothing may survive from the previous fight. Anything left over shifts
+     when the morale tick lands, and because that tick draws from the seeded
+     stream, a stale timer is enough to make the same seed play out
+     differently the second time you run it. */
+  moraleTimer=0; recentKills=0; moraleMul=1;
+  BATTLE.totalKills=0; BATTLE.champ=-1; BATTLE.routed=0;
+  BATTLE.deathsWindow=0; BATTLE.windowT=0;
+  BATTLE.hotX=0; BATTLE.hotZ=0; BATTLE.hotN=0; BATTLE.hsx=0; BATTLE.hsz=0;
+  BATTLE.cx=0; BATTLE.cz=0;
   TC.lead[0]=TC.lead[1]=0;
   BATTLE.conSeen=0; BATTLE.conAge=9; BATTLE.conN=0;
   enemyCentroids();
@@ -188,10 +196,10 @@ function addAgent(x,z,kindIdx,vr){
   const u=UNITS[kindIdx], i=N++;
   if(i>=MAXA) { N=MAXA; return MAXA-1; }
   A.x[i]=x; A.z[i]=z; A.vx[i]=0; A.vz[i]=0;
-  A.hp[i]=A.hpMax[i]=u.hp*rnd(.9,1.12);
-  A.cd[i]=rnd(0,.5); A.tgt[i]=-1; A.team[i]=u.team; A.vr[i]=vr; A.kind[i]=kindIdx;
+  A.hp[i]=A.hpMax[i]=u.hp*srnd(.9,1.12);
+  A.cd[i]=srnd(0,.5); A.tgt[i]=-1; A.team[i]=u.team; A.vr[i]=vr; A.kind[i]=kindIdx;
   A.st[i]=0; A.kills[i]=0; A.name[i]=null;
-  A.ph[i]=Math.random()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
+  A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
   return i;
 }
@@ -205,7 +213,7 @@ const BATTLE={
   conX:0, conZ:0, conN:0, conAge:9, conSeen:0,
   champ:-1, totalKills:0, routed:0
 };
-let moraleMul=1, recentKills=0;
+let moraleMul=1, recentKills=0, moraleTimer=0;
 
 function centroidUpdate(){
   let sx=0,sz=0,n=0;
@@ -387,7 +395,9 @@ function stepSim(dt){
   centroidUpdate();
 }
 
-let moraleTimer=0;
+const CALM_MAX=24;
+const CALM_X=new Float32Array(CALM_MAX), CALM_Z=new Float32Array(CALM_MAX),
+      CALM_R=new Float32Array(CALM_MAX), CALM_S=new Float32Array(CALM_MAX);
 function moraleTick(){
   const fracA=initA?aliveA/initA:1, fracB=initB?aliveB/initB:1;
   const nightMul=NIGHT?2.35:1;
@@ -400,6 +410,15 @@ function moraleTick(){
   let rallied=CMD.feedT>0?0.35:0;
   for(let i=0;i<N;i++){ if(A.st[i]===2) continue;
     const u=UNITS[A.kind[i]]; if(u.rally) rallied=Math.max(rallied,u.rally[1]*0.35); }
+  /* capybaras don't fight, they just refuse to be worried, and birds standing
+     near one hold. A real herd works this way — the calm ones are the reason
+     the rest don't scatter. Radius-based, so where you drop it matters. */
+  let calmN=0;
+  for(let i=0;i<N;i++){ if(A.st[i]===2) continue;
+    const u=UNITS[A.kind[i]]; if(!u.calm) continue;
+    CALM_X[calmN]=A.x[i]; CALM_Z[calmN]=A.z[i];
+    CALM_R[calmN]=u.calm[0]*u.calm[0]; CALM_S[calmN]=u.calm[1];
+    if(++calmN>=CALM_MAX) break; }
 
   for(let i=0;i<N;i++){
     if(A.st[i]===2||A.st[i]===1) continue;
@@ -410,10 +429,17 @@ function moraleTick(){
     const pressure=(1-frac)*(isAlly?nightMul:1);
     const wounded=1-A.hp[i]/A.hpMax[i];
     const scared=isAlly?fearA:fearB;
-    let p=(1-clamp(u.nerve+(isAlly?rallied:0),0,1))*(pressure*0.85+wounded*0.5+scared)*0.42;
+    let steady=isAlly?rallied:0;
+    if(isAlly&&calmN){
+      for(let c=0;c<calmN;c++){
+        const dx=A.x[i]-CALM_X[c], dz=A.z[i]-CALM_Z[c];
+        if(dx*dx+dz*dz<CALM_R[c]){ steady=Math.max(steady,CALM_S[c]); break; }
+      }
+    }
+    let p=(1-clamp(u.nerve+steady,0,1))*(pressure*0.85+wounded*0.5+scared)*0.42;
     if(isAlly && aliveB>0 && aliveA/Math.max(1,aliveB)<3) p*=1.5;
-    if(Math.random()<p){ A.st[i]=1; A.panicT[i]=rnd(2.6,6.5); panicCount++;
-      if(isAlly&&Math.random()<0.05) sfx('cackle',A.x[i],A.z[i]); }
+    if(SR()<p){ A.st[i]=1; A.panicT[i]=srnd(2.6,6.5); panicCount++;
+      if(isAlly&&SR()<0.05) sfx('cackle',A.x[i],A.z[i]); }
   }
 }
 
@@ -423,10 +449,10 @@ function moraleTick(){
 function attack(i,tg,mine,dist){
   const wild=A.st[i]===1?1.28:1;
   const dimmed=(mine.team===1&&CMD.light>0)?0.55:1;
-  A.cd[i]=mine.rate*rnd(.82,1.2)*wild;
-  let dmg=mine.dmg*rnd(.8,1.25)/wild*dimmed*(CMD.horn>0&&mine.team===0?1.15:1);
+  A.cd[i]=mine.rate*srnd(.82,1.2)*wild;
+  let dmg=mine.dmg*srnd(.8,1.25)/wild*dimmed*(CMD.horn>0&&mine.team===0?1.15:1);
   let crit=false;
-  if(mine.crit && Math.random()<mine.crit[0]){ dmg*=mine.crit[1]; crit=true; }
+  if(mine.crit && SR()<mine.crit[0]){ dmg*=mine.crit[1]; crit=true; }
   if(mine.pack){                                   // coyotes hit harder in company
     let n=0; for(let k=cCount[cellOf(A.x[i],A.z[i])];k<cCount[cellOf(A.x[i],A.z[i])+1];k++){
       const j=cItems[k]; if(A.kind[j]===A.kind[i]&&j!==i) n++; }
@@ -462,7 +488,7 @@ function attack(i,tg,mine,dist){
   if(mine.ranged){                                  // the spit travels
     for(let s=1;s<=4;s++) spawnPuff(lerp(A.x[i],A.x[tg],s/5),1.0,lerp(A.z[i],A.z[tg],s/5),0.13);
   }
-  if(Math.random()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
+  if(SR()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
   sfx(crit?'spur':(mine.build==='bird'?'peck':'slash'), A.x[tg], A.z[tg]);
 }
 
@@ -490,17 +516,17 @@ function hurt(j,dmg,by,crit){
   spawnBlood(A.x[j],hy,A.z[j],u.rad>1.1?18:13,1.35,kdx/kl,kdz/kl);
   spawnMist(A.x[j],hy,A.z[j],u.rad>1.1?0.6:0.42);
   addStain(A.x[j],A.z[j],clamp(u.rad*0.55,0.4,1.5));
-  if(Math.random()<0.45) spawnPuff(A.x[j],0.1,A.z[j],0.34);
-  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=pick(A.team[by]===0?BIRD_NAMES:COON_NAMES);
+  if(SR()<0.45) spawnPuff(A.x[j],0.1,A.z[j],0.34);
+  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=spick(A.team[by]===0?BIRD_NAMES:COON_NAMES);
   if(BATTLE.champ<0 || A.kills[by]>A.kills[BATTLE.champ]) BATTLE.champ=by;
   killFeed(by,j,crit);
   sfx(u.build==='bird'?'birddeath':'coondeath', A.x[j], A.z[j]);
   if(u.fly) A.fy[j]=0;                              // it drops
 }
 function reviveCheck(i,dt){
-  if(A.dead[i]<rnd(2.4,2.6)) return;
+  if(A.dead[i]<srnd(2.4,2.6)) return;
   A.rev[i]=0; A.st[i]=0; A.dead[i]=0;
   A.hp[i]=A.hpMax[i]*0.55; A.hit[i]=0;
   sfx('hiss',A.x[i],A.z[i]);
-  if(Math.random()<0.3) killFeedRaw('<i>a possum</i> was not, in fact, dead');
+  if(SR()<0.3) killFeedRaw('<i>a possum</i> was not, in fact, dead');
 }

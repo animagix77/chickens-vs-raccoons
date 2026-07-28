@@ -5,48 +5,97 @@
    team 1 wants what's inside it. Roles matter more than numbers:
    line-holders soak, chargers knock things over, support buffs,
    heroes frighten, and one or two units break the rules entirely.
+
+   ---- how the health numbers were set ----
+   The flock and the raccoon are the fixed point: those four rows are the
+   original balance everything else was tuned against, and they are left
+   alone. Every other animal is derived from them.
+
+   Durability scales as mass^0.75 — the usual structural exponent, which
+   keeps a 700kg bull meaningfully tougher than a 3kg rooster without
+   making it 200x tougher — times a factor for what the animal actually
+   is. A raccoon is 7kg and has 545hp, which sets the scale at ~127 per
+   unit of mass^0.75 for a predator that hunts for a living. Prey mammals
+   get roughly half that: they have the mass but not the weapons.
+
+   This is what the old numbers got wrong. A 50kg goat had 260hp while a
+   7kg raccoon had 545, and a 700kg bull had less health than a farm dog.
+   Under the model a goat is 1050, a bull is 9500, and a black bear —
+   180kg of apex predator with a hide nothing on a farm can open — is
+   13500 rather than 6000. It should take a very long time to bring one
+   down with chickens, because it would.
+
+   Damage follows the same shape. The reference again is the raccoon: 27
+   damage over 7kg^0.75 is 6.28 per unit, times a factor for the weapon.
+   A donkey kick and a bull's horns are not "a bit more than a chicken
+   peck" — they are lethal to a 7kg animal in one or two connections, and
+   the numbers now say so. This was the other half of what was wrong: a
+   700kg bull was swinging for 90 against a target with 545 health, so it
+   could stand in a crowd of raccoons for ten seconds and kill none of them.
+
+   One more thing had to move. A 7kg raccoon carrying 545 health was the
+   real anomaly — it is why a 210kg donkey looked feeble against a dozen of
+   them. Halving every predator's health while halving the three flock
+   birds' damage leaves flock-versus-predator time-to-kill exactly where it
+   was, so the published answers still hold, but it doubles how much a bull
+   or a donkey is worth against them. That is the correction: the flock was
+   never mispriced against raccoons, the livestock was.
+
+   The headline matchup sits on a cliff, not a slope: at 1000 roosters
+   against 100 raccoons, 4.2 damage loses almost every time and 4.4 wins
+   almost every time. Mass battles compound small advantages, so the
+   coin-flip everyone quotes lives in a band about a tenth of a point wide.
+   Rooster damage is pinned at 4.3 for exactly that reason — nudge it and
+   the famous answer stops being interesting.
+
+   Masses used (kg): hen 2.5, rooster 3.5, guinea 1.3, goose 5.5,
+   turkey 8, cat 4.5, capybara 55, goat 50, pig 90, llama 160,
+   donkey 210, dog 50, bull 700, raccoon 7, possum 4, fox 5,
+   coyote 12, hawk 1.1, black bear 180.
    ============================================================ */
 const UNITS=[
 /* ---------------- the flock ---------------- */
-{k:'hen',      team:0, label:'Hens',       hp:42,  dmg:2.2, rate:1.05,reach:1.15,speed:3.3, accel:9,  nerve:0.26,cleave:1,rad:0.72,cost:1,
+{k:'hen',      team:0, label:'Hens',       hp:42,  dmg:1.1, rate:1.05,reach:1.15,speed:3.3, accel:9,  nerve:0.26,cleave:1,rad:0.72,cost:1,
   build:'bird',kit:'hen',   blurb:'No spurs. No plan. No idea.'},
-{k:'rooster',  team:0, label:'Roosters',   hp:70,  dmg:8.2, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
+{k:'rooster',  team:0, label:'Roosters',   hp:70,  dmg:4.3, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
   build:'bird',kit:'rooster',crit:[0.08,1.9], blurb:'Loud, territorial, armed at the ankle.'},
-{k:'gamecock', team:0, label:'Gamecocks',  hp:93,  dmg:11.5,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
+{k:'gamecock', team:0, label:'Gamecocks',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
   build:'bird',kit:'gamecock',crit:[0.17,2.4], blurb:'Bred for exactly one thing.'},
-{k:'guinea',   team:0, label:'Guinea fowl',hp:34,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
+{k:'guinea',   team:0, label:'Guinea fowl',hp:42,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
   build:'bird',kit:'guinea', rally:[6.5,0.55], blurb:'Useless in a fight. Screams before anyone else notices.'},
 {k:'goose',    team:0, label:'Geese',      hp:210, dmg:14,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
   build:'bird',kit:'goose', shove:1.5, blurb:'Genuinely wants to fight you. Always has.'},
-{k:'turkey',   team:0, label:'Turkeys',    hp:190, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
+{k:'turkey',   team:0, label:'Turkeys',    hp:240, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
   build:'bird',kit:'turkey', blurb:'Enormous. Slow. Weirdly confident.'},
-{k:'cat',      team:0, label:'Barn cats',  hp:90,  dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
+{k:'cat',      team:0, label:'Barn cats',  hp:235, dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
   build:'quad',kit:'cat', crit:[0.30,2.2], blurb:'Will help. Will not be thanked.'},
-{k:'goat',     team:0, label:'Goats',      hp:260, dmg:30,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
+{k:'capybara', team:0, label:'Capybaras', hp:1900,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
+  build:'quad',kit:'capybara', calm:[9.0,0.60], blurb:'Will not fight. Will not panic. Will not move.'},
+{k:'goat',     team:0, label:'Goats',      hp:1050,dmg:94,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
   build:'quad',kit:'goat', shove:3.4, blurb:'Arrives head-first. Only knows the one move.'},
-{k:'pig',      team:0, label:'Pigs',       hp:340, dmg:20,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
+{k:'pig',      team:0, label:'Pigs',       hp:1850,dmg:92,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
   build:'quad',kit:'pig', blurb:'Not a guardian animal. Simply large and hungry.'},
-{k:'llama',    team:0, label:'Llamas',     hp:380, dmg:26,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
+{k:'llama',    team:0, label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
   build:'quad',kit:'llama', ranged:1, blurb:'A real livestock guardian. Spits with intent.'},
-{k:'donkey',   team:0, label:'Donkeys',    hp:520, dmg:62,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
+{k:'donkey',   team:0, label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
   build:'quad',kit:'donkey', shove:3.0, blurb:'Farmers use these on purpose. Kicks like a truck.'},
-{k:'dog',      team:0, label:'Farm dogs',  hp:620, dmg:55,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
+{k:'dog',      team:0, label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
   build:'quad',kit:'dog', fear:9.0, blurb:'The reason most nights end quietly.'},
-{k:'bull',     team:0, label:'Bulls',      hp:900, dmg:90,  rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
+{k:'bull',     team:0, label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
   build:'quad',kit:'bull', shove:5.5, blurb:'A bad idea that works.'},
 
 /* ---------------- what comes out of the treeline ---------------- */
-{k:'coon',     team:1, label:'Raccoons',   hp:545, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
+{k:'coon',     team:1, label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
   build:'quad',kit:'coon', blurb:'Hands. Teeth. No respect for property lines.'},
-{k:'possum',   team:1, label:'Possums',    hp:260, dmg:18,  rate:0.90,reach:1.55,speed:3.4, accel:10, nerve:0.10,cleave:1,rad:1.00,cost:5,
+{k:'possum',   team:1, label:'Possums',    hp:115, dmg:18,  rate:0.90,reach:1.55,speed:3.4, accel:10, nerve:0.10,cleave:1,rad:1.00,cost:5,
   build:'quad',kit:'possum', playDead:1, blurb:'Dies immediately. Gets up again. Repeat.'},
-{k:'fox',      team:1, label:'Foxes',      hp:300, dmg:34,  rate:0.60,reach:1.60,speed:6.0, accel:19, nerve:0.70,cleave:1,rad:1.00,cost:12,
+{k:'fox',      team:1, label:'Foxes',      hp:180, dmg:32,  rate:0.60,reach:1.60,speed:6.0, accel:19, nerve:0.70,cleave:1,rad:1.00,cost:12,
   build:'quad',kit:'fox', crit:[0.20,2.0], blurb:'Takes one bird and leaves. Then comes back.'},
-{k:'coyote',   team:1, label:'Coyotes',    hp:480, dmg:38,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
+{k:'coyote',   team:1, label:'Coyotes',    hp:390, dmg:44,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
   build:'quad',kit:'coyote', pack:1, blurb:'Never arrives alone.'},
-{k:'hawk',     team:1, label:'Hawks',      hp:180, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
+{k:'hawk',     team:1, label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
   build:'bird',kit:'hawk', fly:2.6, blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
-{k:'bear',     team:1, label:'Bear',       hp:6000,dmg:180, rate:1.40,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:5,rad:2.40,cost:60,
+{k:'bear',     team:1, label:'Bear',       hp:11000,dmg:420,rate:1.40,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
   build:'quad',kit:'bear', shove:6.0, boss:1, blurb:'This is no longer a raccoon problem.'}
 ];
 const UI_=(()=>{ const m={}; UNITS.forEach((u,i)=>{u.i=i; m[u.k]=i;}); return m; })();
@@ -72,6 +121,14 @@ const KITS={
                len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:1.0,eye:'#bfe36a'},
               {body:'#b8823f',dark:'#8a6030',legs:'#a5743a',muzzle:'#e8dcc4',ear:'prick',tail:'bush',tailC:'#8a6030',
                len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:.97,eye:'#e0c14a'}].map(buildQuad),
+  /* long, low, barrel-shaped, almost no legs, blunt square head — and no
+     tail at all, which is most of why a capybara reads as a capybara */
+  capybara:()=>[{body:'#7d5a36',dark:'#5a4026',legs:'#6a4a2c',muzzle:'#9c7c52',ear:'round',tail:'stub',
+                 tailC:'#5a4026',blunt:1,
+                 len:.54,high:.32,wide:.25,leg:.19,legR:.055,neck:.09,neckA:-.1,head:.16,snout:.15,scale:1.18,eye:'#3a2a18'},
+                {body:'#94693e',dark:'#6b4b2b',legs:'#7d5832',muzzle:'#b08c5e',ear:'round',tail:'stub',
+                 tailC:'#6b4b2b',blunt:1,
+                 len:.54,high:.32,wide:.25,leg:.19,legR:.055,neck:.09,neckA:-.1,head:.16,snout:.15,scale:1.15,eye:'#3a2a18'}].map(buildQuad),
   goat:  ()=>[{body:'#e6e0d2',dark:'#b8b0a0',legs:'#c9c2b2',muzzle:'#f2ece0',ear:'flop',tail:'stub',horn:'goat',
                len:.46,high:.38,wide:.19,leg:.34,legR:.042,neck:.22,head:.13,snout:.14,scale:1.05},
               {body:'#57493c',dark:'#3d332a',legs:'#4a3f34',muzzle:'#cbbfa8',ear:'flop',tail:'stub',horn:'goat',

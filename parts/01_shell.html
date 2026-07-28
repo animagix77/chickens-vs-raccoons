@@ -107,6 +107,58 @@
   body.short #cardBtns{margin-top:18px}
   body.short #cardBtns button{padding:10px 16px;font-size:10.5px}
 
+  /* ---------- the story ---------- */
+  #story{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:8vmin 7vw;
+    background:radial-gradient(60% 60% at 50% 45%,rgba(6,5,9,.86),rgba(4,3,6,.97));
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    opacity:0;transition:opacity .6s}
+  body.story #story{display:flex}
+  body.story.storyIn #story{opacity:1}
+  #story .nm{font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(30px,6.6vmin,58px);color:#f0e2c0;letter-spacing:.01em;margin-bottom:26px}
+  #story p{max-width:30em;margin:0 0 15px;font-size:clamp(13px,2.1vmin,16.5px);
+    line-height:1.72;color:#f4ead6be;letter-spacing:.012em}
+  #story p.last{color:#f4ead6;margin-top:9px}
+  #story .rule{width:52px;height:1px;background:#ffb02055;margin:22px 0 26px}
+  #storyGo{margin-top:12px;padding:14px 30px;font-size:11.5px;font-weight:800;
+    letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
+    font-family:inherit;border:none;color:#fff;
+    background:linear-gradient(180deg,#ff6a3d,#d8452f);
+    box-shadow:0 4px 0 #8c2418,0 10px 24px #d8452f40;transition:.15s}
+  #storyGo:hover{filter:brightness(1.08)}
+  #storyGo:active{transform:translateY(2px);box-shadow:0 2px 0 #8c2418}
+  #storySkip{margin-top:16px;background:none;border:none;cursor:pointer;font-family:inherit;
+    font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#f4ead657}
+  #storySkip:hover{color:#f4ead6a8}
+  .storyLink{display:block;width:100%;margin-top:9px;background:none;border:none;cursor:pointer;
+    font-family:inherit;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+    color:#f4ead652;padding:2px 0}
+  .storyLink:hover{color:#f4ead6a0}
+
+  /* ---------- call the winner ---------- */
+  #callBar{display:none;flex-direction:column;align-items:center;gap:9px;margin-top:24px;
+    pointer-events:auto}
+  #card.callable #callBar{display:flex}
+  #callBar .ck{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:#f4ead67a}
+  #callBtns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+  .callb{padding:11px 20px;font-size:11px;font-weight:800;letter-spacing:.13em;
+    text-transform:uppercase;border-radius:10px;cursor:pointer;font-family:inherit;
+    border:1px solid #ffffff26;background:rgba(16,13,22,.7);color:#f4ead6b0;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:.14s}
+  .callb:hover{background:rgba(38,33,50,.85);color:var(--paper)}
+  .callb[data-s="birds"].on{background:var(--hot);border-color:var(--hot);color:#1a1206}
+  .callb[data-s="coons"].on{background:var(--cool);border-color:var(--cool);color:#08131a}
+  #callBar.locked .callb{cursor:default;opacity:.5}
+  #callBar.locked .callb.on{opacity:1}
+  #callNote{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#f4ead65c}
+  #callScore{margin-top:14px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    font-weight:700;display:none}
+  #card.result #callScore.on{display:block}
+  #callScore.hit{color:#7fd48a} #callScore.miss{color:#e0705c}
+  body.short #callBar{margin-top:14px;gap:6px}
+  body.short .callb{padding:9px 14px;font-size:10px}
+
   /* ---------- controls ---------- */
   #panel{position:absolute;z-index:12;left:16px;bottom:16px;width:296px;
     max-height:calc(100% - 120px);overflow-y:auto;
@@ -323,14 +375,35 @@
     <div id="count"></div>
     <div class="sub" id="cardSub"></div>
     <div id="cardTrib">for Eenie &amp; Moe</div>
+    <div id="callBar">
+      <div class="ck">Call it</div>
+      <div id="callBtns">
+        <button class="callb" data-s="birds">The flock</button>
+        <button class="callb" data-s="coons">The raccoons</button>
+      </div>
+      <div id="callNote">Locks when the countdown ends</div>
+    </div>
+    <div id="callScore"></div>
     <div id="cardBtns">
       <button id="again" class="prime">Run it back</button>
       <button id="setup">Change matchup</button>
+      <button id="share">Copy link</button>
     </div>
     <a class="coffee card" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
       <span>Buy me a coffee</span>
     </a>
+  </div>
+
+  <div id="story">
+    <div class="nm">Eenie &amp; Moe</div>
+    <p>A family of raccoons raided the coop in the middle of the night.</p>
+    <p class="last">Eenie and Moe didn't make it.</p>
+    <div class="rule"></div>
+    <p>So this is a simulator built to answer the question that comes after it:
+       how many chickens would it have taken?</p>
+    <button id="storyGo">Find out</button>
+    <button id="storySkip">Skip</button>
   </div>
 
   <div id="tools">
@@ -378,6 +451,7 @@
     <div class="hint">You call the farm in <em>during</em> the fight — the war chest fills
       while the birds hold the line.</div>
     <button id="go">Fight</button>
+    <button class="storyLink" id="storyOpen">Why this exists</button>
     <div class="mini">
       <button data-preset="classic">1000 v 100</button>
       <button data-preset="massacre">Massacre</button>

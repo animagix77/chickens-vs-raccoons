@@ -6,9 +6,41 @@
 const $ = id => document.getElementById(id);
 const clamp = (v,a,b) => v<a?a:(v>b?b:v);
 const lerp  = (a,b,t) => a+(b-a)*t;
-const rnd   = (a,b) => a+Math.random()*(b-a);
-const pick  = a => a[(Math.random()*a.length)|0];
 const TAU   = Math.PI*2;
+
+/* ============================================================
+   TWO RANDOM STREAMS
+
+   A shared seed has to reproduce a fight exactly, on any machine, at any
+   frame rate. That only works if the numbers the simulation draws depend
+   on nothing but the simulation itself — so the draws are split in two.
+
+   SR() is the fight. It is advanced only inside the fixed-timestep sim
+   step, so after N steps the state is identical everywhere.
+
+   VR() is everything you merely look at: camera shake, blood spatter,
+   music, clouds. It is drawn a different number of times on a fast
+   machine than a slow one, which is exactly why it must never touch the
+   sim's stream.
+   ============================================================ */
+function mulberry(seed){
+  let a=seed>>>0;
+  return function(){
+    a=(a+0x6D2B79F5)|0;
+    let t=Math.imul(a^(a>>>15),1|a);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+let SR=mulberry((Math.random()*4294967296)>>>0);          // simulation
+const VR=mulberry((Math.random()*4294967296)>>>0);        // cosmetic
+function seedSim(n){ SR=mulberry(n>>>0); }
+/* cosmetic helpers — anything that changes only how the fight looks */
+const rnd   = (a,b) => a+VR()*(b-a);
+const pick  = a => a[(VR()*a.length)|0];
+/* simulation helpers — anything that changes who wins */
+const srnd  = (a,b) => a+SR()*(b-a);
+const spick = a => a[(SR()*a.length)|0];
 
 /* ---------- film grain (procedural, keeps file self-contained) ---------- */
 (function grain(){

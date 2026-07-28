@@ -146,9 +146,24 @@ function bakeEnv(night){
 }
 
 /* day / night dressing for the sky itself */
+/* The grade was tuned for daylight and then reused after dark, so the bulb
+   and the moon both punched straight through the bloom threshold. Night gets
+   its own: less exposure, a higher threshold so only the bulb itself blooms,
+   and a deeper vignette to keep the eye in the middle of the coop. */
+function setGrade(night){
+  if(typeof matComp==='undefined'||!matComp) return;
+  const u=matComp.uniforms;
+  u.uExposure.value = night?0.88:0.95;
+  u.uBloom.value    = night?0.22:0.30;
+  u.uVig.value      = night?0.44:0.40;
+  u.uSat.value      = night?0.97:1.10;   // the bulb goes orange fast; pull it back
+  u.uContrast.value = night?1.06:1.075;
+  if(typeof matBright!=='undefined'&&matBright) matBright.uniforms.uThresh.value = night?1.30:1.10;
+}
 function setSky(night){
   SKY_U.uNight.value=night?1:0;
   SKY_U.uCover.value=night?0.34:0.52;
+  setGrade(night);
   bakeEnv(night);
 }
 

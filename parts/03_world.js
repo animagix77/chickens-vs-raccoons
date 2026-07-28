@@ -39,10 +39,15 @@ function buildArena(R,night){
   if(night){
     scene.background=null;
     scene.fog=new THREE.FogExp2(0,0.0055); scene.fog.color.setHex(0x0e1422).convertSRGBToLinear();
-    hemi.color.setHex(0x2c3a58); hemi.groundColor.setHex(0x181008); hemi.intensity=0.16;
-    sun.color.setHex(0x9dbaf0); sun.intensity=0.34; SUN_OFF.set(-34,62,-30);
-    rim.color.setHex(0x4a6fa0); rim.intensity=0.10;
-    bulb.intensity=26; bulb.distance=R*3.4; bulb.decay=1.6; bulb.position.set(0,R*0.26,0);
+    hemi.color.setHex(0x2a3a58); hemi.groundColor.setHex(0x1c1409); hemi.intensity=0.21;
+    sun.color.setHex(0x9db6e2); sun.intensity=0.34; SUN_OFF.set(-34,62,-30);
+    rim.color.setHex(0x486a9c); rim.intensity=0.13;
+    /* One bare bulb over a dirt floor. It was flooding the whole arena at 26
+       with a soft falloff, which is why night looked blown out rather than
+       lit — a quarter of the power with true inverse-square decay makes it
+       pool under the fixture and leave the edges to the moon. */
+    bulb.color.setHex(0xffc98a);
+    bulb.intensity=6.0; bulb.distance=R*2.8; bulb.decay=1.85; bulb.position.set(0,R*0.24,0);
     SKY_U.uSun.value.set(-0.34,0.62,-0.30).normalize();
   }else{
     scene.background=null;
