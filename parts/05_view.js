@@ -594,10 +594,12 @@ async function fetchOne(url,onBytes){
   return out.buffer;
 }
 async function loadAssets(){
-  const art=$('loadArt');
+  /* Still fetched up front so it is decoded and ready the instant the story
+     card appears — it just isn't the loading screen any more. */
+  const art=$('storyArt');
   if(art){
-    art.onload=()=>art.classList.add('in');
-    art.onerror=()=>art.style.display='none';
+    art.onload=()=>{ art.style.display='block'; requestAnimationFrame(()=>art.classList.add('in')); };
+    art.onerror=()=>{ art.style.display='none'; };
     art.src=ASSET_BASE+'img/eeniemoe.jpg';
   }
   /* Weight the bar by the real sizes so it doesn't stall on the big beds.

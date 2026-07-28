@@ -125,21 +125,12 @@
     transition:opacity .6s ease}
   body.loaded #load{opacity:0;pointer-events:none}
   body.loadgone #load{display:none}
-  #loadArt{max-width:min(70vw,340px);max-height:52vh;border-radius:12px;
-    box-shadow:0 20px 60px #000b, 0 0 0 1px #ffffff14;object-fit:contain;
-    opacity:0;transform:scale(.97);transition:opacity .9s ease,transform .9s ease}
-  #loadArt.in{opacity:1;transform:none}
-  #loadName{margin-top:22px;font-size:clamp(19px,3.6vmin,30px);font-weight:800;
-    letter-spacing:-.01em;text-transform:uppercase;color:var(--paper);text-align:center}
-  #loadSub{margin-top:7px;font-size:11px;letter-spacing:.26em;text-transform:uppercase;
-    color:#f4ead67a;text-align:center}
-  #loadBarOuter{margin-top:26px;width:min(62vw,300px);height:5px;border-radius:4px;
+  #loadBarOuter{width:min(62vw,300px);height:5px;border-radius:4px;
     background:#ffffff16;overflow:hidden}
   #loadBar{height:100%;width:0%;border-radius:4px;
     background:linear-gradient(90deg,#ff6a3d,#ffb020);transition:width .25s ease}
   #loadPct{margin-top:11px;font-size:10px;letter-spacing:.22em;color:#f4ead65e;
     font-variant-numeric:tabular-nums}
-  body.short #loadArt{max-height:40vh}
 
   /* ---------- how to play ---------- */
   #rules{position:absolute;inset:0;z-index:29;display:none;flex-direction:column;
@@ -176,20 +167,37 @@
   body.narrow .rl .tx{font-size:11.5px;line-height:1.5}
   body.short #rulesList{max-height:56vh}
 
+  /* With the name gone the portrait carries the top of the card on its own,
+     so it inherits the space the headline was using. */
+  #storyArt{display:none;flex:0 0 auto;width:min(42vh,290px);border-radius:14px;
+    margin-bottom:26px;box-shadow:0 22px 60px #000c, 0 0 0 1px #ffffff1c;
+    opacity:0;transform:scale(.97);transition:opacity 1s ease,transform 1s ease}
+  #storyArt.in{opacity:1;transform:none}
+  body.narrow #storyArt{width:min(38vh,230px);margin-bottom:20px}
+  /* 'short' starts at 600px tall, which includes plenty of ordinary desktop
+     windows — those have room. Only drop the portrait when there genuinely
+     isn't space for it and the words both, and the words are the point. */
+  @media (max-height:640px){ #storyArt{width:min(32vh,200px);margin-bottom:16px} }
+  /* even a phone on its side has room for it now that the headline is gone */
+  @media (max-height:470px){ #storyArt{width:min(21vh,96px);margin-bottom:8px} }
+
   /* ---------- the story ---------- */
+  /* The portrait made this tall enough to push the buttons off a short
+     screen, so the card scrolls rather than trapping them out of reach. */
   #story{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
-    align-items:center;justify-content:center;text-align:center;padding:8vmin 7vw;
+    align-items:center;justify-content:center;text-align:center;padding:6vmin 7vw;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
     background:radial-gradient(60% 60% at 50% 45%,rgba(6,5,9,.86),rgba(4,3,6,.97));
     backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
     opacity:0;transition:opacity .6s}
   body.story #story{display:flex}
   body.story.storyIn #story{opacity:1}
   #story .nm{font-family:Georgia,'Times New Roman',serif;font-style:italic;
-    font-size:clamp(30px,6.6vmin,58px);color:#f0e2c0;letter-spacing:.01em;margin-bottom:26px}
+    font-size:clamp(28px,5.6vmin,52px);color:#f0e2c0;letter-spacing:.01em;margin-bottom:18px}
   #story p{max-width:30em;margin:0 0 15px;font-size:clamp(13px,2.1vmin,16.5px);
     line-height:1.72;color:#f4ead6be;letter-spacing:.012em}
   #story p.last{color:#f4ead6;margin-top:9px}
-  #story .rule{width:52px;height:1px;background:#ffb02055;margin:22px 0 26px}
+  #story .rule{width:52px;height:1px;background:#ffb02055;margin:17px 0 20px;flex:0 0 auto}
   #storyGo{margin-top:12px;padding:14px 30px;font-size:11.5px;font-weight:800;
     letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
     font-family:inherit;border:none;color:#fff;
@@ -492,9 +500,6 @@
   </div>
 
   <div id="load">
-    <img id="loadArt" alt="Eenie and Moe">
-    <div id="loadName">Eenie &amp; Moe</div>
-    <div id="loadSub">They didn't make it</div>
     <div id="loadBarOuter"><div id="loadBar"></div></div>
     <div id="loadPct">Loading</div>
   </div>
@@ -541,7 +546,7 @@
   </div>
 
   <div id="story">
-    <div class="nm">Eenie &amp; Moe</div>
+    <img id="storyArt" alt="Eenie and Moe">
     <p>A family of raccoons raided the coop in the middle of the night.</p>
     <p class="last">Eenie and Moe didn't make it.</p>
     <div class="rule"></div>
