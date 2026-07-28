@@ -16,9 +16,13 @@ Set a matchup — up to 4000 birds against 500 raccoons, on an open field in day
 
 **Three abilities**, each on a cooldown: sound the horn (everything you own moves and swings faster), scatter feed (birds converge and hold their nerve), and the floodlight (predators flinch, hit softer, swing slower).
 
+**Heavy animals swing, they don't jab.** A bear clears a 6.4 metre arc and sends up to sixteen birds cartwheeling through the air at once; a bull manages six, a donkey four. Throw force is divided by the target's bulk, so a hen sails the width of the pen and a bull on the receiving end merely gets rocked. Anything still alive when it lands takes the fall.
+
 **Call it before the countdown.** Pick a side on the matchup card. It locks when the countdown hits zero, and the verdict tells you whether you were right and how you're doing across the session. Most people are confident and wrong, which is the entire appeal.
 
 **Every fight has a link.** The matchup and a seed live in the URL, so a fight can be sent to someone and it replays exactly — same spawns, same crits, same result, on any machine at any frame rate. Copy link is on the verdict card.
+
+**It explains itself.** A short card after the story covers the war chest, what each of the three abilities actually does, and the keyboard shortcuts. Both it and the story are reachable again from the panel.
 
 **Reel mode** crops to 9:16 and hides the chrome, because the point of this was always short-form video.
 
@@ -44,7 +48,7 @@ The headline matchup is genuinely balanced on a knife edge:
 | Matchup | Birds win | Typical result |
 |---|---|---|
 | 850 roosters v 100 raccoons | 0 of 5 | wiped out, ~50 raccoons still standing |
-| **1000 roosters v 100 raccoons** | **6 of 11** | ~33s, ~50 birds and ~8 raccoons left |
+| **1000 roosters v 100 raccoons** | **6 of 13** | ~32s, ~46 birds left |
 | 1200 roosters v 100 raccoons | 5 of 5 | ~560 birds walk away |
 
 Hens are not roosters. A thousand of them lose to a hundred raccoons every time, and the raccoons take **zero** casualties doing it. In the night coop, 1200 hens against 60 raccoons is the same story.
@@ -53,9 +57,10 @@ And a black bear is not a raccoon problem:
 
 | Hens | Result |
 |---|---|
-| 200 | bear wins, 52s |
-| 400 | bear wins, 98s |
-| 600 | bear falls, 375 hens survive |
+| 400 | bear wins, 32s |
+| 700 | bear wins, 53s |
+| 1000 | bear falls in 4 of 5 |
+| 1500 | bear falls every time |
 
 ## Is any of this realistic?
 
@@ -66,6 +71,8 @@ The behaviour is grounded. Raccoons really do surplus-kill. Hens really don't fi
 The durability numbers are now grounded too, which they weren't at first. Health scales as mass^0.75 — the usual structural exponent — times a factor for what the animal actually is, with predators worth roughly twice a prey mammal of the same weight because they have the weapons. The raccoon anchors the scale. Damage follows the same shape: a donkey's kick and a bull's horns are lethal to a 7kg animal in one or two connections, and the numbers say so now.
 
 The first pass got this badly wrong in a way worth recording. A 50kg goat had less health than a 7kg raccoon. A 700kg bull had less than a farm dog and swung for less damage than its target had health, so it could stand in a crowd of raccoons for ten seconds and kill none of them. Fixing it meant halving every predator's health and halving the three flock birds' damage together, which leaves flock-versus-raccoon exactly where it was — the answers above are unchanged — while doubling what a bull or a donkey is worth.
+
+The swing was the other half of the bear problem, and it was a bug rather than a balance choice. Cleave scanned a fixed three-by-three block of the spatial hash — about 3.6 metres — while the bear's reach was 4.6, so most of its arc was silently ignored and the largest animal on the field connected with almost nothing. The scan is now sized from the actual radius.
 
 What is *not* realistic is speed and scale. The real raccoon-to-chicken speed ratio is about 1.7×; the sim uses 1.06×, because a fight where one side simply outruns the other isn't worth watching. And a real bear would never be brought down by any number of chickens.
 
@@ -107,7 +114,7 @@ That writes `index.html`. The part files are ordinary HTML and JS with no module
 | `parts/02c_units.js` | The 20-unit roster table, its stats, and how they were derived |
 | `parts/03_world.js` | Arena, terrain, props, particles, blood and gore |
 | `parts/04_sim.js` | Combat, steering, morale, the commander and deploy system |
-| `parts/05_view.js` | Sound engine, music engine, kill feed, camera director |
+| `parts/05_view.js` | Sound engine and its iOS unlock, music engine, kill feed, camera director |
 | `parts/06_ui.js` | Sequencer, seeds and links, calling the winner, controls, main loop |
 | `parts/07_sky.js` | Sky shader, environment bake, post-processing chain |
 

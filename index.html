@@ -107,6 +107,51 @@
   body.short #cardBtns{margin-top:18px}
   body.short #cardBtns button{padding:10px 16px;font-size:10.5px}
 
+  /* shown only when the browser has refused to start audio */
+  #sndhint{position:absolute;z-index:16;left:50%;transform:translateX(-50%);top:14px;
+    display:none;padding:9px 15px;border-radius:999px;cursor:pointer;font-family:inherit;
+    font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    border:1px solid #ffb02060;background:rgba(40,29,10,.9);color:#ffd58a;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #sndhint.on{display:block}
+  body.narrow #sndhint{top:auto;bottom:14px}
+  body.hideui #sndhint{display:none}
+
+  /* ---------- how to play ---------- */
+  #rules{position:absolute;inset:0;z-index:29;display:none;flex-direction:column;
+    align-items:center;justify-content:center;padding:6vmin 6vw;
+    background:radial-gradient(70% 70% at 50% 45%,rgba(6,5,9,.88),rgba(4,3,6,.97));
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    opacity:0;transition:opacity .5s}
+  body.rules #rules{display:flex}
+  body.rules.rulesIn #rules{opacity:1}
+  #rules h2{margin:0 0 4px;font-size:11px;letter-spacing:.42em;text-transform:uppercase;
+    color:#f4ead67a;font-weight:700}
+  #rules .sub{margin:0 0 22px;font-size:12.5px;color:#f4ead68c;letter-spacing:.02em}
+  #rulesList{width:100%;max-width:560px;max-height:60vh;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:#ffffff2e transparent;
+    display:flex;flex-direction:column;gap:11px;padding-right:4px}
+  #rulesList::-webkit-scrollbar{width:5px}
+  #rulesList::-webkit-scrollbar-thumb{background:#ffffff2e;border-radius:4px}
+  .rl{display:flex;gap:13px;align-items:flex-start;text-align:left}
+  .rl .kx{flex:0 0 auto;min-width:74px;padding:5px 8px;border-radius:7px;text-align:center;
+    font-size:9px;letter-spacing:.11em;text-transform:uppercase;font-weight:800;
+    border:1px solid #ffffff1f;background:#ffffff0a;color:#f4ead6b8}
+  .rl.hot .kx{border-color:#ffb02052;background:rgba(255,176,32,.1);color:#ffd58a}
+  .rl .tx{flex:1;min-width:0;font-size:12.5px;line-height:1.55;color:#f4ead6b0;letter-spacing:.01em}
+  .rl .tx b{color:var(--paper);font-weight:700}
+  #rulesGo{margin-top:24px;padding:14px 30px;font-size:11.5px;font-weight:800;
+    letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
+    font-family:inherit;border:none;color:#fff;
+    background:linear-gradient(180deg,#ff6a3d,#d8452f);
+    box-shadow:0 4px 0 #8c2418,0 10px 24px #d8452f40;transition:.15s}
+  #rulesGo:hover{filter:brightness(1.08)}
+  #rulesGo:active{transform:translateY(2px);box-shadow:0 2px 0 #8c2418}
+  body.narrow #rulesList{max-height:64vh;gap:9px}
+  body.narrow .rl .kx{min-width:62px;font-size:8px;padding:4px 5px}
+  body.narrow .rl .tx{font-size:11.5px;line-height:1.5}
+  body.short #rulesList{max-height:56vh}
+
   /* ---------- the story ---------- */
   #story{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
     align-items:center;justify-content:center;text-align:center;padding:8vmin 7vw;
@@ -395,6 +440,47 @@
     </a>
   </div>
 
+  <button id="sndhint">Tap for sound</button>
+
+  <div id="rules">
+    <h2>How this works</h2>
+    <p class="sub">You don't just watch it. You run the farm while it happens.</p>
+    <div id="rulesList">
+      <div class="rl hot"><div class="kx">War chest</div><div class="tx">
+        Points build the whole fight. Spend them on the chips along the bottom to
+        call animals in <b>mid-battle</b> — guinea fowl are cheap noise, a bull costs
+        most of what you'll ever hold. You get four or five packets a match, so
+        what you skip matters as much as what you buy.</div></div>
+      <div class="rl hot"><div class="kx">1 &nbsp;Horn</div><div class="tx">
+        Everything on your side swings <b>35% faster and hits 15% harder</b> for six
+        seconds. Tempo. Use it when the lines are already locked and you want to
+        win the exchange.</div></div>
+      <div class="rl hot"><div class="kx">2 &nbsp;Feed</div><div class="tx">
+        Drops a pile mid-field. Birds break off and <b>converge on it</b>, and your
+        whole side stops routing for seven seconds. It's a rally and a regroup at
+        once — the answer to a collapse.</div></div>
+      <div class="rl hot"><div class="kx">3 &nbsp;Light</div><div class="tx">
+        Predators do <b>45% less damage and swing 35% slower</b> for five seconds.
+        Purely defensive, and the thing that saves you mid-massacre. Strongest in
+        the night coop.</div></div>
+      <div class="rl"><div class="kx">Call it</div><div class="tx">
+        Pick a side on the matchup card. It <b>locks when the countdown hits zero</b>
+        and the verdict tells you whether you were right. Most people are confident
+        and wrong.</div></div>
+      <div class="rl"><div class="kx">Camera</div><div class="tx">
+        Drag to look around, pinch or scroll to zoom. <b>Auto Cam</b> hands it back to
+        the director, which follows the front of the flock and then the clash.</div></div>
+      <div class="rl"><div class="kx">Copy link</div><div class="tx">
+        Every fight has a seed. The link on the verdict card <b>replays that exact
+        battle</b> for anyone who opens it — same spawns, same result. That's how you
+        make someone argue with you about it.</div></div>
+      <div class="rl"><div class="kx">R &nbsp;B &nbsp;H</div><div class="tx">
+        <b>Reel</b> crops to 9:16 for video. <b>Blood</b> is off by default and toggles on.
+        <b>H</b> hides the interface for a clean recording. Space starts a fight.</div></div>
+    </div>
+    <button id="rulesGo">Got it</button>
+  </div>
+
   <div id="story">
     <div class="nm">Eenie &amp; Moe</div>
     <p>A family of raccoons raided the coop in the middle of the night.</p>
@@ -403,7 +489,7 @@
     <p>So this is a simulator built to answer the question that comes after it:
        how many chickens would it have taken?</p>
     <button id="storyGo">Find out</button>
-    <button id="storySkip">Skip</button>
+    <button id="storySkip">Skip the lot</button>
   </div>
 
   <div id="tools">
@@ -451,6 +537,7 @@
     <div class="hint">You call the farm in <em>during</em> the fight — the war chest fills
       while the birds hold the line.</div>
     <button id="go">Fight</button>
+    <button class="storyLink" id="rulesOpen">How to play</button>
     <button class="storyLink" id="storyOpen">Why this exists</button>
     <div class="mini">
       <button data-preset="classic">1000 v 100</button>
@@ -953,6 +1040,12 @@ function buildQuad(o){
    Rooster damage is pinned at 4.3 for exactly that reason — nudge it and
    the famous answer stops being interesting.
 
+   The heavy animals swing rather than jab. sweep is [radius, targets, throw
+   force, lift]: a bear clears a 6.4 metre arc and sends up to sixteen birds
+   through the air at once, a bull six, a donkey four. Throw force is divided
+   by the target's bulk, so a hen cartwheels the width of the pen and a bull
+   on the receiving end merely gets rocked.
+
    Masses used (kg): hen 2.5, rooster 3.5, guinea 1.3, goose 5.5,
    turkey 8, cat 4.5, capybara 55, goat 50, pig 90, llama 160,
    donkey 210, dog 50, bull 700, raccoon 7, possum 4, fox 5,
@@ -983,11 +1076,11 @@ const UNITS=[
 {k:'llama',    team:0, label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
   build:'quad',kit:'llama', ranged:1, blurb:'A real livestock guardian. Spits with intent.'},
 {k:'donkey',   team:0, label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
-  build:'quad',kit:'donkey', shove:3.0, blurb:'Farmers use these on purpose. Kicks like a truck.'},
+  build:'quad',kit:'donkey', shove:3.0, sweep:[3.0,4,10,5.0], blurb:'Farmers use these on purpose. Kicks like a truck.'},
 {k:'dog',      team:0, label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
   build:'quad',kit:'dog', fear:9.0, blurb:'The reason most nights end quietly.'},
 {k:'bull',     team:0, label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
-  build:'quad',kit:'bull', shove:5.5, blurb:'A bad idea that works.'},
+  build:'quad',kit:'bull', shove:5.5, sweep:[3.6,6,12,5.8], blurb:'A bad idea that works.'},
 
 /* ---------------- what comes out of the treeline ---------------- */
 {k:'coon',     team:1, label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
@@ -1000,8 +1093,8 @@ const UNITS=[
   build:'quad',kit:'coyote', pack:1, blurb:'Never arrives alone.'},
 {k:'hawk',     team:1, label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
   build:'bird',kit:'hawk', fly:2.6, blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
-{k:'bear',     team:1, label:'Bear',       hp:11000,dmg:420,rate:1.40,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
-  build:'quad',kit:'bear', shove:6.0, boss:1, blurb:'This is no longer a raccoon problem.'}
+{k:'bear',     team:1, label:'Bear',       hp:11000,dmg:420,rate:1.15,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
+  build:'quad',kit:'bear', shove:6.0, boss:1, sweep:[6.4,16,19,9.0], blurb:'This is no longer a raccoon problem.'}
 ];
 const UI_=(()=>{ const m={}; UNITS.forEach((u,i)=>{u.i=i; m[u.k]=i;}); return m; })();
 const ALLIES=UNITS.filter(u=>u.team===0), FOES=UNITS.filter(u=>u.team===1);
@@ -1862,7 +1955,11 @@ const A={
   panicT:new Float32Array(MAXA),
   hit:new Float32Array(MAXA),       // flinch timer
   fy:new Float32Array(MAXA),        // flight height
-  rev:new Uint8Array(MAXA)          // possums: one free resurrection
+  rev:new Uint8Array(MAXA),         // possums: one free resurrection
+  /* being launched: vertical speed, tumble angle and its rate, and who
+     did it, so the landing can be credited to them */
+  vy:new Float32Array(MAXA), tum:new Float32Array(MAXA),
+  spin:new Float32Array(MAXA), lby:new Int32Array(MAXA)
 };
 let N=0;
 let aliveA=0, aliveB=0, initA=0, initB=0, panicCount=0;
@@ -2046,6 +2143,7 @@ function addAgent(x,z,kindIdx,vr){
   A.st[i]=0; A.kills[i]=0; A.name[i]=null;
   A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
+  A.vy[i]=0; A.tum[i]=0; A.spin[i]=0; A.lby[i]=-1;
   return i;
 }
 
@@ -2109,6 +2207,7 @@ function stepSim(dt){
   let conX=0, conZ=0, conN=0;
 
   for(let i=0;i<N;i++){
+    if(airborne(i,dt)) continue;      // nothing steers or swings mid-flight
     if(A.st[i]===2){ A.dead[i]+=dt; if(A.rev[i]===2) reviveCheck(i,dt); continue; }
 
     const mine=UNITS[A.kind[i]];
@@ -2307,11 +2406,20 @@ function attack(i,tg,mine,dist){
   hurt(tg,dmg,i,crit);
   if(mine.shove) shove(tg,A.x[tg]-A.x[i],A.z[tg]-A.z[i],mine.shove);
 
-  if(mine.cleave>1){
-    let extra=mine.cleave-1;
+  /* A wide swing. sweep is [radius, targets, throw force, lift]; without it a
+     unit just cleaves. The cell scan is sized from the radius — it used to be
+     a fixed 3x3 block, which for a bear meant searching about 3.6 metres for
+     targets up to 4.6 metres away, so most of the arc was silently ignored
+     and the biggest animal on the field looked harmless. */
+  const sw=mine.sweep;
+  const cr=sw?sw[0]:(mine.cleave>1?mine.reach*1.5:0);
+  if(cr>0){
+    let extra=sw?sw[1]:mine.cleave-1;
+    const span=Math.max(1,Math.ceil(cr/CS));
     const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
     const gz=clamp(((A.z[i]+ARENA_R+12)/CS)|0,0,gridW-1);
-    for(let a=-1;a<=1 && extra>0;a++)for(let b=-1;b<=1 && extra>0;b++){
+    const cr2=cr*cr;
+    for(let a=-span;a<=span && extra>0;a++)for(let b=-span;b<=span && extra>0;b++){
       const cx2=gx+a,cz2=gz+b;
       if(cx2<0||cz2<0||cx2>=gridW||cz2>=gridW) continue;
       const c=cz2*gridW+cx2;
@@ -2319,11 +2427,17 @@ function attack(i,tg,mine,dist){
         const j=cItems[k];
         if(j===tg||A.st[j]===2||A.team[j]===A.team[i]) continue;
         if(UNITS[A.kind[j]].fly&&!mine.aa) continue;
-        const d=Math.hypot(A.x[j]-A.x[i],A.z[j]-A.z[i]);
-        if(d<mine.reach*1.5){ hurt(j,dmg*0.62,i,false);
-          if(mine.shove) shove(j,A.x[j]-A.x[i],A.z[j]-A.z[i],mine.shove*0.6); extra--; }
+        const ddx=A.x[j]-A.x[i], ddz=A.z[j]-A.z[i];
+        if(ddx*ddx+ddz*ddz<cr2){
+          hurt(j,dmg*(sw?0.72:0.62),i,false);
+          if(sw) launch(j,ddx,ddz,sw[2],sw[3],i);
+          else if(mine.shove) shove(j,ddx,ddz,mine.shove*0.6);
+          extra--;
+        }
       }
     }
+    /* the one it actually swung at goes furthest */
+    if(sw) launch(tg,A.x[tg]-A.x[i],A.z[tg]-A.z[i],sw[2]*1.25,sw[3]*1.15,i);
   }
   const hy=0.5+(A.fy[tg]||0);
   spawnFeathers(A.x[tg],hy+0.05,A.z[tg],crit?3:1,crit?1.35:1);
@@ -2335,6 +2449,51 @@ function attack(i,tg,mine,dist){
   }
   if(SR()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
   sfx(crit?'spur':(mine.build==='bird'?'peck':'slash'), A.x[tg], A.z[tg]);
+}
+
+/* A heavy enough swing doesn't push a chicken, it throws it. Force is divided
+   by the target's bulk, so a hen sails across the pen, a goat gets rocked, and
+   a bull barely notices — and anything too heavy to lift just gets shoved. */
+const GRAV=23;
+function launch(j,dx,dz,force,up,by){
+  const u=UNITS[A.kind[j]];
+  if(u.boss||u.fly) return;
+  const m=force/(0.55+u.rad*1.5);
+  if(m<1.6){ shove(j,dx,dz,force*0.45); return; }
+  const l=Math.hypot(dx,dz)||1;
+  A.vx[j]=dx/l*m*srnd(.75,1.25);
+  A.vz[j]=dz/l*m*srnd(.75,1.25);
+  A.vy[j]=up/(0.55+u.rad*1.0)*srnd(.85,1.3);
+  A.fy[j]=Math.max(A.fy[j],0.06);
+  A.spin[j]=srnd(-11,11); A.tum[j]=0;
+  A.lby[j]=by; A.hit[j]=0.3;
+  spawnFeathers(A.x[j],0.75,A.z[j],u.build==='bird'?4:2,1.9);
+}
+/* returns true when the agent is still in the air and should be left alone */
+function airborne(i,dt){
+  const u=UNITS[A.kind[i]];
+  if(u.fly || A.fy[i]<=0.001) return false;
+  A.vy[i]-=GRAV*dt;
+  A.fy[i]+=A.vy[i]*dt;
+  A.x[i]+=A.vx[i]*dt; A.z[i]+=A.vz[i]*dt;
+  const drag=1-1.05*dt; A.vx[i]*=drag; A.vz[i]*=drag;
+  A.tum[i]+=A.spin[i]*dt;
+  if(A.st[i]===2) A.dead[i]+=dt;
+  const rr=Math.hypot(A.x[i],A.z[i]), lim=ARENA_R-0.9;
+  if(rr>lim){ const k=lim/rr; A.x[i]*=k; A.z[i]*=k; A.vx[i]*=-0.35; A.vz[i]*=-0.35; }
+  if(A.fy[i]<=0){
+    const speed=-A.vy[i];
+    A.fy[i]=0; A.vy[i]=0; A.tum[i]=0; A.spin[i]=0;
+    A.vx[i]*=0.12; A.vz[i]*=0.12;
+    spawnPuff(A.x[i],0.12,A.z[i],0.30);
+    if(A.st[i]!==2 && speed>7){
+      const by=A.lby[i]>=0?A.lby[i]:i;
+      hurt(i, A.hpMax[i]*clamp((speed-7)/16,0,0.55), by, false);
+    }
+    A.lby[i]=-1;
+    return false;
+  }
+  return true;
 }
 
 function shove(j,dx,dz,f){
@@ -2498,7 +2657,51 @@ function audioInit(){
   musicInit();
   master.gain.setTargetAtTime(soundOn?0.85:0.0001, AC.currentTime, 0.5);
 }
-function audioResume(){ audioInit(); if(AC&&AC.state==='suspended') AC.resume(); }
+/* ---------- getting sound out of iOS Safari ----------
+   Three separate things have to go right on an iPad and only the first is
+   obvious. The context has to be created and resumed inside a real user
+   gesture. It also has to actually play a source inside that gesture or
+   Safari reports 'running' and stays silent. And WebAudio alone is filed
+   under the ambient audio session, which the ringer switch mutes — a muted
+   iPad plays nothing no matter how correct the rest of it is, unless a
+   media element has claimed a playback session first.
+
+   The old code hooked one listener with {once:true}. A single failed attempt
+   meant silence for the rest of the visit, with no way back. */
+let audioPrimed=false, silentEl=null;
+/* 0.35s of digital silence — enough for iOS to grant a playback session */
+const SILENT_WAV='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
+function audioPrime(){
+  if(audioPrimed||!AC) return;
+  try{
+    const b=AC.createBuffer(1,1,AC.sampleRate);
+    const src=AC.createBufferSource();
+    src.buffer=b; src.connect(AC.destination); src.start(0);
+  }catch(e){}
+  try{
+    if(!silentEl){
+      silentEl=new Audio(SILENT_WAV);
+      silentEl.loop=true; silentEl.volume=0.0001;
+      silentEl.setAttribute('playsinline','');
+    }
+    const pr=silentEl.play(); if(pr&&pr.catch) pr.catch(()=>{});
+  }catch(e){}
+  audioPrimed=true;
+}
+function audioResume(){
+  audioInit();
+  if(!AC) return;
+  if(AC.state!=='running'){
+    const pr=AC.resume(); if(pr&&pr.catch) pr.catch(()=>{});
+  }
+  audioPrime();
+  audioBadge();
+}
+/* a visible way back if the browser refused the first time */
+function audioBadge(){
+  const el=$('sndhint'); if(!el) return;
+  el.classList.toggle('on', !!AC && AC.state!=='running' && (soundOn||MUS.on));
+}
 
 /* ---------- primitives ---------- */
 function outBus(pan){
@@ -3040,6 +3243,26 @@ function renderAgents(){
     const u=UNITS[ki], kit=KIT_PIV[ki][A.vr[i]];
     const st=A.st[i], bird=u.build==='bird';
     let y=A.fy[i]||0, roll=0, pitch=0, amp, fr;
+
+    /* thrown: ignore the gait and the corpse pose entirely and just cartwheel.
+       A dead bird keeps its arc — dying mid-flight shouldn't stop it. */
+    if(!u.fly && A.fy[i]>0.02){
+      pitch=A.tum[i]; roll=A.tum[i]*0.63;
+      amp=bird?0.95:0.35; fr=15;
+      const yaw2=A.yaw[i]+A.tum[i]*0.25;
+      _e.set(pitch,yaw2,roll,'YXZ'); _q.setFromEuler(_e);
+      _v.set(A.x[i],y,A.z[i]); _s.set(1,1,1);
+      _m.compose(_v,_q,_s);
+      const ang2=Math.sin(A.ph[i]*fr)*amp;
+      const c2=Math.cos(ang2), s3=Math.sin(ang2), py2=kit.y, pz2=kit.z;
+      _mL.set(1,0,0,0,
+              0,c2,-s3, py2-c2*py2+s3*pz2,
+              0,s3, c2, pz2-s3*py2-c2*pz2,
+              0,0,0,1);
+      _mF.multiplyMatrices(_m,_mL);
+      sq.push(A.vr[i],_m,_mF);
+      continue;                       // no blob shadow while it's off the ground
+    }
 
     if(st===2){
       const d=A.dead[i];
@@ -3713,7 +3936,10 @@ $('share').addEventListener('click',e=>{
   }
 });
 
-/* ---------- the story ---------- */
+/* ---------- the story, then how it works ----------
+   On a first visit these run one into the other: why this exists, then what
+   the buttons do, then you're in. Either can be opened again on its own from
+   the panel, and skip jumps the whole preamble. */
 function storyShow(){
   document.body.classList.add('story');
   requestAnimationFrame(()=>document.body.classList.add('storyIn'));
@@ -3723,9 +3949,21 @@ function storyHide(){
   setTimeout(()=>document.body.classList.remove('story'),620);
   audioResume();
 }
-$('storyGo').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); });
-$('storySkip').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); });
-$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); storyShow(); });
+function rulesShow(){
+  document.body.classList.add('rules');
+  $('rulesList').scrollTop=0;
+  requestAnimationFrame(()=>document.body.classList.add('rulesIn'));
+}
+function rulesHide(){
+  document.body.classList.remove('rulesIn');
+  setTimeout(()=>document.body.classList.remove('rules'),520);
+  audioResume();
+}
+$('storyGo').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
+$('storySkip').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesHide(); });
+$('rulesGo').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); });
+$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); storyShow(); });
+$('rulesOpen').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 
 $('go').addEventListener('click',()=>{
   if(BATTLE.running||SEQ.phase==='title'||SEQ.phase==='count') standby();
@@ -3754,9 +3992,19 @@ $('btnBlood').addEventListener('click',()=>{
   setGore(!GORE);
   $('btnBlood').classList.toggle('on',GORE);
 });
-/* browsers need a gesture before any of this makes a sound */
-['pointerdown','keydown','touchstart'].forEach(ev=>
-  addEventListener(ev,audioResume,{once:true,passive:true}));
+/* Keep trying on every gesture until it actually takes, rather than spending
+   the single attempt the old code allowed and giving up. Unhook once the
+   context is running so we're not calling resume() on every tap forever. */
+const AUDIO_EV=['pointerdown','pointerup','touchstart','touchend','click','keydown'];
+function audioPoke(){
+  audioResume();
+  if(AC&&AC.state==='running') AUDIO_EV.forEach(ev=>removeEventListener(ev,audioPoke));
+}
+AUDIO_EV.forEach(ev=>addEventListener(ev,audioPoke,{passive:true}));
+/* iOS suspends the context when you leave the tab and doesn't always restore it */
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) audioResume(); });
+$('sndhint').addEventListener('click',e=>{ e.stopPropagation(); audioResume(); });
+setInterval(audioBadge,1500);
 
 /* ---------- manual orbit ----------
    The drag moves the world with your finger: swipe right and the near side of
@@ -3823,7 +4071,12 @@ addEventListener('keydown',e=>{
   if(e.key==='r'||e.key==='R')$('btnReel').click();
   if(e.key==='h'||e.key==='H')document.body.classList.toggle('hideui');
   if(e.key==='b'||e.key==='B')$('btnBlood').click();
-  if(e.key==='Escape'){ if(document.body.classList.contains('story')) storyHide(); else toSetup(); }
+  if(e.key==='Escape'){
+    const b=document.body.classList;
+    if(b.contains('rules')) rulesHide();
+    else if(b.contains('story')) storyHide();
+    else toSetup();
+  }
   const c=CMD_DEF.find(d=>d.key===e.key); if(c) cmdFire(c.k);
 });
 
