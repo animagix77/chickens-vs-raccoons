@@ -48,6 +48,11 @@
    Rooster damage is pinned at 4.3 for exactly that reason — nudge it and
    the famous answer stops being interesting.
 
+   Every row also carries its voice. `voice` is what it says charging onto the
+   field, `hurtv` what it says when something connects and it lives, and `cry`
+   is [sound, chance-per-second] for speaking up unprompted mid-fight — a dog
+   barks constantly, a bear roars every few seconds, a hen only ever reacts.
+
    The heavy animals swing rather than jab. sweep is [radius, targets, throw
    force, lift]: a bear clears a 6.4 metre arc and sends up to sixteen birds
    through the air at once, a bull six, a donkey four. Throw force is divided
@@ -61,47 +66,47 @@
    ============================================================ */
 const UNITS=[
 /* ---------------- the flock ---------------- */
-{k:'hen',      team:0, label:'Hens',       hp:42,  dmg:1.1, rate:1.05,reach:1.15,speed:3.3, accel:9,  nerve:0.26,cleave:1,rad:0.72,cost:1,
+{k:'hen',      team:0, voice:'bawk', hurtv:'bawk', label:'Hens',       hp:42,  dmg:1.1, rate:1.05,reach:1.15,speed:3.3, accel:9,  nerve:0.26,cleave:1,rad:0.72,cost:1,
   build:'bird',kit:'hen',   blurb:'No spurs. No plan. No idea.'},
-{k:'rooster',  team:0, label:'Roosters',   hp:70,  dmg:4.3, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
+{k:'rooster',  team:0, voice:'crow', hurtv:'bawk', cry:['bawk',.05], label:'Roosters',   hp:70,  dmg:4.3, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
   build:'bird',kit:'rooster',crit:[0.08,1.9], blurb:'Loud, territorial, armed at the ankle.'},
-{k:'gamecock', team:0, label:'Gamecocks',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
+{k:'gamecock', team:0, voice:'crow', hurtv:'squawk', cry:['crow',.03], label:'Gamecocks',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
   build:'bird',kit:'gamecock',crit:[0.17,2.4], blurb:'Bred for exactly one thing.'},
-{k:'guinea',   team:0, label:'Guinea fowl',hp:42,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
+{k:'guinea',   team:0, voice:'cackle', hurtv:'bawk', cry:['cackle',.10], label:'Guinea fowl',hp:42,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
   build:'bird',kit:'guinea', rally:[6.5,0.55], blurb:'Useless in a fight. Screams before anyone else notices.'},
-{k:'goose',    team:0, label:'Geese',      hp:210, dmg:14,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
+{k:'goose',    team:0, voice:'honk', hurtv:'honk', cry:['honk',.12], label:'Geese',      hp:210, dmg:14,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
   build:'bird',kit:'goose', shove:1.5, blurb:'Genuinely wants to fight you. Always has.'},
-{k:'turkey',   team:0, label:'Turkeys',    hp:240, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
+{k:'turkey',   team:0, voice:'gobble', hurtv:'gobble', cry:['gobble',.10], label:'Turkeys',    hp:240, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
   build:'bird',kit:'turkey', blurb:'Enormous. Slow. Weirdly confident.'},
-{k:'cat',      team:0, label:'Barn cats',  hp:235, dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
+{k:'cat',      team:0, voice:'yowl', hurtv:'yowl', cry:['yowl',.08], label:'Barn cats',  hp:235, dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
   build:'quad',kit:'cat', crit:[0.30,2.2], blurb:'Will help. Will not be thanked.'},
-{k:'capybara', team:0, label:'Capybaras', hp:1900,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
+{k:'capybara', team:0, voice:'peep', hurtv:'peep', cry:['peep',.06], label:'Capybaras', hp:1900,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
   build:'quad',kit:'capybara', calm:[9.0,0.60], blurb:'Will not fight. Will not panic. Will not move.'},
-{k:'goat',     team:0, label:'Goats',      hp:1050,dmg:94,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
+{k:'goat',     team:0, voice:'bleat', hurtv:'bleat', cry:['bleat',.10], label:'Goats',      hp:1050,dmg:94,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
   build:'quad',kit:'goat', shove:3.4, blurb:'Arrives head-first. Only knows the one move.'},
-{k:'pig',      team:0, label:'Pigs',       hp:1850,dmg:92,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
+{k:'pig',      team:0, voice:'squeal', hurtv:'squeal', cry:['squeal',.09], label:'Pigs',       hp:1850,dmg:92,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
   build:'quad',kit:'pig', blurb:'Not a guardian animal. Simply large and hungry.'},
-{k:'llama',    team:0, label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
+{k:'llama',    team:0, voice:'orgle', hurtv:'orgle', cry:['orgle',.09], label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
   build:'quad',kit:'llama', ranged:1, blurb:'A real livestock guardian. Spits with intent.'},
-{k:'donkey',   team:0, label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
+{k:'donkey',   team:0, voice:'bray', hurtv:'bray', cry:['bray',.14], label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
   build:'quad',kit:'donkey', shove:3.0, sweep:[3.0,4,10,5.0], blurb:'Farmers use these on purpose. Kicks like a truck.'},
-{k:'dog',      team:0, label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
+{k:'dog',      team:0, voice:'bark', hurtv:'bark', cry:['bark',.30], label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
   build:'quad',kit:'dog', fear:9.0, blurb:'The reason most nights end quietly.'},
-{k:'bull',     team:0, label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
+{k:'bull',     team:0, voice:'bellow', hurtv:'bellow', cry:['bellow',.20], label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
   build:'quad',kit:'bull', shove:5.5, sweep:[3.6,6,12,5.8], blurb:'A bad idea that works.'},
 
 /* ---------------- what comes out of the treeline ---------------- */
-{k:'coon',     team:1, label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
+{k:'coon',     team:1, voice:'chitter', hurtv:'chitter', cry:['chitter',.05], label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
   build:'quad',kit:'coon', blurb:'Hands. Teeth. No respect for property lines.'},
-{k:'possum',   team:1, label:'Possums',    hp:115, dmg:18,  rate:0.90,reach:1.55,speed:3.4, accel:10, nerve:0.10,cleave:1,rad:1.00,cost:5,
+{k:'possum',   team:1, voice:'hiss', hurtv:'hiss', cry:['hiss',.07], label:'Possums',    hp:115, dmg:18,  rate:0.90,reach:1.55,speed:3.4, accel:10, nerve:0.10,cleave:1,rad:1.00,cost:5,
   build:'quad',kit:'possum', playDead:1, blurb:'Dies immediately. Gets up again. Repeat.'},
-{k:'fox',      team:1, label:'Foxes',      hp:180, dmg:32,  rate:0.60,reach:1.60,speed:6.0, accel:19, nerve:0.70,cleave:1,rad:1.00,cost:12,
+{k:'fox',      team:1, voice:'foxscream', hurtv:'foxscream', cry:['foxscream',.13], label:'Foxes',      hp:180, dmg:32,  rate:0.60,reach:1.60,speed:6.0, accel:19, nerve:0.70,cleave:1,rad:1.00,cost:12,
   build:'quad',kit:'fox', crit:[0.20,2.0], blurb:'Takes one bird and leaves. Then comes back.'},
-{k:'coyote',   team:1, label:'Coyotes',    hp:390, dmg:44,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
+{k:'coyote',   team:1, voice:'howl', hurtv:'growl', cry:['howl',.16], label:'Coyotes',    hp:390, dmg:44,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
   build:'quad',kit:'coyote', pack:1, blurb:'Never arrives alone.'},
-{k:'hawk',     team:1, label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
+{k:'hawk',     team:1, voice:'screech', hurtv:'screech', cry:['screech',.14], label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
   build:'bird',kit:'hawk', fly:2.6, blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
-{k:'bear',     team:1, label:'Bear',       hp:11000,dmg:420,rate:1.15,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
+{k:'bear',     team:1, voice:'roar', hurtv:'huff', cry:['roar',.26], label:'Bear',       hp:11000,dmg:420,rate:1.15,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
   build:'quad',kit:'bear', shove:6.0, boss:1, sweep:[6.4,16,19,9.0], blurb:'This is no longer a raccoon problem.'}
 ];
 const UI_=(()=>{ const m={}; UNITS.forEach((u,i)=>{u.i=i; m[u.k]=i;}); return m; })();

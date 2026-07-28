@@ -21,7 +21,8 @@ const A={
   /* being launched: vertical speed, tumble angle and its rate, and who
      did it, so the landing can be credited to them */
   vy:new Float32Array(MAXA), tum:new Float32Array(MAXA),
-  spin:new Float32Array(MAXA), lby:new Int32Array(MAXA)
+  spin:new Float32Array(MAXA), lby:new Int32Array(MAXA),
+  vt:new Float32Array(MAXA)         // when this one last used its voice
 };
 let N=0;
 let aliveA=0, aliveB=0, initA=0, initB=0, panicCount=0;
@@ -97,7 +98,13 @@ function deploy(d){
     aliveA++; initA++;
     spawnPuff(A.x[j],0.2,A.z[j],0.3);
   }
-  sfx(u.build==='bird'?'cackle':'screech',TC.ax,TC.az);
+  /* they arrive making their own noise — a pack of dogs should sound like a
+     pack of dogs, not a generic whoosh. Stagger so it reads as several animals
+     rather than one loud one. */
+  const vc=u.voice||(u.build==='bird'?'cackle':'growl');
+  const voices=Math.min(d.n,4);
+  for(let i=0;i<voices;i++)
+    setTimeout(()=>sfx(vc,TC.ax+srnd(-2,2),TC.az+srnd(-2,2),'cry'),i*srnd(90,240));
   killFeedRaw('<b>'+(d.n>1?d.n+' ':'')+u.label.toUpperCase()+'</b> joined the line');
   return true;
 }
@@ -205,7 +212,7 @@ function addAgent(x,z,kindIdx,vr){
   A.st[i]=0; A.kills[i]=0; A.name[i]=null;
   A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
-  A.vy[i]=0; A.tum[i]=0; A.spin[i]=0; A.lby[i]=-1;
+  A.vy[i]=0; A.tum[i]=0; A.spin[i]=0; A.lby[i]=-1; A.vt[i]=-9;
   return i;
 }
 
@@ -499,7 +506,10 @@ function attack(i,tg,mine,dist){
       }
     }
     /* the one it actually swung at goes furthest */
-    if(sw) launch(tg,A.x[tg]-A.x[i],A.z[tg]-A.z[i],sw[2]*1.25,sw[3]*1.15,i);
+    if(sw){
+      launch(tg,A.x[tg]-A.x[i],A.z[tg]-A.z[i],sw[2]*1.25,sw[3]*1.15,i);
+      if(mine.voice && SR()<0.30) sfx(mine.voice,A.x[i],A.z[i],'cry');
+    }
   }
   const hy=0.5+(A.fy[tg]||0);
   spawnFeathers(A.x[tg],hy+0.05,A.z[tg],crit?3:1,crit?1.35:1);
@@ -569,7 +579,18 @@ function shove(j,dx,dz,f){
 function hurt(j,dmg,by,crit){
   if(A.st[j]===2) return;
   A.hp[j]-=dmg; A.hit[j]=0.18;
-  if(A.hp[j]>0) return;
+  if(A.hp[j]>0){
+    /* Getting hit and living should be loud — that panicked BAWK is most of
+       what a coop raid actually sounds like. Throttled per bird so a single
+       one under sustained attack doesn't machine-gun, and pulled from its own
+       small budget so the whole flock can't drown everything else. */
+    const uh=UNITS[A.kind[j]];
+    if(BATTLE.t-A.vt[j]>srnd(.75,1.5) && SR()<(uh.build==='bird'?.55:.30)){
+      A.vt[j]=BATTLE.t;
+      sfx(uh.hurtv||(uh.build==='bird'?'bawk':'chitter'),A.x[j],A.z[j],'cry');
+    }
+    return;
+  }
   const u=UNITS[A.kind[j]];
   /* possums take the coward's exit and get back up */
   if(A.rev[j]===1){ A.rev[j]=2; A.st[j]=2; A.dead[j]=0; A.hp[j]=0; return; }
@@ -586,7 +607,7 @@ function hurt(j,dmg,by,crit){
   if(A.name[by]==null && A.kills[by]>=2) A.name[by]=spick(A.team[by]===0?BIRD_NAMES:COON_NAMES);
   if(BATTLE.champ<0 || A.kills[by]>A.kills[BATTLE.champ]) BATTLE.champ=by;
   killFeed(by,j,crit);
-  sfx(u.build==='bird'?'birddeath':'coondeath', A.x[j], A.z[j]);
+  sfx(u.build==='bird'?'birddeath':'coondeath', A.x[j], A.z[j], 'key');
   if(u.fly) A.fy[j]=0;                              // it drops
 }
 function reviveCheck(i,dt){

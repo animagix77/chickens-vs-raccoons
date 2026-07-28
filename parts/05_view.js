@@ -53,7 +53,8 @@ function clearFeed(){ feedEl.innerHTML=''; feedLock=0; }
    low-passed by distance, and fed to a synthetic room reverb.
    ============================================================ */
 let AC=null, master=null, mFilter=null, revSend=null,
-    soundOn=true, noiseBuf=null, sfxTokens=7, murmurT=0, farT=0;
+    soundOn=true, noiseBuf=null, sfxTokens=9, murmurT=0, farT=0,
+    voxTokens=6, cryT=0;
 const amb={};
 const _ap=new THREE.Vector3(), _ap2=new THREE.Vector3();
 
@@ -268,6 +269,99 @@ const VOX={
     VOX.thud(d,v*.8,t+.03);
     for(let i=0;i<2;i++) nz(d,t+.06+i*.07,.05,'lowpass',700,0,.11*v,rnd(.6,1));
   },
+
+  /* ---------- the barnyard proper ----------
+     Each of these is the same trick: a buzzy source at the animal's pitch,
+     pushed through parallel bandpass resonators standing in for a throat.
+     What separates a goat from a donkey is mostly the vibrato rate and where
+     those resonances sit, so the numbers below are the whole characterisation. */
+  bawk(d,v){ const t=AC.currentTime, f=rnd(400,560);   // BAWK-buk-buk-buk
+    vox(d,t,{f0:f,dur:.20,vol:.28*v, pitch:[[.08,2.1],[.35,1.5],[1,.58]],
+      vib:[rnd(20,30),rnd(40,80)], noise:.16, noiseF:3100,
+      form:[[rnd(1150,1450),4,1],[rnd(2700,3300),6,.7],[4400,9,.32]]});
+    const n=2+((Math.random()*3)|0);
+    for(let i=0;i<n;i++) vox(d,t+.24+i*rnd(.11,.15),{f0:f*rnd(.62,.74),dur:.08,
+      vol:.19*v, pitch:[[.3,1.35],[1,.66]], noise:.05,
+      form:[[1080,7,1],[2500,9,.5]]});
+  },
+  bark(d,v){ const t=AC.currentTime, n=1+((Math.random()*3)|0);
+    for(let i=0;i<n;i++){ const f=rnd(230,420);
+      vox(d,t+i*rnd(.15,.24),{f0:f,dur:.11,vol:.30*v, wave:'square',
+        pitch:[[.12,1.7],[1,.5]], noise:.22, noiseF:1900,
+        form:[[rnd(620,820),3.5,1],[rnd(1500,1900),5,.65],[2900,7,.3]]});
+      nz(d,t+i*.19,.05,'bandpass',rnd(900,1500),1.6,.12*v,1);
+    }
+  },
+  bleat(d,v){ vox(d,AC.currentTime,{f0:rnd(215,330),dur:rnd(.45,.62),vol:.26*v,
+    pitch:[[.15,1.12],[1,.78]], vib:[rnd(22,30),rnd(60,105)],   // the wobble is the goat
+    noise:.10, noiseF:2400, form:[[rnd(880,1120),5,1],[rnd(1950,2400),7,.6],[3400,9,.25]]}); },
+  bray(d,v){ const t=AC.currentTime;                  // hee-HAW
+    vox(d,t,{f0:rnd(300,400),dur:.30,vol:.26*v, pitch:[[.2,1.5],[1,1.15]],
+      am:rnd(15,22), noise:.14, noiseF:2200, form:[[1000,4,1],[2300,6,.5]]});
+    vox(d,t+.32,{f0:rnd(150,200),dur:.62,vol:.31*v, pitch:[[.15,.92],[1,.55]],
+      am:rnd(24,34), noise:.18, noiseF:1100,
+      form:[[rnd(480,640),3,1],[rnd(1200,1500),5,.55],[2400,8,.22]]});
+  },
+  bellow(d,v){ const t=AC.currentTime;                // bull
+    vox(d,t,{f0:rnd(92,132),dur:rnd(.85,1.20),vol:.34*v, glide:.72,
+      pitch:[[.10,1.16],[.5,1.02],[1,.72]], vib:[rnd(6,10),rnd(6,14)],
+      am:rnd(11,17), noise:.13, noiseF:520,
+      form:[[rnd(330,430),2.6,1],[rnd(760,940),4,.5],[1700,7,.2]]});
+    nz(d,t+.05,.5,'lowpass',260,0,.10*v,.7);
+  },
+  squeal(d,v){ vox(d,AC.currentTime,{f0:rnd(620,1000),dur:rnd(.26,.40),vol:.25*v,
+    wave:'square', pitch:[[.08,1.7],[.45,1.25],[1,.62]], vib:[rnd(26,40),rnd(70,150)],
+    noise:.14, noiseF:3400, form:[[rnd(1250,1650),3.5,1],[rnd(2800,3400),5,.55]]}); },
+  orgle(d,v){ vox(d,AC.currentTime,{f0:rnd(175,245),dur:rnd(.50,.72),vol:.22*v,
+    pitch:[[.3,1.08],[1,.86]], am:rnd(13,20), noise:.05, noiseF:1400,
+    form:[[rnd(520,660),4,1],[rnd(1150,1450),6,.45],[2600,9,.18]]}); },
+  yowl(d,v){ vox(d,AC.currentTime,{f0:rnd(420,640),dur:rnd(.42,.60),vol:.24*v,
+    pitch:[[.18,1.5],[.55,1.28],[1,.62]], vib:[rnd(11,18),rnd(30,65)],
+    noise:.09, noiseF:2800, form:[[rnd(960,1240),4,1],[rnd(2100,2650),6,.6],[3800,9,.25]]}); },
+  honk(d,v){ const t=AC.currentTime, n=1+((Math.random()*2)|0);
+    for(let i=0;i<n;i++) vox(d,t+i*rnd(.18,.26),{f0:rnd(330,470),dur:.19,vol:.27*v,
+      wave:'sawtooth', pitch:[[.15,1.3],[1,.74]], noise:.12, noiseF:2600,
+      form:[[rnd(760,980),3,1],[rnd(1900,2350),5,.8],[3300,8,.35]]});   // nasal 2nd formant
+  },
+  gobble(d,v){ const t=AC.currentTime;
+    vox(d,t,{f0:rnd(270,360),dur:rnd(.38,.55),vol:.25*v,
+      pitch:[[.2,1.25],[.6,1.05],[1,.8]], am:rnd(19,27),      // the wattle rattle
+      noise:.12, noiseF:2500, form:[[rnd(900,1150),4,1],[rnd(2000,2500),6,.6],[3600,9,.28]]});
+  },
+  howl(d,v){ const t=AC.currentTime;                  // coyote
+    vox(d,t,{f0:rnd(380,520),dur:rnd(1.0,1.5),vol:.28*v, glide:1.25,
+      pitch:[[.12,1.55],[.35,1.72],[.75,1.62],[1,1.05]], vib:[rnd(5,9),rnd(14,30)],
+      noise:.06, noiseF:3000, form:[[rnd(900,1150),3,1],[rnd(2000,2500),5,.55],[3800,8,.2]]});
+    if(Math.random()<.5) for(let i=0;i<3;i++)
+      vox(d,t+rnd(1.5,1.8)+i*.13,{f0:rnd(500,700),dur:.09,vol:.19*v,
+        pitch:[[.3,1.4],[1,.6]], noise:.10, form:[[1200,5,1],[2600,7,.5]]});
+  },
+  foxscream(d,v){ vox(d,AC.currentTime,{f0:rnd(680,980),dur:rnd(.40,.58),vol:.27*v,
+    wave:'square', pitch:[[.06,1.5],[.3,1.22],[1,.55]], vib:[rnd(14,24),rnd(45,95)],
+    noise:.26, noiseF:3600, form:[[rnd(1300,1700),3,1],[rnd(2900,3500),5,.6]]}); },
+  roar(d,v){ const t=AC.currentTime;                  // bear: the big one
+    vox(d,t,{f0:rnd(68,104),dur:rnd(1.0,1.45),vol:.38*v, glide:.68,
+      pitch:[[.08,1.22],[.45,1.05],[1,.66]], am:rnd(17,26), vib:[rnd(4,8),rnd(4,10)],
+      noise:.20, noiseF:420,
+      form:[[rnd(260,350),2.2,1],[rnd(640,820),3.5,.6],[1400,6,.26],[2600,9,.1]]});
+    nz(d,t,.7,'lowpass',rnd(200,300),0,.16*v,.6);
+    const sub=AC.createOscillator(); sub.type='sine';
+    sub.frequency.setValueAtTime(rnd(52,68),t);
+    sub.frequency.exponentialRampToValueAtTime(rnd(34,44),t+1.0);
+    sub.connect(env(d,t,.05,1.0,.22*v)); sub.start(t); sub.stop(t+1.2);
+  },
+  huff(d,v){ const t=AC.currentTime;                  // bear, close up and unhappy
+    for(let i=0;i<2+((Math.random()*2)|0);i++)
+      nz(d,t+i*rnd(.13,.19),.09,'lowpass',rnd(380,620),0,.20*v,rnd(.5,.8));
+  },
+  screech(d,v){ const t=AC.currentTime;              // raptor
+    vox(d,t,{f0:rnd(1100,1650),dur:rnd(.45,.65),vol:.26*v, wave:'sawtooth',
+      glide:.62, pitch:[[.05,1.35],[.3,1.1],[1,.5]], vib:[rnd(30,48),rnd(80,170)],
+      noise:.30, noiseF:4600, form:[[rnd(2100,2700),3,1],[rnd(4200,5000),5,.5]]});
+    nz(d,t,.28,'highpass',3800,0,.10*v,1);
+  },
+  peep(d,v){ vox(d,AC.currentTime,{f0:rnd(900,1400),dur:.09,vol:.17*v,
+    pitch:[[.3,1.3],[1,.72]], noise:.06, form:[[2100,6,1],[3800,8,.4]]}); },
   chitter(d,v){ vox(d,AC.currentTime,{f0:rnd(205,325),dur:rnd(.22,.42),vol:.19*v,
     pitch:[[.5,1.25],[1,.85]], am:rnd(36,58), noise:.08, noiseF:2200,
     form:[[rnd(790,1060),4,1],[rnd(1850,2450),6,.5]]}); },
@@ -315,8 +409,14 @@ const VOX={
 };
 
 /* ---------- positional dispatch ---------- */
-function sfx(kind,x,z,soft){
+/* mode: undefined = an ordinary blow, thinned out with distance
+        'soft'  = background murmur, quiet, unlimited
+        'cry'   = a creature using its voice — own budget, never thinned
+        'key'   = something that must be heard (a death), never thinned */
+function sfx(kind,x,z,mode){
+  if(mode===true) mode='soft';
   if(!soundOn||!AC||!VOX[kind]) return;
+  const always=(mode==='soft'||mode==='cry'||mode==='key');
   let v=1, pan=0, bright=15000;
   if(x!==undefined){
     _ap.set(x,0.55,z);
@@ -326,10 +426,16 @@ function sfx(kind,x,z,soft){
     _ap2.copy(_ap).project(camera);
     if(_ap2.z>1) return;                       // behind the lens
     // the close fight is the one you hear; distant scuffles thin out
-    if(!soft && Math.random()>near*0.9+0.05) return;
+    if(!always && Math.random()>near*0.9+0.05) return;
+    /* An always-play sound still costs a token, so a death 60 metres away
+       would spend budget on something inaudible and starve the one happening
+       in front of the lens. Cries and deaths have to clear a hearing floor. */
+    if(mode!=='soft' && always && near<0.24) return;
     v=near*near; pan=clamp(_ap2.x*0.9,-1,1); bright=lerp(850,15000,near);
   }
-  if(soft) v*=0.42; else { if(sfxTokens<1) return; sfxTokens--; }
+  if(mode==='soft') v*=0.42;
+  else if(mode==='cry'){ if(voxTokens<1) return; voxTokens--; }
+  else { if(sfxTokens<1) return; sfxTokens--; }
   const bus=outBus(pan);
   const tn=AC.createBiquadFilter(); tn.type='lowpass'; tn.frequency.value=bright;
   tn.connect(bus);
@@ -382,7 +488,8 @@ function audioUpdate(dt){
   if(!AC) return;
   musicUpdate(dt);
   recentKills*=Math.exp(-dt*1.6);
-  sfxTokens=Math.min(7,sfxTokens+dt*17);
+  sfxTokens=Math.min(9,sfxTokens+dt*20);
+  voxTokens=Math.min(6,voxTokens+dt*7);
   master.gain.setTargetAtTime(soundOn?0.85:0.0001, AC.currentTime, 0.25);
   if(!soundOn) return;
 
@@ -405,6 +512,22 @@ function audioUpdate(dt){
       sfx(k,A.x[i],A.z[i],true);
     }
   }
+  /* Battle cries. Every so often pick a living combatant and let whatever it
+     is speak up — this is what makes a field of dogs and bears feel occupied
+     rather than like one crowd loop. Rarer, bigger animals get heard more
+     because there are fewer of them to notice. */
+  cryT-=dt;
+  if(cryT<=0 && N>0 && BATTLE.running && !BATTLE.over){
+    cryT=rnd(.22,.55);
+    for(let a=0;a<4;a++){
+      const i=(Math.random()*N)|0;
+      if(A.st[i]===2) continue;
+      const u=UNITS[A.kind[i]];
+      if(!u.cry) continue;
+      if(Math.random()<u.cry[1]){ sfx(u.cry[0],A.x[i],A.z[i],'cry'); break; }
+    }
+  }
+
   /* and the world keeps making noise around it */
   farT-=dt;
   if(farT<=0){
