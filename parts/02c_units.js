@@ -105,7 +105,7 @@ const UNITS=[
 {k:'coyote',   team:1, voice:'howl', hurtv:'growl', cry:['howl',.16], label:'Coyotes',    hp:390, dmg:44,  rate:0.68,reach:1.80,speed:5.2, accel:15, nerve:0.90,cleave:2,rad:1.15,cost:16,
   build:'quad',kit:'coyote', pack:1, blurb:'Never arrives alone.'},
 {k:'hawk',     team:1, voice:'screech', hurtv:'screech', cry:['screech',.14], label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
-  build:'bird',kit:'hawk', fly:2.6, blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
+  build:'bird',kit:'hawk', fly:2.6, soar:[7.2,0.85,8.5,2.6], blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
 {k:'bear',     team:1, voice:'roar', hurtv:'huff', cry:['roar',.26], label:'Bear',       hp:11000,dmg:420,rate:1.15,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
   build:'quad',kit:'bear', shove:6.0, boss:1, sweep:[6.4,16,19,9.0], blurb:'This is no longer a raccoon problem.'}
 ];
@@ -125,8 +125,9 @@ const KITS={
                  {feather:'#5a5f52',wingC:'#6a6f60',tail:'#3f4438',red:'#1a1a1a',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.52,spur:0}].map(buildBird),
   turkey:   ()=>[{feather:'#3a2f26',wingC:'#4a3c30',tail:'#5a4a38',red:'#d0403a',comb:1.7,tailUp:.05,tailW:2.0,tailL:1.5,scale:1.45,spur:0},
                  {feather:'#2b241d',wingC:'#3a3128',tail:'#4a3e30',red:'#c8382f',comb:1.8,tailUp:.05,tailW:2.1,tailL:1.55,scale:1.48,spur:0}].map(buildBird),
-  hawk:     ()=>[{feather:'#6b533a',wingC:'#8a6c48',tail:'#4a3a28',red:'#e8b022',comb:.1,tailUp:.55,tailW:1.4,tailL:.9,scale:1.05,spur:1},
-                 {feather:'#514436',wingC:'#6f5c46',tail:'#3c3226',red:'#e8b022',comb:.1,tailUp:.55,tailW:1.4,tailL:.9,scale:1.02,spur:1}].map(buildBird),
+  /* red-tailed and a darker morph */
+  hawk:     ()=>[{feather:'#6b533a',wingC:'#7d6244',tail:'#a8482a',hood:'#5a4632',beak:'#e8b022',scale:1.15},
+                 {feather:'#4a3d30',wingC:'#5c4d3c',tail:'#7a4030',hood:'#3a3126',beak:'#e0a820',scale:1.10}].map(buildHawk),
 
   cat:   ()=>[{body:'#3b3a40',dark:'#2a292e',legs:'#33323a',muzzle:'#c9c4bc',ear:'prick',tail:'bush',tailC:'#2a292e',
                len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:1.0,eye:'#bfe36a'},

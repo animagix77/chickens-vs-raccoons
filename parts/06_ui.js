@@ -26,7 +26,7 @@ const LABEL=(()=>{ const m={}; UNITS.forEach(u=>m[u.k]=u.label); return m; })();
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},seed:0};
+let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
 
 /* ============================================================
@@ -54,6 +54,7 @@ function fightURL(){
   return location.origin+location.pathname+'?'+encodeFight();
 }
 function decodeFight(){
+  CFG.allies={};                     // a link never carries a preset's allies
   const q=new URLSearchParams(location.search);
   if(!q.has('s')&&!q.has('b')) return false;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
@@ -75,6 +76,8 @@ function pushFightURL(){
 function rosterList(){
   const L=[{k:CFG.kind,n:CFG.birds},{k:'coon',n:CFG.coons}];
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
+  /* presets can field the whole farm at the whistle, not just the flock */
+  for(const k in CFG.allies) if(CFG.allies[k]>0) L.push({k,n:CFG.allies[k]});
   return L;
 }
 
@@ -452,12 +455,22 @@ const PRESETS={
   classic :{birds:1000,coons:100,kind:'rooster', arena:'field',foes:{}},
   massacre:{birds:1200,coons:60, kind:'hen',     arena:'coop', foes:{possum:20}},
   even    :{birds:485, coons:100,kind:'gamecock',arena:'field',foes:{fox:8,coyote:4}},
+  /* Max chaos was a slaughter because only one side got reinforcements: the
+     predator list spawned at the whistle while every ally sat behind the war
+     chest waiting to be bought. The farm turns out now — but at the size a
+     real farm actually is, not at whatever number made the fight even. You
+     keep forty guinea fowl and one bull, not the reverse, and guardian llamas
+     and donkeys are kept singly or in pairs because that is how they work.
+     The result is measured, not chosen. */
   silly   :{birds:2500,coons:300,kind:'rooster', arena:'field',
-            foes:{fox:30,coyote:20,possum:40,hawk:20,bear:1}}
+            foes:{fox:30,coyote:20,possum:40,hawk:20,bear:1},
+            allies:{guinea:40,goose:20,turkey:25,cat:5,capybara:4,goat:12,
+                    pig:10,llama:2,donkey:2,dog:2,bull:1}}
 };
 document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',()=>{
   const P=PRESETS[b.dataset.preset];
   EXTRA_B.forEach(k=>CFG.foes[k]=P.foes[k]||0);
+  CFG.allies=P.allies||{};
   CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
   syncSliders(); startBattle();
 }));

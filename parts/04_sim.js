@@ -22,7 +22,8 @@ const A={
      did it, so the landing can be credited to them */
   vy:new Float32Array(MAXA), tum:new Float32Array(MAXA),
   spin:new Float32Array(MAXA), lby:new Int32Array(MAXA),
-  vt:new Float32Array(MAXA)         // when this one last used its voice
+  vt:new Float32Array(MAXA),        // when this one last used its voice
+  cyc:new Float32Array(MAXA)        // fliers: where they are in the soar cycle
 };
 let N=0;
 let aliveA=0, aliveB=0, initA=0, initB=0, panicCount=0;
@@ -219,6 +220,7 @@ function addAgent(x,z,kindIdx,vr){
   A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
   A.vy[i]=0; A.tum[i]=0; A.spin[i]=0; A.lby[i]=-1; A.vt[i]=-9;
+  A.cyc[i]=SR()*9;                  // stagger them so they don't dive as one
   return i;
 }
 
@@ -291,11 +293,15 @@ function stepSim(dt){
     const dimmed=(!isAlly&&CMD.light>0)?1:0;
     A.cd[i]-=dt*(hasted?1.35:1)*(dimmed?0.65:1);
     A.hit[i]=Math.max(0,A.hit[i]-dt);
-    if(mine.fly) A.fy[i]=mine.fly+Math.sin(BATTLE.t*2.2+i)*0.35;
+    const wasHigh=A.fy[i]>SKY_LINE;
+    const diving=mine.fly?flierStep(i,mine,dt):false;
+    if(mine.soar&&wasHigh&&A.fy[i]<=SKY_LINE) sfx('stoop',A.x[i],A.z[i],'cry');
+    /* high and circling: no target, no attack, and nothing can touch it */
+    if(mine.fly&&!diving&&A.fy[i]>SKY_LINE){ A.tgt[i]=-1; A.cd[i]=Math.max(A.cd[i],.25); }
 
     /* ---------- retarget ---------- */
     let tg=A.tgt[i];
-    if(tg>=0 && (A.st[tg]===2 || A.team[tg]===A.team[i] || (UNITS[A.kind[tg]].fly && !mine.aa))) tg=-1;
+    if(tg>=0 && (A.st[tg]===2 || A.team[tg]===A.team[i] || outOfReach(tg,mine))) tg=-1;
     if(tg<0 || ((i+((BATTLE.t*20)|0))&15)===0){
       let best=-1,bd=1e9;
       const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
@@ -309,7 +315,7 @@ function stepSim(dt){
           for(let k=cCount[c];k<cCount[c+1];k++){
             const j=cItems[k];
             if(A.team[j]===A.team[i]||A.st[j]===2) continue;
-            if(UNITS[A.kind[j]].fly && !mine.aa) continue;   // can't reach the sky
+            if(outOfReach(j,mine)) continue;                // still out of reach
             const d=(A.x[j]-A.x[i])**2+(A.z[j]-A.z[i])**2;
             if(d<bd){bd=d;best=j;}
           }
@@ -501,7 +507,7 @@ function attack(i,tg,mine,dist){
       for(let k=cCount[c];k<cCount[c+1] && extra>0;k++){
         const j=cItems[k];
         if(j===tg||A.st[j]===2||A.team[j]===A.team[i]) continue;
-        if(UNITS[A.kind[j]].fly&&!mine.aa) continue;
+        if(outOfReach(j,mine)) continue;
         const ddx=A.x[j]-A.x[i], ddz=A.z[j]-A.z[i];
         if(ddx*ddx+ddz*ddz<cr2){
           hurt(j,dmg*(sw?0.72:0.62),i,false);
@@ -527,6 +533,8 @@ function attack(i,tg,mine,dist){
   }
   if(SR()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
   sfx(crit?'spur':(mine.build==='bird'?'peck':'slash'), A.x[tg], A.z[tg]);
+  if(mine.sweep&&SR()<0.5) sfx('bonecrack',A.x[tg],A.z[tg]);
+  else if(mine.dmg>200&&SR()<0.25) sfx('bonecrack',A.x[tg],A.z[tg]);
 }
 
 /* A heavy enough swing doesn't push a chicken, it throws it. Force is divided
@@ -546,6 +554,7 @@ function launch(j,dx,dz,force,up,by){
   A.spin[j]=srnd(-11,11); A.tum[j]=0;
   A.lby[j]=by; A.hit[j]=0.3;
   spawnFeathers(A.x[j],0.75,A.z[j],u.build==='bird'?4:2,1.9);
+  if(u.build==='bird'&&SR()<0.55) sfx('wingbeat',A.x[j],A.z[j],'cry');
 }
 /* returns true when the agent is still in the air and should be left alone */
 function airborne(i,dt){
@@ -564,6 +573,7 @@ function airborne(i,dt){
     A.fy[i]=0; A.vy[i]=0; A.tum[i]=0; A.spin[i]=0;
     A.vx[i]*=0.12; A.vz[i]*=0.12;
     spawnPuff(A.x[i],0.12,A.z[i],0.30);
+    if(speed>6) sfx('landthud',A.x[i],A.z[i]);
     if(A.st[i]!==2 && speed>7){
       const by=A.lby[i]>=0?A.lby[i]:i;
       hurt(i, A.hpMax[i]*clamp((speed-7)/16,0,0.55), by, false);
@@ -574,6 +584,35 @@ function airborne(i,dt){
   return true;
 }
 
+/* A hawk that never comes down is not a threat, it is weather. The soar
+   cycle gives the flock a window: high and circling it cannot be touched and
+   cannot attack, then it drops, kills, and climbs out. Reach into the sky is
+   height-dependent rather than absolute, so anything low enough to bite is
+   low enough to be bitten. */
+const SKY_LINE=1.7;
+function outOfReach(j,mine){
+  const u=UNITS[A.kind[j]];
+  return u.fly && !mine.aa && A.fy[j]>SKY_LINE;
+}
+function flierStep(i,mine,dt){
+  const so=mine.soar;
+  if(!so) { A.fy[i]=mine.fly+Math.sin(BATTLE.t*2.2+i)*0.35; return false; }
+  const [cruise,strike,period,dive]=so;
+  A.cyc[i]=(A.cyc[i]+dt)%period;
+  const t=A.cyc[i];
+  let want, diving=false;
+  if(t<dive*0.45){                      // stoop: fall out of the sky
+    want=lerp(cruise,strike,clamp(t/(dive*0.45),0,1)); diving=true;
+  }else if(t<dive){                     // level out and hunt along the ground
+    want=strike; diving=true;
+  }else if(t<dive+1.5){                 // climb back out
+    want=lerp(strike,cruise,clamp((t-dive)/1.5,0,1));
+  }else{                                // circle, untouchable, biding
+    want=cruise+Math.sin(BATTLE.t*1.6+i)*0.45;
+  }
+  A.fy[i]+=(want-A.fy[i])*Math.min(1,dt*3.4);
+  return diving;
+}
 function shove(j,dx,dz,f){
   if(UNITS[A.kind[j]].boss) return;
   const l=Math.hypot(dx,dz)||1;
@@ -591,7 +630,10 @@ function hurt(j,dmg,by,crit){
        one under sustained attack doesn't machine-gun, and pulled from its own
        small budget so the whole flock can't drown everything else. */
     const uh=UNITS[A.kind[j]];
-    if(BATTLE.t-A.vt[j]>srnd(.75,1.5) && SR()<(uh.build==='bird'?.55:.30)){
+    /* Birds are the joke, so they get a much shorter leash than anything
+       else — a coop under attack should be a wall of indignant chicken. */
+    if(BATTLE.t-A.vt[j]>(uh.build==='bird'?srnd(.30,.70):srnd(.75,1.5))
+       && SR()<(uh.build==='bird'?.85:.30)){
       A.vt[j]=BATTLE.t;
       sfx(uh.hurtv||(uh.build==='bird'?'bawk':'chitter'),A.x[j],A.z[j],'cry');
     }

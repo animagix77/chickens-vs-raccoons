@@ -364,6 +364,50 @@ const VOX={
     for(let i=0;i<2+((Math.random()*2)|0);i++)
       nz(d,t+i*rnd(.13,.19),.09,'lowpass',rnd(380,620),0,.20*v,rnd(.5,.8));
   },
+
+  /* ---------- more of the barnyard ---------- */
+  wingbeat(d,v){ const t=AC.currentTime;      // heavy, close, panicked
+    for(let i=0;i<4;i++){
+      const tt=t+i*rnd(.075,.115);
+      nz(d,tt,.07,'lowpass',rnd(380,760),0,.19*v,rnd(.55,.95));
+      nz(d,tt+.018,.04,'bandpass',rnd(1200,2100),1.2,.07*v,1);
+    }
+  },
+  stoop(d,v){ const t=AC.currentTime;         // a raptor falling out of the sky
+    const f=AC.createBiquadFilter(); f.type='bandpass'; f.Q.value=1.5;
+    f.frequency.setValueAtTime(600,t);
+    f.frequency.exponentialRampToValueAtTime(3600,t+.42);
+    const src=AC.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    const g=env(d,t,.10,.44,.22*v);
+    src.connect(f); f.connect(g); src.start(t); src.stop(t+.55);
+  },
+  scuffle(d,v){ const t=AC.currentTime;       // bodies and dirt, the crowd sound
+    for(let i=0;i<3;i++)
+      nz(d,t+i*rnd(.04,.09),.06,'bandpass',rnd(500,1400),.9,.11*v,rnd(.7,1.3));
+  },
+  feathers(d,v){ const t=AC.currentTime;      // a burst coming apart
+    for(let i=0;i<5;i++)
+      nz(d,t+i*rnd(.02,.055),.045,'highpass',rnd(2600,5200),0,.075*v,rnd(.8,1.5));
+  },
+  bonecrack(d,v){ const t=AC.currentTime;     // the big animals connecting
+    nz(d,t,.035,'bandpass',rnd(900,1600),5.5,.26*v,rnd(.9,1.2));
+    const o=AC.createOscillator(); o.type='triangle';
+    o.frequency.setValueAtTime(rnd(180,260),t);
+    o.frequency.exponentialRampToValueAtTime(60,t+.09);
+    o.connect(env(d,t,.002,.10,.20*v)); o.start(t); o.stop(t+.16);
+  },
+  dirt(d,v){ nz(d,AC.currentTime,.13,'lowpass',rnd(240,420),0,.15*v,rnd(.6,1)); },
+  landthud(d,v){ const t=AC.currentTime;      // a thrown bird arriving
+    VOX.thud(d,v*1.15,t);
+    VOX.feathers(d,v*.8);
+    nz(d,t+.01,.09,'lowpass',rnd(300,520),0,.13*v,.8);
+  },
+  yelp(d,v){ vox(d,AC.currentTime,{f0:rnd(430,720),dur:.16,vol:.24*v,
+    pitch:[[.1,1.8],[1,.5]], noise:.16, noiseF:2800,
+    form:[[rnd(1000,1350),4,1],[rnd(2400,2900),6,.6]]}); },
+  warble(d,v){ vox(d,AC.currentTime,{f0:rnd(520,760),dur:rnd(.30,.48),vol:.20*v,
+    pitch:[[.3,1.25],[.7,.9],[1,1.1]], vib:[rnd(9,15),rnd(40,90)], noise:.07,
+    form:[[1250,5,1],[2700,7,.5]]}); },
   screech(d,v){ const t=AC.currentTime;              // raptor
     vox(d,t,{f0:rnd(1100,1650),dur:rnd(.45,.65),vol:.26*v, wave:'sawtooth',
       glide:.62, pitch:[[.05,1.35],[.3,1.1],[1,.5]], vib:[rnd(30,48),rnd(80,170)],
@@ -633,7 +677,7 @@ function audioUpdate(dt){
   musicUpdate(dt);
   recentKills*=Math.exp(-dt*1.6);
   sfxTokens=Math.min(9,sfxTokens+dt*20);
-  voxTokens=Math.min(6,voxTokens+dt*7);
+  voxTokens=Math.min(9,voxTokens+dt*12);
   master.gain.setTargetAtTime(soundOn?0.85:0.0001, AC.currentTime, 0.25);
   if(!soundOn) return;
 
@@ -651,8 +695,10 @@ function audioUpdate(dt){
     const i=(Math.random()*N)|0;
     if(A.st[i]!==2){
       const bird=A.team[i]===0;
-      const k=bird ? (A.st[i]===1 ? (Math.random()<.45?'cackle':'squawk') : (Math.random()<.82?'buk':'squawk'))
-                   : (Math.random()<.55?'chitter':(Math.random()<.6?'growl':'hiss'));
+      const r=Math.random();
+      const k=bird ? (A.st[i]===1 ? (r<.34?'cackle':r<.62?'squawk':r<.82?'bawk':'wingbeat')
+                                  : (r<.55?'buk':r<.74?'squawk':r<.88?'warble':'scuffle'))
+                   : (r<.42?'chitter':r<.62?'growl':r<.78?'hiss':r<.9?'yelp':'scuffle');
       sfx(k,A.x[i],A.z[i],true);
     }
   }
@@ -1056,6 +1102,14 @@ function renderAgents(){
       pitch=-clamp(sp*0.045,0,0.26)+Math.sin(A.ph[i]*2)*(bird?0.028:0.02);
       if(A.hit[i]>0){ roll=Math.sin(A.hit[i]*70)*0.28; pitch+=0.12; }
       amp=st===1?(bird?0.62:0.40):(bird?0.24:0.16); fr=st===1?11:5.2;
+      /* A soaring raptor holds its wings still and banks; it only beats them
+         to climb or when it is about to hit something. */
+      if(u.soar){
+        const high=A.fy[i]>1.7;
+        amp=high?0.03:0.55; fr=high?1.2:13;
+        roll+=Math.sin(BATTLE.t*0.9+i)*(high?0.34:0.12);
+        pitch+=high?-0.05:0.30;                    // nose down in the stoop
+      }
     }
 
     const yaw=A.yaw[i]+(st===1?Math.sin(A.ph[i]*3.1)*0.28:0);

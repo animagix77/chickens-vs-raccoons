@@ -245,6 +245,59 @@ function buildBird(o){
   return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s)};
 }
 
+/* A hawk is not a chicken with a small comb. It reads as a raptor because of
+   proportion, not detail: one long straight wing line, a body that tapers to
+   a fanned tail, a head that sits forward instead of upright, and no comb or
+   wattle at all. Wings go in the flap group so the existing limb animation
+   beats them; when the bird is soaring the sim holds that animation still and
+   the wings simply lock out flat. */
+function buildHawk(o){
+  const F=o.feather, W=o.wingC||o.feather, T=o.tail, B=o.beak||'#e8b022', K='#131118';
+  const s=o.scale;
+  const core=[
+    // body: a tapered wedge, nose down
+    P(G.sph,F, 0,.50,.02, -.18,0,0, .105,.115,.235),
+    P(G.sph,F, 0,.535,-.14, -.10,0,0, .085,.088,.145),
+    // shoulders, where the wings hinge
+    P(G.sph,W, .10,.545,.05, 0,0,-.25, .062,.070,.115),
+    P(G.sph,W,-.10,.545,.05, 0,0, .25, .062,.070,.115),
+    // head pushed forward, low and level — the raptor signature
+    P(G.sph,o.hood||F, 0,.565,.235, 0,0,0, .078,.076,.082),
+    // hooked beak: a short cone plus a down-turned tip
+    P(G.cone,B, 0,.555,.315, 1.42,0,0, .034,.075,.034),
+    P(G.cone,B, 0,.532,.335, 2.05,0,0, .026,.045,.026),
+    // eyes, set forward for binocular vision
+    P(G.sphLo,'#f6c542', .050,.585,.283, 0,0,0, .028,.028,.022),
+    P(G.sphLo,'#f6c542',-.050,.585,.283, 0,0,0, .028,.028,.022),
+    P(G.sphLo,K, .058,.586,.300, 0,0,0, .015,.015,.012),
+    P(G.sphLo,K,-.058,.586,.300, 0,0,0, .015,.015,.012),
+    // legs tucked back under the body, talons forward
+    P(G.cyl,B, .058,.395,-.02, .55,0,0, .017,.135,.017),
+    P(G.cyl,B,-.058,.395,-.02, .55,0,0, .017,.135,.017),
+    P(G.cone,K, .058,.330,.045, 2.5,0,0, .020,.070,.020),
+    P(G.cone,K,-.058,.330,.045, 2.5,0,0, .020,.070,.020)
+  ];
+  const flap=[
+    // primaries: long, straight, swept slightly back
+    P(G.sph,W, .40,.555,-.02, 0,-.16,-.06, .245,.030,.115),
+    P(G.sph,W,-.40,.555,-.02, 0, .16, .06, .245,.030,.115),
+    // inner wing, thicker where it meets the body
+    P(G.sph,F, .195,.552,.015, 0,-.10,-.10, .105,.042,.135),
+    P(G.sph,F,-.195,.552,.015, 0, .10, .10, .105,.042,.135),
+    // wingtip feathers splayed like fingers
+    P(G.cone,T, .615,.552,-.055, -1.50,-.30,0, .052,.155,.026),
+    P(G.cone,T,-.615,.552,-.055, -1.50, .30,0, .052,.155,.026),
+    // fanned tail
+    P(G.cone,T, 0,.515,-.245, -1.42,0,0, .155,.300,.036),
+    P(G.cone,T, .075,.515,-.235, -1.46,0,.20, .085,.255,.030),
+    P(G.cone,T,-.075,.515,-.235, -1.46,0,-.20,.085,.255,.030)
+  ];
+  const gc=mergeAll(core), gf=mergeAll(flap);
+  gc.scale(s,s,s); gf.scale(s,s,s);
+  /* hinge at the shoulders, so the beat pivots the whole wing */
+  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.55*s,.02*s)};
+}
+
 /* ---------- the raccoon ---------- */
 function buildCoon(o){
   const GY=o.gy, DK=o.dk, LT=o.lt, K='#131118';
