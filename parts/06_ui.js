@@ -319,7 +319,7 @@ function startBattle(){
   audioResume();
 }
 function standby(){
-  musicMode('idle');
+  musicMode('menu');
   document.body.classList.remove('fighting');
   document.body.classList.remove('live');   // panel comes back only here
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1; BATTLE.totalKills=0;
