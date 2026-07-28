@@ -119,7 +119,51 @@ function audioInit(){
   musicInit();
   master.gain.setTargetAtTime(soundOn?0.85:0.0001, AC.currentTime, 0.5);
 }
-function audioResume(){ audioInit(); if(AC&&AC.state==='suspended') AC.resume(); }
+/* ---------- getting sound out of iOS Safari ----------
+   Three separate things have to go right on an iPad and only the first is
+   obvious. The context has to be created and resumed inside a real user
+   gesture. It also has to actually play a source inside that gesture or
+   Safari reports 'running' and stays silent. And WebAudio alone is filed
+   under the ambient audio session, which the ringer switch mutes — a muted
+   iPad plays nothing no matter how correct the rest of it is, unless a
+   media element has claimed a playback session first.
+
+   The old code hooked one listener with {once:true}. A single failed attempt
+   meant silence for the rest of the visit, with no way back. */
+let audioPrimed=false, silentEl=null;
+/* 0.35s of digital silence — enough for iOS to grant a playback session */
+const SILENT_WAV='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
+function audioPrime(){
+  if(audioPrimed||!AC) return;
+  try{
+    const b=AC.createBuffer(1,1,AC.sampleRate);
+    const src=AC.createBufferSource();
+    src.buffer=b; src.connect(AC.destination); src.start(0);
+  }catch(e){}
+  try{
+    if(!silentEl){
+      silentEl=new Audio(SILENT_WAV);
+      silentEl.loop=true; silentEl.volume=0.0001;
+      silentEl.setAttribute('playsinline','');
+    }
+    const pr=silentEl.play(); if(pr&&pr.catch) pr.catch(()=>{});
+  }catch(e){}
+  audioPrimed=true;
+}
+function audioResume(){
+  audioInit();
+  if(!AC) return;
+  if(AC.state!=='running'){
+    const pr=AC.resume(); if(pr&&pr.catch) pr.catch(()=>{});
+  }
+  audioPrime();
+  audioBadge();
+}
+/* a visible way back if the browser refused the first time */
+function audioBadge(){
+  const el=$('sndhint'); if(!el) return;
+  el.classList.toggle('on', !!AC && AC.state!=='running' && (soundOn||MUS.on));
+}
 
 /* ---------- primitives ---------- */
 function outBus(pan){
@@ -661,6 +705,26 @@ function renderAgents(){
     const u=UNITS[ki], kit=KIT_PIV[ki][A.vr[i]];
     const st=A.st[i], bird=u.build==='bird';
     let y=A.fy[i]||0, roll=0, pitch=0, amp, fr;
+
+    /* thrown: ignore the gait and the corpse pose entirely and just cartwheel.
+       A dead bird keeps its arc — dying mid-flight shouldn't stop it. */
+    if(!u.fly && A.fy[i]>0.02){
+      pitch=A.tum[i]; roll=A.tum[i]*0.63;
+      amp=bird?0.95:0.35; fr=15;
+      const yaw2=A.yaw[i]+A.tum[i]*0.25;
+      _e.set(pitch,yaw2,roll,'YXZ'); _q.setFromEuler(_e);
+      _v.set(A.x[i],y,A.z[i]); _s.set(1,1,1);
+      _m.compose(_v,_q,_s);
+      const ang2=Math.sin(A.ph[i]*fr)*amp;
+      const c2=Math.cos(ang2), s3=Math.sin(ang2), py2=kit.y, pz2=kit.z;
+      _mL.set(1,0,0,0,
+              0,c2,-s3, py2-c2*py2+s3*pz2,
+              0,s3, c2, pz2-s3*py2-c2*pz2,
+              0,0,0,1);
+      _mF.multiplyMatrices(_m,_mL);
+      sq.push(A.vr[i],_m,_mF);
+      continue;                       // no blob shadow while it's off the ground
+    }
 
     if(st===2){
       const d=A.dead[i];

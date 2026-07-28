@@ -17,7 +17,11 @@ const A={
   panicT:new Float32Array(MAXA),
   hit:new Float32Array(MAXA),       // flinch timer
   fy:new Float32Array(MAXA),        // flight height
-  rev:new Uint8Array(MAXA)          // possums: one free resurrection
+  rev:new Uint8Array(MAXA),         // possums: one free resurrection
+  /* being launched: vertical speed, tumble angle and its rate, and who
+     did it, so the landing can be credited to them */
+  vy:new Float32Array(MAXA), tum:new Float32Array(MAXA),
+  spin:new Float32Array(MAXA), lby:new Int32Array(MAXA)
 };
 let N=0;
 let aliveA=0, aliveB=0, initA=0, initB=0, panicCount=0;
@@ -201,6 +205,7 @@ function addAgent(x,z,kindIdx,vr){
   A.st[i]=0; A.kills[i]=0; A.name[i]=null;
   A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
+  A.vy[i]=0; A.tum[i]=0; A.spin[i]=0; A.lby[i]=-1;
   return i;
 }
 
@@ -264,6 +269,7 @@ function stepSim(dt){
   let conX=0, conZ=0, conN=0;
 
   for(let i=0;i<N;i++){
+    if(airborne(i,dt)) continue;      // nothing steers or swings mid-flight
     if(A.st[i]===2){ A.dead[i]+=dt; if(A.rev[i]===2) reviveCheck(i,dt); continue; }
 
     const mine=UNITS[A.kind[i]];
@@ -462,11 +468,20 @@ function attack(i,tg,mine,dist){
   hurt(tg,dmg,i,crit);
   if(mine.shove) shove(tg,A.x[tg]-A.x[i],A.z[tg]-A.z[i],mine.shove);
 
-  if(mine.cleave>1){
-    let extra=mine.cleave-1;
+  /* A wide swing. sweep is [radius, targets, throw force, lift]; without it a
+     unit just cleaves. The cell scan is sized from the radius — it used to be
+     a fixed 3x3 block, which for a bear meant searching about 3.6 metres for
+     targets up to 4.6 metres away, so most of the arc was silently ignored
+     and the biggest animal on the field looked harmless. */
+  const sw=mine.sweep;
+  const cr=sw?sw[0]:(mine.cleave>1?mine.reach*1.5:0);
+  if(cr>0){
+    let extra=sw?sw[1]:mine.cleave-1;
+    const span=Math.max(1,Math.ceil(cr/CS));
     const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
     const gz=clamp(((A.z[i]+ARENA_R+12)/CS)|0,0,gridW-1);
-    for(let a=-1;a<=1 && extra>0;a++)for(let b=-1;b<=1 && extra>0;b++){
+    const cr2=cr*cr;
+    for(let a=-span;a<=span && extra>0;a++)for(let b=-span;b<=span && extra>0;b++){
       const cx2=gx+a,cz2=gz+b;
       if(cx2<0||cz2<0||cx2>=gridW||cz2>=gridW) continue;
       const c=cz2*gridW+cx2;
@@ -474,11 +489,17 @@ function attack(i,tg,mine,dist){
         const j=cItems[k];
         if(j===tg||A.st[j]===2||A.team[j]===A.team[i]) continue;
         if(UNITS[A.kind[j]].fly&&!mine.aa) continue;
-        const d=Math.hypot(A.x[j]-A.x[i],A.z[j]-A.z[i]);
-        if(d<mine.reach*1.5){ hurt(j,dmg*0.62,i,false);
-          if(mine.shove) shove(j,A.x[j]-A.x[i],A.z[j]-A.z[i],mine.shove*0.6); extra--; }
+        const ddx=A.x[j]-A.x[i], ddz=A.z[j]-A.z[i];
+        if(ddx*ddx+ddz*ddz<cr2){
+          hurt(j,dmg*(sw?0.72:0.62),i,false);
+          if(sw) launch(j,ddx,ddz,sw[2],sw[3],i);
+          else if(mine.shove) shove(j,ddx,ddz,mine.shove*0.6);
+          extra--;
+        }
       }
     }
+    /* the one it actually swung at goes furthest */
+    if(sw) launch(tg,A.x[tg]-A.x[i],A.z[tg]-A.z[i],sw[2]*1.25,sw[3]*1.15,i);
   }
   const hy=0.5+(A.fy[tg]||0);
   spawnFeathers(A.x[tg],hy+0.05,A.z[tg],crit?3:1,crit?1.35:1);
@@ -490,6 +511,51 @@ function attack(i,tg,mine,dist){
   }
   if(SR()<0.10) spawnPuff(A.x[i],0.12,A.z[i],0.18);
   sfx(crit?'spur':(mine.build==='bird'?'peck':'slash'), A.x[tg], A.z[tg]);
+}
+
+/* A heavy enough swing doesn't push a chicken, it throws it. Force is divided
+   by the target's bulk, so a hen sails across the pen, a goat gets rocked, and
+   a bull barely notices — and anything too heavy to lift just gets shoved. */
+const GRAV=23;
+function launch(j,dx,dz,force,up,by){
+  const u=UNITS[A.kind[j]];
+  if(u.boss||u.fly) return;
+  const m=force/(0.55+u.rad*1.5);
+  if(m<1.6){ shove(j,dx,dz,force*0.45); return; }
+  const l=Math.hypot(dx,dz)||1;
+  A.vx[j]=dx/l*m*srnd(.75,1.25);
+  A.vz[j]=dz/l*m*srnd(.75,1.25);
+  A.vy[j]=up/(0.55+u.rad*1.0)*srnd(.85,1.3);
+  A.fy[j]=Math.max(A.fy[j],0.06);
+  A.spin[j]=srnd(-11,11); A.tum[j]=0;
+  A.lby[j]=by; A.hit[j]=0.3;
+  spawnFeathers(A.x[j],0.75,A.z[j],u.build==='bird'?4:2,1.9);
+}
+/* returns true when the agent is still in the air and should be left alone */
+function airborne(i,dt){
+  const u=UNITS[A.kind[i]];
+  if(u.fly || A.fy[i]<=0.001) return false;
+  A.vy[i]-=GRAV*dt;
+  A.fy[i]+=A.vy[i]*dt;
+  A.x[i]+=A.vx[i]*dt; A.z[i]+=A.vz[i]*dt;
+  const drag=1-1.05*dt; A.vx[i]*=drag; A.vz[i]*=drag;
+  A.tum[i]+=A.spin[i]*dt;
+  if(A.st[i]===2) A.dead[i]+=dt;
+  const rr=Math.hypot(A.x[i],A.z[i]), lim=ARENA_R-0.9;
+  if(rr>lim){ const k=lim/rr; A.x[i]*=k; A.z[i]*=k; A.vx[i]*=-0.35; A.vz[i]*=-0.35; }
+  if(A.fy[i]<=0){
+    const speed=-A.vy[i];
+    A.fy[i]=0; A.vy[i]=0; A.tum[i]=0; A.spin[i]=0;
+    A.vx[i]*=0.12; A.vz[i]*=0.12;
+    spawnPuff(A.x[i],0.12,A.z[i],0.30);
+    if(A.st[i]!==2 && speed>7){
+      const by=A.lby[i]>=0?A.lby[i]:i;
+      hurt(i, A.hpMax[i]*clamp((speed-7)/16,0,0.55), by, false);
+    }
+    A.lby[i]=-1;
+    return false;
+  }
+  return true;
 }
 
 function shove(j,dx,dz,f){

@@ -485,7 +485,10 @@ $('share').addEventListener('click',e=>{
   }
 });
 
-/* ---------- the story ---------- */
+/* ---------- the story, then how it works ----------
+   On a first visit these run one into the other: why this exists, then what
+   the buttons do, then you're in. Either can be opened again on its own from
+   the panel, and skip jumps the whole preamble. */
 function storyShow(){
   document.body.classList.add('story');
   requestAnimationFrame(()=>document.body.classList.add('storyIn'));
@@ -495,9 +498,21 @@ function storyHide(){
   setTimeout(()=>document.body.classList.remove('story'),620);
   audioResume();
 }
-$('storyGo').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); });
-$('storySkip').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); });
-$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); storyShow(); });
+function rulesShow(){
+  document.body.classList.add('rules');
+  $('rulesList').scrollTop=0;
+  requestAnimationFrame(()=>document.body.classList.add('rulesIn'));
+}
+function rulesHide(){
+  document.body.classList.remove('rulesIn');
+  setTimeout(()=>document.body.classList.remove('rules'),520);
+  audioResume();
+}
+$('storyGo').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
+$('storySkip').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesHide(); });
+$('rulesGo').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); });
+$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); storyShow(); });
+$('rulesOpen').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 
 $('go').addEventListener('click',()=>{
   if(BATTLE.running||SEQ.phase==='title'||SEQ.phase==='count') standby();
@@ -526,9 +541,19 @@ $('btnBlood').addEventListener('click',()=>{
   setGore(!GORE);
   $('btnBlood').classList.toggle('on',GORE);
 });
-/* browsers need a gesture before any of this makes a sound */
-['pointerdown','keydown','touchstart'].forEach(ev=>
-  addEventListener(ev,audioResume,{once:true,passive:true}));
+/* Keep trying on every gesture until it actually takes, rather than spending
+   the single attempt the old code allowed and giving up. Unhook once the
+   context is running so we're not calling resume() on every tap forever. */
+const AUDIO_EV=['pointerdown','pointerup','touchstart','touchend','click','keydown'];
+function audioPoke(){
+  audioResume();
+  if(AC&&AC.state==='running') AUDIO_EV.forEach(ev=>removeEventListener(ev,audioPoke));
+}
+AUDIO_EV.forEach(ev=>addEventListener(ev,audioPoke,{passive:true}));
+/* iOS suspends the context when you leave the tab and doesn't always restore it */
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) audioResume(); });
+$('sndhint').addEventListener('click',e=>{ e.stopPropagation(); audioResume(); });
+setInterval(audioBadge,1500);
 
 /* ---------- manual orbit ----------
    The drag moves the world with your finger: swipe right and the near side of
@@ -595,7 +620,12 @@ addEventListener('keydown',e=>{
   if(e.key==='r'||e.key==='R')$('btnReel').click();
   if(e.key==='h'||e.key==='H')document.body.classList.toggle('hideui');
   if(e.key==='b'||e.key==='B')$('btnBlood').click();
-  if(e.key==='Escape'){ if(document.body.classList.contains('story')) storyHide(); else toSetup(); }
+  if(e.key==='Escape'){
+    const b=document.body.classList;
+    if(b.contains('rules')) rulesHide();
+    else if(b.contains('story')) storyHide();
+    else toSetup();
+  }
   const c=CMD_DEF.find(d=>d.key===e.key); if(c) cmdFire(c.k);
 });
 

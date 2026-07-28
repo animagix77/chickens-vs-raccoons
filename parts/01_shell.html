@@ -107,6 +107,51 @@
   body.short #cardBtns{margin-top:18px}
   body.short #cardBtns button{padding:10px 16px;font-size:10.5px}
 
+  /* shown only when the browser has refused to start audio */
+  #sndhint{position:absolute;z-index:16;left:50%;transform:translateX(-50%);top:14px;
+    display:none;padding:9px 15px;border-radius:999px;cursor:pointer;font-family:inherit;
+    font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    border:1px solid #ffb02060;background:rgba(40,29,10,.9);color:#ffd58a;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #sndhint.on{display:block}
+  body.narrow #sndhint{top:auto;bottom:14px}
+  body.hideui #sndhint{display:none}
+
+  /* ---------- how to play ---------- */
+  #rules{position:absolute;inset:0;z-index:29;display:none;flex-direction:column;
+    align-items:center;justify-content:center;padding:6vmin 6vw;
+    background:radial-gradient(70% 70% at 50% 45%,rgba(6,5,9,.88),rgba(4,3,6,.97));
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    opacity:0;transition:opacity .5s}
+  body.rules #rules{display:flex}
+  body.rules.rulesIn #rules{opacity:1}
+  #rules h2{margin:0 0 4px;font-size:11px;letter-spacing:.42em;text-transform:uppercase;
+    color:#f4ead67a;font-weight:700}
+  #rules .sub{margin:0 0 22px;font-size:12.5px;color:#f4ead68c;letter-spacing:.02em}
+  #rulesList{width:100%;max-width:560px;max-height:60vh;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:#ffffff2e transparent;
+    display:flex;flex-direction:column;gap:11px;padding-right:4px}
+  #rulesList::-webkit-scrollbar{width:5px}
+  #rulesList::-webkit-scrollbar-thumb{background:#ffffff2e;border-radius:4px}
+  .rl{display:flex;gap:13px;align-items:flex-start;text-align:left}
+  .rl .kx{flex:0 0 auto;min-width:74px;padding:5px 8px;border-radius:7px;text-align:center;
+    font-size:9px;letter-spacing:.11em;text-transform:uppercase;font-weight:800;
+    border:1px solid #ffffff1f;background:#ffffff0a;color:#f4ead6b8}
+  .rl.hot .kx{border-color:#ffb02052;background:rgba(255,176,32,.1);color:#ffd58a}
+  .rl .tx{flex:1;min-width:0;font-size:12.5px;line-height:1.55;color:#f4ead6b0;letter-spacing:.01em}
+  .rl .tx b{color:var(--paper);font-weight:700}
+  #rulesGo{margin-top:24px;padding:14px 30px;font-size:11.5px;font-weight:800;
+    letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
+    font-family:inherit;border:none;color:#fff;
+    background:linear-gradient(180deg,#ff6a3d,#d8452f);
+    box-shadow:0 4px 0 #8c2418,0 10px 24px #d8452f40;transition:.15s}
+  #rulesGo:hover{filter:brightness(1.08)}
+  #rulesGo:active{transform:translateY(2px);box-shadow:0 2px 0 #8c2418}
+  body.narrow #rulesList{max-height:64vh;gap:9px}
+  body.narrow .rl .kx{min-width:62px;font-size:8px;padding:4px 5px}
+  body.narrow .rl .tx{font-size:11.5px;line-height:1.5}
+  body.short #rulesList{max-height:56vh}
+
   /* ---------- the story ---------- */
   #story{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
     align-items:center;justify-content:center;text-align:center;padding:8vmin 7vw;
@@ -395,6 +440,47 @@
     </a>
   </div>
 
+  <button id="sndhint">Tap for sound</button>
+
+  <div id="rules">
+    <h2>How this works</h2>
+    <p class="sub">You don't just watch it. You run the farm while it happens.</p>
+    <div id="rulesList">
+      <div class="rl hot"><div class="kx">War chest</div><div class="tx">
+        Points build the whole fight. Spend them on the chips along the bottom to
+        call animals in <b>mid-battle</b> — guinea fowl are cheap noise, a bull costs
+        most of what you'll ever hold. You get four or five packets a match, so
+        what you skip matters as much as what you buy.</div></div>
+      <div class="rl hot"><div class="kx">1 &nbsp;Horn</div><div class="tx">
+        Everything on your side swings <b>35% faster and hits 15% harder</b> for six
+        seconds. Tempo. Use it when the lines are already locked and you want to
+        win the exchange.</div></div>
+      <div class="rl hot"><div class="kx">2 &nbsp;Feed</div><div class="tx">
+        Drops a pile mid-field. Birds break off and <b>converge on it</b>, and your
+        whole side stops routing for seven seconds. It's a rally and a regroup at
+        once — the answer to a collapse.</div></div>
+      <div class="rl hot"><div class="kx">3 &nbsp;Light</div><div class="tx">
+        Predators do <b>45% less damage and swing 35% slower</b> for five seconds.
+        Purely defensive, and the thing that saves you mid-massacre. Strongest in
+        the night coop.</div></div>
+      <div class="rl"><div class="kx">Call it</div><div class="tx">
+        Pick a side on the matchup card. It <b>locks when the countdown hits zero</b>
+        and the verdict tells you whether you were right. Most people are confident
+        and wrong.</div></div>
+      <div class="rl"><div class="kx">Camera</div><div class="tx">
+        Drag to look around, pinch or scroll to zoom. <b>Auto Cam</b> hands it back to
+        the director, which follows the front of the flock and then the clash.</div></div>
+      <div class="rl"><div class="kx">Copy link</div><div class="tx">
+        Every fight has a seed. The link on the verdict card <b>replays that exact
+        battle</b> for anyone who opens it — same spawns, same result. That's how you
+        make someone argue with you about it.</div></div>
+      <div class="rl"><div class="kx">R &nbsp;B &nbsp;H</div><div class="tx">
+        <b>Reel</b> crops to 9:16 for video. <b>Blood</b> is off by default and toggles on.
+        <b>H</b> hides the interface for a clean recording. Space starts a fight.</div></div>
+    </div>
+    <button id="rulesGo">Got it</button>
+  </div>
+
   <div id="story">
     <div class="nm">Eenie &amp; Moe</div>
     <p>A family of raccoons raided the coop in the middle of the night.</p>
@@ -403,7 +489,7 @@
     <p>So this is a simulator built to answer the question that comes after it:
        how many chickens would it have taken?</p>
     <button id="storyGo">Find out</button>
-    <button id="storySkip">Skip</button>
+    <button id="storySkip">Skip the lot</button>
   </div>
 
   <div id="tools">
@@ -451,6 +537,7 @@
     <div class="hint">You call the farm in <em>during</em> the fight — the war chest fills
       while the birds hold the line.</div>
     <button id="go">Fight</button>
+    <button class="storyLink" id="rulesOpen">How to play</button>
     <button class="storyLink" id="storyOpen">Why this exists</button>
     <div class="mini">
       <button data-preset="classic">1000 v 100</button>

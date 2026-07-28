@@ -48,6 +48,12 @@
    Rooster damage is pinned at 4.3 for exactly that reason — nudge it and
    the famous answer stops being interesting.
 
+   The heavy animals swing rather than jab. sweep is [radius, targets, throw
+   force, lift]: a bear clears a 6.4 metre arc and sends up to sixteen birds
+   through the air at once, a bull six, a donkey four. Throw force is divided
+   by the target's bulk, so a hen cartwheels the width of the pen and a bull
+   on the receiving end merely gets rocked.
+
    Masses used (kg): hen 2.5, rooster 3.5, guinea 1.3, goose 5.5,
    turkey 8, cat 4.5, capybara 55, goat 50, pig 90, llama 160,
    donkey 210, dog 50, bull 700, raccoon 7, possum 4, fox 5,
@@ -78,11 +84,11 @@ const UNITS=[
 {k:'llama',    team:0, label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
   build:'quad',kit:'llama', ranged:1, blurb:'A real livestock guardian. Spits with intent.'},
 {k:'donkey',   team:0, label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
-  build:'quad',kit:'donkey', shove:3.0, blurb:'Farmers use these on purpose. Kicks like a truck.'},
+  build:'quad',kit:'donkey', shove:3.0, sweep:[3.0,4,10,5.0], blurb:'Farmers use these on purpose. Kicks like a truck.'},
 {k:'dog',      team:0, label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
   build:'quad',kit:'dog', fear:9.0, blurb:'The reason most nights end quietly.'},
 {k:'bull',     team:0, label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
-  build:'quad',kit:'bull', shove:5.5, blurb:'A bad idea that works.'},
+  build:'quad',kit:'bull', shove:5.5, sweep:[3.6,6,12,5.8], blurb:'A bad idea that works.'},
 
 /* ---------------- what comes out of the treeline ---------------- */
 {k:'coon',     team:1, label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
@@ -95,8 +101,8 @@ const UNITS=[
   build:'quad',kit:'coyote', pack:1, blurb:'Never arrives alone.'},
 {k:'hawk',     team:1, label:'Hawks',      hp:75, dmg:40,  rate:1.30,reach:1.70,speed:7.0, accel:22, nerve:0.85,cleave:1,rad:0.80,cost:14,
   build:'bird',kit:'hawk', fly:2.6, blurb:'Comes out of the sun. Nothing on the ground can reach it.'},
-{k:'bear',     team:1, label:'Bear',       hp:11000,dmg:420,rate:1.40,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
-  build:'quad',kit:'bear', shove:6.0, boss:1, blurb:'This is no longer a raccoon problem.'}
+{k:'bear',     team:1, label:'Bear',       hp:11000,dmg:420,rate:1.15,reach:3.10,speed:3.4, accel:8,  nerve:1.00,cleave:6,rad:2.40,cost:60,
+  build:'quad',kit:'bear', shove:6.0, boss:1, sweep:[6.4,16,19,9.0], blurb:'This is no longer a raccoon problem.'}
 ];
 const UI_=(()=>{ const m={}; UNITS.forEach((u,i)=>{u.i=i; m[u.k]=i;}); return m; })();
 const ALLIES=UNITS.filter(u=>u.team===0), FOES=UNITS.filter(u=>u.team===1);
