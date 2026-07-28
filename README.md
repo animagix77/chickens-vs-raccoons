@@ -18,6 +18,8 @@ Set a matchup — up to 4000 birds against 500 raccoons, on an open field in day
 
 **Heavy animals swing, they don't jab.** A bear clears a 6.4 metre arc and sends up to sixteen birds cartwheeling through the air at once; a bull manages six, a donkey four. Throw force is divided by the target's bulk, so a hen sails the width of the pen and a bull on the receiving end merely gets rocked. Anything still alive when it lands takes the fall.
 
+**Everything has a voice.** Twenty animals, each with three: what it says charging onto the field, what it says when something connects and it lives, and what it says unprompted mid-fight. A dog barks constantly, a bear roars every few seconds, a hen only ever reacts. All of it is synthesized — a buzzy source at the animal's pitch pushed through parallel bandpass resonators standing in for a throat, where the difference between a goat and a donkey is mostly vibrato rate and where those resonances sit. Two separate voice budgets keep a thousand dying birds from becoming white noise, and an audibility floor stops a death sixty metres away from spending budget a nearer one should get.
+
 **Call it before the countdown.** Pick a side on the matchup card. It locks when the countdown hits zero, and the verdict tells you whether you were right and how you're doing across the session. Most people are confident and wrong, which is the entire appeal.
 
 **Every fight has a link.** The matchup and a seed live in the URL, so a fight can be sent to someone and it replays exactly — same spawns, same crits, same result, on any machine at any frame rate. Copy link is on the verdict card.
@@ -89,7 +91,7 @@ Masses used, in kilograms: hen 2.5, rooster 3.5, guinea fowl 1.3, goose 5.5, tur
 | Lighting | PBR materials, ACES filmic tone mapping, PMREM environment, tracked sun shadow frustum |
 | Post | Custom chain — HDR target → bright pass → 4 blur passes → composite with grade, vignette, chromatic aberration and grain |
 | Sky | Shader dome with two fbm cloud layers, sun disc, stars and moon |
-| Audio | Formant-model animal voices (buzzy source into parallel resonant bandpass filters), stereo panning, synthetic convolution reverb |
+| Audio | 32 formant-model animal voices (buzzy source into parallel resonant bandpass filters), stereo panning, synthetic convolution reverb, two-bucket voice budgeting |
 | Music | Procedural, 16th-note lookahead scheduler decoupled from frame rate, D minor i–VI–III–VII with adaptive layer gating |
 
 Everything runs in one thread at 60 FPS with a thousand-plus animated units.
