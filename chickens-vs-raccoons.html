@@ -213,6 +213,39 @@
     color:#f4ead652;padding:2px 0}
   .storyLink:hover{color:#f4ead6a0}
 
+  /* ---------- the long version ----------
+     Same furniture as the story card, but this one is a read rather than a
+     doorway: the text is left-aligned in a proper measure, and the whole
+     column scrolls under a fixed Back button. */
+  #about{position:absolute;inset:0;z-index:31;display:none;flex-direction:column;
+    align-items:center;padding:5vmin 7vw 0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    background:radial-gradient(70% 70% at 50% 40%,rgba(6,5,9,.9),rgba(4,3,6,.985));
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    opacity:0;transition:opacity .55s}
+  body.about #about{display:flex}
+  body.about.aboutIn #about{opacity:1}
+  #about .ab{max-width:34em;width:100%;text-align:left}
+  #aboutArt{display:none;width:min(30vh,190px);border-radius:13px;margin:0 auto 12px;
+    box-shadow:0 18px 46px #000c, 0 0 0 1px #ffffff1c}
+  #about p{margin:0 0 14px;font-size:clamp(13px,2.05vmin,16px);line-height:1.78;
+    color:#f4ead6b0;letter-spacing:.012em}
+  #about p.cap{text-align:center;font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(13px,2vmin,16px);color:#f0e2c0a8;margin-bottom:26px}
+  #about p.last{color:#f4ead6}
+  #about p.q{font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(17px,3.1vmin,26px);line-height:1.5;color:#f0e2c0;
+    text-align:center;margin:22px 0 24px}
+  #about p.sig{margin-top:26px;text-align:center;font-size:9.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:#f4ead65e}
+  #about .rule{width:52px;height:1px;background:#ffb02055;margin:24px auto 26px}
+  #aboutGo{flex:0 0 auto;margin:14px 0 7vmin;padding:13px 32px;font-size:11px;font-weight:800;
+    letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
+    font-family:inherit;border:1px solid #ffffff26;background:rgba(16,13,22,.8);
+    color:#f4ead6c0;transition:.15s}
+  #aboutGo:hover{color:#fff;border-color:#ffffff45}
+  body.narrow #about{padding:16px 22px 0}
+  body.narrow #aboutArt{width:min(24vh,150px)}
+
   /* ---------- call the winner ---------- */
   #callBar{display:none;flex-direction:column;align-items:center;gap:9px;margin-top:24px;
     pointer-events:auto}
@@ -557,6 +590,50 @@
     <button id="storySkip">Skip the lot</button>
   </div>
 
+  <!-- The long version, opened from 'Why this exists'. The welcome card has to
+       stay short — it stands between people and the game. This one is for the
+       ones who come back and want the whole thing. -->
+  <div id="about">
+    <div class="ab">
+      <img id="aboutArt" alt="Eenie and Moe">
+      <p class="cap">Eenie and Moe</p>
+      <p>We kept eight hens in the yard behind the house. My son named two of them
+         Eenie and Moe — he was three when they arrived, and those were the two he
+         could tell apart.</p>
+      <p>They were his. He'd carry them around the yard with their legs dangling,
+         narrating their opinions in a voice he invented for them. Eenie was the bold
+         one. Moe followed her everywhere and complained about it the whole way.</p>
+      <p>A family of raccoons got into the coop in the middle of the night. By the
+         time I got out there with a flashlight it was already over.</p>
+      <p class="last">Eenie and Moe didn't make it.</p>
+      <div class="rule"></div>
+      <p>He took it harder than I was ready for. It was his first real loss, and
+         there was no version of that morning I could fix for him — no explanation
+         that made it land any softer. He just kept asking me the same thing, over
+         and over, the way kids do when they're trying to find a door out of it:</p>
+      <p class="q">&ldquo;How many chickens would it have taken?&rdquo;</p>
+      <p>I didn't know. Nobody knows. It isn't the kind of question that has an
+         answer sitting around waiting for you.</p>
+      <p>But I'm a nerdy dad who writes code at the kitchen table, and it turns out
+         that when your kid asks you an impossible question, you can either say
+         &ldquo;I don't know&rdquo; or you can spend a few weeks building the machine
+         that finds out. So that's what this is.</p>
+      <p>Every bird in here fights like a real bird. The hens are brave and outmatched.
+         The roosters have spurs and know how to use them. The raccoons are quick and
+         clever and they do not lose to small numbers. Nothing is rigged in the flock's
+         favour, because a rigged answer wouldn't have meant anything to him.</p>
+      <p class="last">Somewhere in those numbers is the flock that would have been
+         enough. He found it on a Sunday afternoon, sitting on my lap, and he laughed
+         for the first time in about a week.</p>
+      <div class="rule"></div>
+      <p>The rest of the hens are fine, by the way. The coop has a proper latch now,
+         and a light on a sensor. We're getting two more in the spring. He's already
+         picked the names.</p>
+      <p class="sig">— for Eenie and Moe</p>
+    </div>
+    <button id="aboutGo">Back</button>
+  </div>
+
   <div id="tools">
     <button id="btnReel">Reel Mode</button>
     <button id="btnCam" class="on">Auto Cam</button>
@@ -585,7 +662,7 @@
       <div class="seg" id="segBird">
         <button data-v="hen">Hens</button>
         <button data-v="rooster" class="on">Roosters</button>
-        <button data-v="gamecock">Gamecocks</button>
+        <button data-v="gamecock">Warrior Fowls</button>
       </div>
     </div>
     <div class="row">
@@ -1200,30 +1277,30 @@ const UNITS=[
   build:'bird',kit:'hen',   blurb:'No spurs. No plan. No idea.'},
 {k:'rooster',  team:0, voice:'crow', hurtv:'bawk', cry:['bawk',.05], label:'Roosters',   hp:70,  dmg:4.3, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
   build:'bird',kit:'rooster',crit:[0.08,1.9], blurb:'Loud, territorial, armed at the ankle.'},
-{k:'gamecock', team:0, voice:'crow', hurtv:'squawk', cry:['crow',.03], label:'Gamecocks',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
+{k:'gamecock', team:0, voice:'crow', hurtv:'squawk', cry:['crow',.03], label:'Warrior Fowls',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
   build:'bird',kit:'gamecock',crit:[0.17,2.4], blurb:'Bred for exactly one thing.'},
 {k:'guinea',   team:0, voice:'cackle', hurtv:'bawk', cry:['cackle',.10], label:'Guinea fowl',hp:42,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
   build:'bird',kit:'guinea', rally:[6.5,0.55], blurb:'Useless in a fight. Screams before anyone else notices.'},
-{k:'goose',    team:0, voice:'honk', hurtv:'honk', cry:['honk',.12], label:'Geese',      hp:210, dmg:14,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
+{k:'goose',    team:0, voice:'honk', hurtv:'honk', cry:['honk',.12], label:'Geese',      hp:280, dmg:32,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
   build:'bird',kit:'goose', shove:1.5, blurb:'Genuinely wants to fight you. Always has.'},
-{k:'turkey',   team:0, voice:'gobble', hurtv:'gobble', cry:['gobble',.10], label:'Turkeys',    hp:240, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
+{k:'turkey',   team:0, voice:'gobble', hurtv:'gobble', cry:['gobble',.10], label:'Turkeys',    hp:360, dmg:34,  rate:0.95,reach:1.65,speed:3.0, accel:8,  nerve:0.72,cleave:2,rad:1.00,cost:5,
   build:'bird',kit:'turkey', blurb:'Enormous. Slow. Weirdly confident.'},
-{k:'cat',      team:0, voice:'yowl', hurtv:'yowl', cry:['yowl',.08], label:'Barn cats',  hp:235, dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
+{k:'cat',      team:0, voice:'yowl', hurtv:'yowl', cry:['yowl',.08], label:'Barn cats',  hp:270, dmg:32,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
   build:'quad',kit:'cat', crit:[0.30,2.2], blurb:'Will help. Will not be thanked.'},
 {k:'capybara', team:0, voice:'peep', hurtv:'peep', cry:['peep',.06], label:'Capybaras', hp:1900,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
   build:'quad',kit:'capybara', calm:[9.0,0.60], blurb:'Will not fight. Will not panic. Will not move.'},
-{k:'goat',     team:0, voice:'bleat', hurtv:'bleat', cry:['bleat',.10], label:'Goats',      hp:1050,dmg:94,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
+{k:'goat',     team:0, voice:'bleat', hurtv:'bleat', cry:['bleat',.10], label:'Goats',      hp:1050,dmg:130,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
   build:'quad',kit:'goat', shove:3.4, blurb:'Arrives head-first. Only knows the one move.'},
 {k:'pig',      team:0, voice:'squeal', hurtv:'squeal', cry:['squeal',.09], label:'Pigs',       hp:1850,dmg:92,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
   build:'quad',kit:'pig', blurb:'Not a guardian animal. Simply large and hungry.'},
-{k:'llama',    team:0, voice:'orgle', hurtv:'orgle', cry:['orgle',.09], label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
+{k:'llama',    team:0, voice:'orgle', hurtv:'orgle', cry:['orgle',.09], label:'Llamas',     hp:2850,dmg:130,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
   build:'quad',kit:'llama', ranged:1, blurb:'A real livestock guardian. Spits with intent.'},
-{k:'donkey',   team:0, voice:'bray', hurtv:'bray', cry:['bray',.14], label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
-  build:'quad',kit:'donkey', shove:3.0, sweep:[3.0,4,10,5.0], blurb:'Farmers use these on purpose. Kicks like a truck.'},
-{k:'dog',      team:0, voice:'bark', hurtv:'bark', cry:['bark',.30], label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
+{k:'donkey',   team:0, voice:'bray', hurtv:'bray', cry:['bray',.14], label:'Donkeys',    hp:3850,dmg:200,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
+  build:'quad',kit:'donkey', shove:3.0, sweep:[2.8,3,10,4.6], blurb:'Farmers use these on purpose. Kicks like a truck.'},
+{k:'dog',      team:0, voice:'bark', hurtv:'bark', cry:['bark',.30], label:'Farm dogs',  hp:3100,dmg:180,  rate:0.48,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
   build:'quad',kit:'dog', fear:9.0, blurb:'The reason most nights end quietly.'},
-{k:'bull',     team:0, voice:'bellow', hurtv:'bellow', cry:['bellow',.20], label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
-  build:'quad',kit:'bull', shove:5.5, sweep:[3.6,6,12,5.8], blurb:'A bad idea that works.'},
+{k:'bull',     team:0, voice:'bellow', hurtv:'bellow', cry:['bellow',.20], label:'Bulls',      hp:9500,dmg:360, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
+  build:'quad',kit:'bull', shove:5.5, sweep:[3.4,4,12,5.6], blurb:'A bad idea that works.'},
 
 /* ---------------- what comes out of the treeline ---------------- */
 {k:'coon',     team:1, voice:'chitter', hurtv:'chitter', cry:['chitter',.05], label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
@@ -2211,18 +2288,21 @@ const CMD_DEF=[
 ];
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
+/* Guinea fowl and capybaras used to be on this bar and were a trap: measured
+   at equal spend they removed half a percent of the raccoon force, and half of
+   a flight of guineas was dead inside three and a half seconds. Both are still
+   in the game — they turn up in Max Chaos, where they belong — but nobody
+   should be spending a war chest on them. */
 const DEPLOY=[
-  {k:'guinea',  n:8, cost:8},
   {k:'goose',   n:6, cost:12},
   {k:'turkey',  n:5, cost:12},
   {k:'cat',     n:6, cost:14},
-  {k:'capybara',n:2, cost:16},
   {k:'goat',    n:3, cost:20},
   {k:'pig',     n:2, cost:20},
   {k:'llama',   n:2, cost:24},
-  {k:'donkey',  n:1, cost:26},
+  {k:'donkey',  n:1, cost:30},
   {k:'dog',     n:1, cost:28},
-  {k:'bull',    n:1, cost:44}
+  {k:'bull',    n:1, cost:58}
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
@@ -2966,18 +3046,37 @@ function audioPrime(){
   /* Keep asking until the element is genuinely playing. One refused attempt
      used to cost the whole visit; now every later gesture gets another go. */
   try{
-    if(!silentEl){
-      silentEl=new Audio(SILENT_WAV);
-      silentEl.loop=true; silentEl.volume=0.02; silentEl.preload='auto';
-      silentEl.setAttribute('playsinline','');
-      silentEl.setAttribute('webkit-playsinline','');
-      silentEl.style.cssText='position:absolute;width:0;height:0;opacity:0;pointer-events:none';
-      document.body.appendChild(silentEl);
-    }
-    if(silentEl.paused){
+    makeSilentEl();
+    if(silentEl&&silentEl.paused){
       const pr=silentEl.play(); if(pr&&pr.catch) pr.catch(()=>{});
     }
   }catch(e){}
+}
+function makeSilentEl(){
+  if(silentEl) return silentEl;
+  silentEl=new Audio(SILENT_WAV);
+  silentEl.loop=true; silentEl.volume=0.02; silentEl.preload='auto';
+  silentEl.setAttribute('playsinline','');
+  silentEl.setAttribute('webkit-playsinline','');
+  silentEl.style.cssText='position:absolute;width:0;height:0;opacity:0;pointer-events:none';
+  document.body.appendChild(silentEl);
+  return silentEl;
+}
+/* ---------- starting the theme on landing ----------
+   The theme should be playing while someone reads the story card, not waiting
+   behind the setup screen. Browsers won't let a page make noise unprompted, so
+   this asks politely: it tries to play the inaudible clip, and only if the
+   browser allows it does it build the context and start the music. Chrome
+   grants this on a site you've visited before, and a desktop that already
+   trusts the origin grants it outright; a first-time phone visit refuses, the
+   promise rejects, nothing happens, and the ordinary first-tap path takes over.
+   Nothing here can leave audio in a worse state than not trying. */
+function audioAutoStart(){
+  if(AC) return;
+  let el; try{ el=makeSilentEl(); }catch(e){ return; }
+  let pr; try{ pr=el.play(); }catch(e){ return; }
+  if(!pr||!pr.then) return;
+  pr.then(()=>{ audioResume(); }).catch(()=>{});
 }
 function audioResume(){
   audioInit();
@@ -3431,6 +3530,13 @@ async function loadAssets(){
     art.onerror=()=>{ art.style.display='none'; };
     art.src=ASSET_BASE+'img/eeniemoe.jpg';
   }
+  /* the same portrait heads the long version */
+  const aart=$('aboutArt');
+  if(aart){
+    aart.onload=()=>{ aart.style.display='block'; };
+    aart.onerror=()=>{ aart.style.display='none'; };
+    aart.src=ASSET_BASE+'img/eeniemoe.jpg';
+  }
   /* Weight the bar by the real sizes so it doesn't stall on the big beds.
      Unknown lengths fall back to counting files. */
   let total=0, done=0, files=0;
@@ -3452,6 +3558,10 @@ async function loadAssets(){
     assetsFetched=false;
     assetProgress(1,'Ready');
   }
+  /* If the first tap landed while these were still downloading, decodeAssets()
+     bailed on !assetsFetched and nothing ever called it again — the visit ran
+     on synthesized music with the beds sitting decoded-never in memory. */
+  decodeAssets();
   loadDone();
 }
 const ASSET_TOTAL_GUESS=4400000;   // roughly the folder size; only drives the bar
@@ -4007,22 +4117,47 @@ function renderAgents(){
 /* ============================================================
    CAMERA DIRECTOR
    ============================================================ */
-const DIR={shot:'wide',t:0,dur:5,ang:0,seed:0,manual:false,snap:false,
+const DIR={shot:'wide',t:0,dur:5,ang:0,seed:0,manual:false,snap:false,spin:1,
   orbA:0.9,orbH:0.55,orbD:1.0,drag:false,px:0,py:0};
 const camPos=new THREE.Vector3(0,30,60), camAim=new THREE.Vector3(0,0,0);
 
+/* ---------- keeping the camera watchable ----------
+   The first cut of this director orbited fast and cut every three seconds,
+   which is exactly the recipe for making someone queasy: constant sideways
+   optic flow, never long enough to settle. It reads as energy on a five
+   second clip and as motion sickness on a two minute fight.
+
+   Three changes fix it without making the camera static. Shots hold roughly
+   twice as long. The orbits run at about a third of the old rate and ease up
+   from a standstill instead of snapping into motion on the cut. And the
+   movement that remains is mostly radial — a slow push toward the fight —
+   because moving toward something produces far less optic flow than sliding
+   past it. */
+const ORB_EASE=1.15;
+/* the integral of (1-e^(-t/T)) — angle that starts still and eases to speed */
+function orbT(){ return DIR.t-ORB_EASE*(1-Math.exp(-DIR.t/ORB_EASE)); }
+/* a slow push in across the life of the shot */
+function pushIn(){ return 1.05-0.075*clamp(DIR.t/Math.max(0.001,DIR.dur),0,1); }
+
 function pickShot(){
-  const r=Math.random();
   const hasChamp=BATTLE.champ>=0&&A.st[BATTLE.champ]!==2;
+  const prev=DIR.shot;
   let s;
-  if(r<0.24) s='wide';
-  else if(r<0.46) s='clash';
-  else if(r<0.66) s='low';
-  else if(r<0.82) s=hasChamp?'champ':'clash';
-  else if(r<0.92) s='top';
-  else s='sweep';
-  DIR.shot=s; DIR.t=0; DIR.dur=s==='wide'?rnd(5,7):rnd(3.2,5.2);
+  for(let tries=0;tries<4;tries++){
+    const r=Math.random();
+    if(r<0.30) s='wide';
+    else if(r<0.50) s='low';
+    else if(r<0.68) s='clash';
+    else if(r<0.84) s=hasChamp?'champ':'low';
+    else if(r<0.93) s='sweep';
+    else s='top';
+    if(s!==prev) break;                 // don't cut from a setup to itself
+  }
+  DIR.shot=s; DIR.t=0;
+  /* long enough to actually read the shot */
+  DIR.dur=s==='wide'?rnd(9,13):(s==='sweep'?rnd(8,11):rnd(6.5,9.5));
   DIR.ang=Math.random()*TAU; DIR.seed=Math.random()*100;
+  DIR.spin=Math.random()<0.5?-1:1;      // orbit both ways, not one endless drift
 }
 
 function director(dt,real,wall){
@@ -4054,7 +4189,7 @@ function director(dt,real,wall){
   let fx,fz;
   if(BATTLE.conSeen && BATTLE.conAge<2.5){ fx=BATTLE.conX; fz=BATTLE.conZ; }
   else { fx=TC.afx; fz=TC.afz; }   // not joined yet — watch the front of the flock
-  const kh=1-Math.pow(0.30,real);
+  const kh=1-Math.pow(0.55,real);   // the focal point drifts to the clash, it doesn't chase it
   BATTLE.hsx=lerp(BATTLE.hsx,fx,kh);
   BATTLE.hsz=lerp(BATTLE.hsz,fz,kh);
   const hx=BATTLE.hsx, hz=BATTLE.hsz;
@@ -4065,38 +4200,41 @@ function director(dt,real,wall){
 
   switch(DIR.shot){
     case 'wide':{
-      const a=DIR.ang+t*0.09, d=R*1.24*zoom;
+      const a=DIR.ang+DIR.spin*orbT()*0.042, d=R*1.24*zoom*pushIn();
       tx=wx+Math.cos(a)*d; ty=R*0.50; tz=wz+Math.sin(a)*d;
       ax=hx; ay=0; az=hz; fov=44;
       break;}
     case 'top':{
-      tx=hx+Math.sin(t*0.16)*R*0.35; ty=R*1.45*zoom;
-      tz=hz+Math.cos(t*0.16)*R*0.35;
+      const a=DIR.ang+DIR.spin*orbT()*0.055;
+      tx=hx+Math.sin(a)*R*0.32; ty=R*1.45*zoom*pushIn();
+      tz=hz+Math.cos(a)*R*0.32;
       ax=hx; ay=0; az=hz; fov=42;
       break;}
     case 'low':{
-      const a=DIR.ang+DIR.t*0.10, d=(R*0.34+7)*zoom;
-      tx=hx+Math.cos(a)*d; ty=(NIGHT?3.4:1.15)+Math.sin(DIR.t*0.6)*0.25; tz=hz+Math.sin(a)*d;
+      const a=DIR.ang+DIR.spin*orbT()*0.048, d=(R*0.34+7)*zoom*pushIn();
+      tx=hx+Math.cos(a)*d; ty=(NIGHT?3.4:1.15)+Math.sin(DIR.t*0.30)*0.12; tz=hz+Math.sin(a)*d;
       ax=hx; ay=NIGHT?0.9:0.75; az=hz; fov=52;
       break;}
     case 'clash':{
-      const a=DIR.ang+DIR.t*0.22, d=8.6*zoom;
+      /* the tightest setup, so it gets the slowest orbit — this is the one that
+         used to swing the whole frame around every couple of seconds */
+      const a=DIR.ang+DIR.spin*orbT()*0.075, d=8.6*zoom*pushIn();
       tx=hx+Math.cos(a)*d; ty=NIGHT?3.6:2.5; tz=hz+Math.sin(a)*d;
       ax=hx; ay=0.85; az=hz; fov=40;
       break;}
     case 'champ':{
       const c=BATTLE.champ>=0?BATTLE.champ:0;
       const yw=A.yaw[c]||0;
-      const cd=5.0*zoom;
+      const cd=5.0*zoom*pushIn();
       tx=A.x[c]-Math.sin(yw)*cd; ty=(NIGHT?3.2:2.1)*(reel?1.25:1); tz=A.z[c]-Math.cos(yw)*cd;
       ax=A.x[c]+Math.sin(yw)*2.5; ay=0.85; az=A.z[c]+Math.cos(yw)*2.5; fov=44;
       break;}
     default:{ // sweep — long dolly across the front
       const p=(DIR.t/DIR.dur)*2-1;
       const a=DIR.ang;
-      tx=wx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.9;
-      ty=(NIGHT?3.5:2.0)+Math.sin(DIR.t)*0.3;
-      tz=wz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.9;
+      tx=wx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.78;
+      ty=(NIGHT?3.5:2.0)+Math.sin(DIR.t*0.42)*0.16;
+      tz=wz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.78;
       ax=hx; ay=0.9; az=hz; fov=48;   // dolly past the arena, but look at the fight
     }
   }
@@ -4124,20 +4262,25 @@ function director(dt,real,wall){
     ax=TC.afx*0.5; ay=0.6; az=TC.afz*0.5; fov=42;
   }
 
-  // handheld
-  const n=DIR.seed+t;
-  tx+=Math.sin(n*1.7)*0.16+Math.sin(n*0.53)*0.3;
-  ty+=Math.cos(n*1.3)*0.12;
-  tz+=Math.cos(n*1.9)*0.16+Math.cos(n*0.47)*0.3;
+  /* handheld — slower, smaller, and scaled by how far out we are. A fixed
+     amount of wobble is a breath of life from across the field and a shaky
+     phone from five metres away. */
+  const n=DIR.seed+t*0.5;
+  const hs=clamp(Math.hypot(tx-ax,tz-az)/38,0.25,1)*0.6;
+  tx+=(Math.sin(n*1.1)*0.14+Math.sin(n*0.37)*0.26)*hs;
+  ty+=Math.cos(n*0.85)*0.10*hs;
+  tz+=(Math.cos(n*1.25)*0.14+Math.cos(n*0.31)*0.26)*hs;
 
   if(DIR.snap){                                  // hard cut, no swooping between setups
     DIR.snap=false;
     camPos.set(tx,ty,tz); camAim.set(ax,ay,az);
     camera.fov=fov; camera.updateProjectionMatrix();
   }
-  const kp=BATTLE.slowT>0?0.02:(SEQ.phase==='introA'||SEQ.phase==='introB'?0.25:0.006);
+  /* Softer glide on both the position and the aim. Higher constant = longer
+     settle; the camera arrives at its mark rather than snapping to it. */
+  const kp=BATTLE.slowT>0?0.02:(SEQ.phase==='introA'||SEQ.phase==='introB'?0.25:0.045);
   camPos.lerp(_v.set(tx,ty,tz),1-Math.pow(kp,real));
-  camAim.lerp(_v.set(ax,ay,az),1-Math.pow(0.008,real));
+  camAim.lerp(_v.set(ax,ay,az),1-Math.pow(0.03,real));
   camera.position.copy(camPos); camera.lookAt(camAim);
   if(Math.abs(camera.fov-fov)>0.05){ camera.fov=lerp(camera.fov,fov,1-Math.pow(0.05,real)); camera.updateProjectionMatrix(); }
 }
@@ -4166,12 +4309,17 @@ function showCard(o){
 function hideCard(){ card.classList.remove('on'); }
 
 const LABEL=(()=>{ const m={}; UNITS.forEach(u=>m[u.k]=u.label); return m; })();
+/* a mixed flock has no single name — the cards say what it actually is */
+function flockCount(){ return CFG.mix?Object.keys(CFG.mix).reduce((a,k)=>a+CFG.mix[k],0):CFG.birds; }
+function flockName(){ return CFG.mix?'BIRDS':LABEL[CFG.kind].toUpperCase(); }
+function flockBlurb(){ return CFG.mix?'Hens, roosters and warrior fowls. Everything with feathers.'
+                                     :UNITS[UI_[CFG.kind]].blurb; }
 /* the ally side is no longer picked in the panel — you call those in live, from
    the commander bar, out of the war chest. the panel keeps the predator list
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},seed:0};
+let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
 
 /* ============================================================
@@ -4199,7 +4347,7 @@ function fightURL(){
   return location.origin+location.pathname+'?'+encodeFight();
 }
 function decodeFight(){
-  CFG.allies={};                     // a link never carries a preset's allies
+  CFG.allies={}; CFG.mix=null;       // a link never carries a preset's allies or mix
   const q=new URLSearchParams(location.search);
   if(!q.has('s')&&!q.has('b')) return false;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
@@ -4219,7 +4367,13 @@ function pushFightURL(){
   try{ history.replaceState(null,'','?'+encodeFight()); }catch(e){}
 }
 function rosterList(){
-  const L=[{k:CFG.kind,n:CFG.birds},{k:'coon',n:CFG.coons}];
+  /* Normally the flock is one bird type on a slider. A preset can instead hand
+     over a mix — every kind of bird on the place at once — in which case the
+     slider value is ignored and CFG.mix is spawned verbatim. */
+  const L=[];
+  if(CFG.mix){ for(const k in CFG.mix) if(CFG.mix[k]>0) L.push({k,n:CFG.mix[k]}); }
+  else L.push({k:CFG.kind,n:CFG.birds});
+  L.push({k:'coon',n:CFG.coons});
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
   /* presets can field the whole farm at the whistle, not just the flock */
   for(const k in CFG.allies) if(CFG.allies[k]>0) L.push({k,n:CFG.allies[k]});
@@ -4268,8 +4422,8 @@ function callGrade(who){
 function setPhase(p){
   SEQ.phase=p; SEQ.t=0; DIR.snap=(p!=='result');   // let the final shot ride
   if(p==='introA'){ musicMode('tension');
-    showCard({thin:true, kick:'The flock', a:CFG.birds+' '+LABEL[CFG.kind].toUpperCase(),
-      sub:UNITS[UI_[CFG.kind]].blurb});
+    showCard({thin:true, kick:'The flock', a:flockCount()+' '+flockName(),
+      sub:flockBlurb()});
   }
   if(p==='introB'){
     const foe=EXTRA_B.filter(k=>CFG.foes[k]>0);
@@ -4282,7 +4436,7 @@ function setPhase(p){
   }
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
-      a:CFG.birds+' '+LABEL[CFG.kind].toUpperCase(), vs:'VS', b:CFG.coons+' RACCOONS',
+      a:flockCount()+' '+flockName(), vs:'VS', b:CFG.coons+' RACCOONS',
       sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field',
       call:true});
   }
@@ -4304,7 +4458,7 @@ function verdict(who,how){
     result:true,
     trib:who==='birds',          // the flock only gets its dedication when it earns it
     kick:how,
-    a:who==='birds'?LABEL[CFG.kind].toUpperCase()+' WIN':(who==='coons'?'RACCOONS WIN':'STALEMATE'),
+    a:who==='birds'?flockName()+' WIN':(who==='coons'?'RACCOONS WIN':'STALEMATE'),
     vs:'', b:'',
     sub:survivors+' of '+initA+' birds standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
         ' raccoons standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
@@ -4439,8 +4593,10 @@ function slowmo(dt){
   if(BATTLE.windowT>0.3){
     const thresh=Math.max(3,(initA*0.008)|0);
     if(BATTLE.deathsWindow>=thresh&&slowCool<=0&&SEQ.phase==='battle'){
-      BATTLE.slowT=1.0; slowCool=6; DIR.shot='clash'; DIR.t=0; DIR.dur=2.4; sting('slow');
-      DIR.ang=Math.random()*TAU;
+      /* the slow-motion beat holds a beat longer now, so it lands as a moment
+         rather than another cut in an already busy sequence */
+      BATTLE.slowT=1.0; slowCool=8; DIR.shot='clash'; DIR.t=0; DIR.dur=4.5; sting('slow');
+      DIR.ang=Math.random()*TAU; DIR.spin=Math.random()<0.5?-1:1;
     }
     BATTLE.deathsWindow=0; BATTLE.windowT=0;
   }
@@ -4589,10 +4745,12 @@ function syncSliders(){
 let reSpawn=null;
 function queueStandby(){ clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
 
-sA.addEventListener('input',()=>{CFG.birds=+sA.value;syncSliders();queueStandby();});
+sA.addEventListener('input',()=>{CFG.birds=+sA.value;CFG.mix=null;syncSliders();queueStandby();});
 sB.addEventListener('input',()=>{CFG.coons=+sB.value;syncSliders();queueStandby();});
+/* touching the flock controls drops out of a preset's mixed roster — you asked
+   for one kind of bird, so that is what you get */
 document.querySelectorAll('#segBird button').forEach(b=>
-  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;syncSliders();queueStandby();}));
+  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;CFG.mix=null;syncSliders();queueStandby();}));
 document.querySelectorAll('#segArena button').forEach(b=>
   b.addEventListener('click',()=>{CFG.arena=b.dataset.v;syncSliders();queueStandby();}));
 
@@ -4607,8 +4765,15 @@ const PRESETS={
      keep forty guinea fowl and one bull, not the reverse, and guardian llamas
      and donkeys are kept singly or in pairs because that is how they work.
      The result is measured, not chosen. */
-  silly   :{birds:2500,coons:300,kind:'rooster', arena:'field',
-            foes:{fox:30,coyote:20,possum:40,hawk:20,bear:1},
+  /* Max chaos is the ceiling: every bird on the place, every animal on the
+     place, and everything in the treeline, all on the field at the whistle.
+     Four thousand birds is the flock cap and it goes out as a real mix —
+     mostly hens, because that is what a yard is mostly made of. With the farm
+     and the treeline on top it lands a little under the five thousand two
+     hundred agent ceiling, which leaves room for whatever you call in on top. */
+  silly   :{birds:4000,coons:600,kind:'rooster', arena:'field',
+            mix:{hen:1900,rooster:1400,gamecock:700},
+            foes:{fox:40,coyote:30,possum:50,hawk:30,bear:2},
             allies:{guinea:40,goose:20,turkey:25,cat:5,capybara:4,goat:12,
                     pig:10,llama:2,donkey:2,dog:2,bull:1}}
 };
@@ -4616,6 +4781,7 @@ document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',
   const P=PRESETS[b.dataset.preset];
   EXTRA_B.forEach(k=>CFG.foes[k]=P.foes[k]||0);
   CFG.allies=P.allies||{};
+  CFG.mix=P.mix||null;
   CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
   syncSliders(); startBattle();
 }));
@@ -4677,10 +4843,24 @@ function rulesHide(){
   setTimeout(()=>document.body.classList.remove('rules'),520);
   audioResume();
 }
+/* 'Why this exists' opens the long version, not the welcome card — that one
+   stands between people and the game and has to stay short. */
+function aboutShow(){
+  document.body.classList.add('about');
+  const el=$('about'); if(el) el.scrollTop=0;
+  requestAnimationFrame(()=>document.body.classList.add('aboutIn'));
+}
+function aboutHide(){
+  document.body.classList.remove('aboutIn');
+  setTimeout(()=>document.body.classList.remove('about'),560);
+  audioResume();
+}
 $('storyGo').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 $('storySkip').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesHide(); });
 $('rulesGo').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); });
-$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); storyShow(); });
+$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); storyHide(); aboutShow(); });
+$('aboutGo').addEventListener('click',e=>{ e.stopPropagation(); aboutHide(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.body.classList.contains('about')) aboutHide(); });
 $('rulesOpen').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 
 $('go').addEventListener('click',()=>{
@@ -4877,7 +5057,8 @@ buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 const LINKED=decodeFight();
 syncSliders();
 resize();
-standby();
+standby();          // sets the music mode to 'menu' before anything can play
+audioAutoStart();   // …and starts it right now if the browser will allow it
 if(!LINKED) storyShow();
 camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
 requestAnimationFrame(loop);
