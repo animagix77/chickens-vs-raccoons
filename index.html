@@ -2387,6 +2387,7 @@ function cmdReset(){
    ============================================================ */
 function spawnRoster(list,night){
   N=0; aliveA=0; aliveB=0; initA=0; initB=0; panicCount=0;
+  resetNames();   // the per-round counters restart; the session's name book does not
   const rows=list.filter(r=>r.n>0);
   let total=0; rows.forEach(r=>total+=r.n);
   total=Math.max(1,total);
@@ -2897,7 +2898,7 @@ function hurt(j,dmg,by,crit){
   spawnMist(A.x[j],hy,A.z[j],u.rad>1.1?0.6:0.42);
   addStain(A.x[j],A.z[j],clamp(u.rad*0.55,0.4,1.5));
   if(SR()<0.45) spawnPuff(A.x[j],0.1,A.z[j],0.34);
-  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=spick(A.team[by]===0?BIRD_NAMES:COON_NAMES);
+  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=earnName(A.kind[by],A.team[by]);
   if(BATTLE.champ<0 || A.kills[by]>A.kills[BATTLE.champ]) BATTLE.champ=by;
   killFeed(by,j,crit);
   sfx(u.build==='bird'?'birddeath':'coondeath', A.x[j], A.z[j], 'key');
@@ -2929,6 +2930,52 @@ const COON_NAMES=['Bandito','Trash Panda Prime','Dumpster Dave','Jimothy','Meatb
  'Garbage Gary','The Hamburglar','Ring King','Nocturne','Snackrifice','Lord Rummage','Chonk',
  'Pillage','Tiny Hands McGee','Mask','Sir Rummages-a-Lot','The Night Shift','Debris','Nacho',
  'Short Spine Steve','Rolypoly','The Ballard Menace'];
+
+/* ---------- names that stick ----------
+   A name used to be drawn fresh from the seeded stream every fight, and since
+   'Run it back' rolls a new seed on purpose, the bear came back each round
+   under a different name. Every run really is a new fight, so nothing was
+   broken — but a boss that renames itself between rounds reads as a bug, and
+   the bear is the one animal on the field people expect to recognise.
+
+   Names are now remembered for the session, in the order they are earned, per
+   kind of animal. The first bear to earn a name IS the bear, all evening. The
+   first raccoon to earn one keeps that name in every later round too.
+
+   The seeded draw still happens on every single naming, whether or not the
+   answer is already known, because the simulation's random sequence has to be
+   byte-identical across runs of a seed. If we skipped the draw when the book
+   already had an entry, a shared link would stop replaying the same fight for
+   the person who opened it. */
+const NAME_BOOK={};                       // kind -> names, in the order earned
+const NAME_USED={0:new Set(),1:new Set()};// no two animals on a side share one
+const NAME_LAP={0:0,1:0};                 // how many times round the list we are
+const ROMAN=['',' II',' III',' IV',' V',' VI',' VII',' VIII',' IX',' X'];
+let NAME_SEQ={};                          // kind -> how many named this round
+function resetNames(){ NAME_SEQ={}; }
+function earnName(kindIdx,team){
+  const key=UNITS[kindIdx].k;
+  const i=(NAME_SEQ[key]=(NAME_SEQ[key]||0)+1)-1;
+  const pool=team===0?BIRD_NAMES:COON_NAMES;
+  const drawn=spick(pool);                // always drawn — see the note above
+  const book=NAME_BOOK[key]||(NAME_BOOK[key]=[]);
+  if(book[i]!=null) return book[i];
+  /* A big fight names more animals than there are names, so the list gets
+     reused in laps — the second time round is 'Meatball II', the third
+     'Meatball III'. Walking on from the drawn name rather than redrawing
+     means a collision costs nothing out of the seeded stream. */
+  const lap=NAME_LAP[team]||(NAME_LAP[team]=0), tag=ROMAN[Math.min(lap,ROMAN.length-1)];
+  let n=drawn, at=pool.indexOf(drawn), guard=0;
+  while(NAME_USED[team].has(n+tag) && guard++<pool.length) n=pool[(++at)%pool.length];
+  let full=n+tag;
+  if(NAME_USED[team].has(full)){          // that whole lap is spoken for
+    NAME_LAP[team]=lap+1;
+    full=n+ROMAN[Math.min(lap+1,ROMAN.length-1)];
+    if(NAME_USED[team].has(full)) full=n+' '+(i+1);
+  }
+  NAME_USED[team].add(full); book[i]=full;
+  return full;
+}
 
 const KILL_VERBS_BIRD=['spurred','flogged','erased','dismantled','pecked into orbit','unmade',
  'sent to the shadow realm','deleted','beaked','folded','ratio’d','turned into a hat'];
