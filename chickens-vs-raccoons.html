@@ -25,6 +25,32 @@
 <meta name="twitter:image" content="https://chickensvraccoons.com/assets/img/share.jpg">
 <meta name="theme-color" content="#08070a">
 <meta name="apple-mobile-web-app-title" content="Chickens vs Raccoons">
+<!-- ---------- visitor counting ----------
+     Put your GA4 Measurement ID in GA_ID below and analytics turns itself on.
+     Leave it empty and nothing loads at all: no request to Google, no cookie,
+     no third-party anything. That matters more than it sounds — a tag that
+     fires with no property behind it still sets cookies and still puts you
+     inside consent-banner rules for no benefit whatsoever.
+
+     The ID is not a secret. It is designed to sit in public page source, so
+     there is nothing to protect here.
+
+     'anonymize_ip' trims the last octet before Google stores it. GA4 does
+     this by default now, but stating it explicitly means the behaviour does
+     not depend on a default someone might change later. -->
+<script>
+const GA_ID='G-EYGKSG41H1';   /* Chickens vs Raccoons web stream */
+window.dataLayer=window.dataLayer||[];
+function gtag(){ dataLayer.push(arguments); }
+function track(name,params){ if(GA_ID) try{ gtag('event',name,params||{}); }catch(e){} }
+if(GA_ID){
+  const s=document.createElement('script'); s.async=true;
+  s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;
+  document.head.appendChild(s);
+  gtag('js',new Date());
+  gtag('config',GA_ID,{anonymize_ip:true});
+}
+</script>
 <style>
   :root{
     --hot:#ffb020; --cool:#7fd4ff; --blood:#d8452f; --paper:#f4ead6;
@@ -4522,6 +4548,12 @@ function setPhase(p){
 function verdict(who,how){
   BATTLE.over=true; BATTLE.running=false;
   document.body.classList.remove('fighting');
+  /* and one per fight finished, so outcomes can be read against starts —
+     a gap between the two is people leaving mid-battle, which is worth
+     knowing on its own */
+  track('battle_end',{winner:who, how:how, seconds:Math.round(BATTLE.t),
+    flock:CFG.mix?'mixed':CFG.kind, birds_left:Math.max(0,aliveA),
+    raccoons_left:Math.max(0,aliveB), kills:BATTLE.totalKills});
   const mvp=BATTLE.champ>=0?(A.name[BATTLE.champ]||'an anonymous bird'):'nobody';
   const mk=BATTLE.champ>=0?A.kills[BATTLE.champ]:0;
   const survivors=Math.max(0,aliveA), coonsLeft=Math.max(0,aliveB);
@@ -4686,6 +4718,12 @@ function slowmo(dt){
    ============================================================ */
 function startBattle(){
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
+  /* one event per fight started — this is the 'how many battles have been
+     simulated' number, and it carries the matchup so the answer to 'what do
+     people actually play' comes free with it */
+  track('battle_start',{flock:CFG.mix?'mixed':CFG.kind, birds:flockCount(),
+    raccoons:CFG.coons, arena:CFG.arena,
+    predators:EXTRA_B.filter(k=>CFG.foes[k]>0).join(',')||'none'});
   document.body.classList.add('live');   // slides the setup panel away immediately
   // the opening is a directed shot — if the viewer had grabbed the camera, take it back
   if(DIR.manual){ DIR.manual=false; $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; }
@@ -4918,6 +4956,7 @@ function rulesHide(){
 /* 'Why this exists' opens the long version, not the welcome card — that one
    stands between people and the game and has to stay short. */
 function aboutShow(){
+  track('story_opened');
   document.body.classList.add('about');
   const el=$('about'); if(el) el.scrollTop=0;
   requestAnimationFrame(()=>document.body.classList.add('aboutIn'));
