@@ -426,7 +426,15 @@ if(GA_ID){
   body.narrow .dep{padding:5px 6px 6px}
   body.narrow .dep .dn{font-size:8px;letter-spacing:.04em}
   body.narrow #cmdpts{padding:5px 7px 6px}
-  body.short #cmddep{max-height:56px;overflow:hidden}
+  /* A short screen cannot spare more than about a row and a half for chips,
+     but `overflow:hidden` meant the rest were not merely off-screen, they
+     were unreachable — and because the row sorts by cost, the ones it ate
+     were always the expensive end: the dog, the donkey, the bull. Same cap,
+     but it scrolls now, so the bull is a swipe away instead of gone. The
+     scrollbar itself is hidden; it would sit across the play area. */
+  body.short #cmddep{max-height:56px;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain}
+  body.short #cmddep::-webkit-scrollbar{display:none}
 
   /* five buttons now, so the row is allowed to wrap rather than run off a phone */
   #tools{position:absolute;z-index:13;right:16px;bottom:16px;display:flex;gap:6px;
@@ -878,7 +886,8 @@ const _m=new THREE.Matrix4(), _m2=new THREE.Matrix4();
 const G_TIER=[
   { sph:[1,9,6], sphLo:[1,6,4], cyl:[1,1,1,6], cone:[1,1,6] },   // 0 full
   { sph:[1,7,5], sphLo:[1,5,3], cyl:[1,1,1,5], cone:[1,1,5] },   // 1 crowded
-  { sph:[1,5,4], sphLo:[1,4,3], cyl:[1,1,1,4], cone:[1,1,4] }    // 2 a mob
+  { sph:[1,5,4], sphLo:[1,4,3], cyl:[1,1,1,4], cone:[1,1,4] },   // 2 a mob
+  { sph:[1,4,3], sphLo:[1,3,2], cyl:[1,1,1,3], cone:[1,1,3] }    // 3 a horde
 ];
 const G = { box:new THREE.BoxGeometry(1,1,1) };
 let DETAIL=-1;
@@ -893,8 +902,18 @@ function setDetail(level){
   return true;                       // caller must rebuild anything cached
 }
 setDetail(0);
-/* how crowded is too crowded */
-function detailFor(total){ return total>1500?2:(total>650?1:0); }
+/* How crowded is too crowded. These were far too generous: the classic
+   preset — 1000 roosters against 100 raccoons, which is the fight most
+   people actually play — landed at tier 1 and submitted 1.68M triangles a
+   frame, more than a 2600-unit fight sitting at tier 2. The most-played
+   preset was the most expensive one on the board.
+   The thresholds are lower now because the thing they trade away is close to
+   invisible. Field radius grows as sqrt(total), so a bird's size on screen
+   falls off much more slowly than the count rises: at a thousand units a
+   rooster is already a few dozen pixels, and the difference between a
+   nine-segment sphere and a five-segment one at that size is nothing you can
+   see. What you can see is the frame rate. */
+function detailFor(total){ return total>2400?3:(total>900?2:(total>320?1:0)); }
 
 /** build a coloured, transformed, non-indexed piece */
 function P(base,color,px,py,pz,rx,ry,rz,sx,sy,sz){
@@ -1334,8 +1353,21 @@ const UNITS=[
   build:'bird',kit:'turkey', blurb:'Enormous. Slow. Weirdly confident.'},
 {k:'cat',      team:0, voice:'yowl', hurtv:'yowl', cry:['yowl',.08], label:'Barn cats',  hp:270, dmg:32,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
   build:'quad',kit:'cat', crit:[0.30,2.2], blurb:'Will help. Will not be thanked.'},
-{k:'capybara', team:0, voice:'peep', hurtv:'peep', cry:['peep',.06], label:'Capybaras', hp:1900,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
-  build:'quad',kit:'capybara', calm:[9.0,0.60], blurb:'Will not fight. Will not panic. Will not move.'},
+/* The capybara sits deliberately above the prey-mammal durability line —
+   129 per unit of mass^0.75 against the ~64 a goat or a llama gets. That is
+   not a thumb on the scale. The prey factor assumes an animal whose plan is
+   to outrun the problem; a capybara's plan is to absorb it and walk into
+   water, and it is built accordingly: barrel-bodied, thick-hided, and almost
+   impossible to make panic (nerve 1.00).
+   All of its damage lives in `bite` instead of `dmg`. Offence stays at 6,
+   which is another way of saying it never kills anything it walks up to —
+   it genuinely will not start a fight. But it carries a pair of
+   continuously-growing incisors with 55kg behind them, and the real animal's
+   behaviour is to tolerate almost anything and then, if you keep going, take
+   a piece out of you. `bite` fires only in response, only at whoever just
+   connected. See hurt() in the sim. */
+{k:'capybara', team:0, voice:'peep', hurtv:'peep', cry:['peep',.06], label:'Capybaras', hp:2600,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
+  build:'quad',kit:'capybara', calm:[9.0,0.60], bite:[0.25,40], blurb:'Will not start it. Will not panic. Will not be bitten twice.'},
 {k:'goat',     team:0, voice:'bleat', hurtv:'bleat', cry:['bleat',.10], label:'Goats',      hp:1050,dmg:130,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
   build:'quad',kit:'goat', shove:3.4, blurb:'Arrives head-first. Only knows the one move.'},
 {k:'pig',      team:0, voice:'squeal', hurtv:'squeal', cry:['squeal',.09], label:'Pigs',       hp:1850,dmg:92,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
@@ -2335,15 +2367,30 @@ const CMD_DEF=[
 ];
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
-/* Guinea fowl and capybaras used to be on this bar and were a trap: measured
-   at equal spend they removed half a percent of the raccoon force, and half of
-   a flight of guineas was dead inside three and a half seconds. Both are still
-   in the game — they turn up in Max Chaos, where they belong — but nobody
-   should be spending a war chest on them. */
+/* Guinea fowl were a trap on this bar and stay off it: at equal spend they
+   removed half a percent of the raccoon force, and half a flight was dead
+   inside three and a half seconds. They are still in Max Chaos, where a
+   screaming alarm bird belongs, but nobody should spend a war chest on one.
+
+   Capybaras were pulled for the same reason and have earned their way back.
+   The old row was the trap: 1900 health and 6 damage is a unit that soaks for
+   seventeen seconds, kills nothing, and leaves. With the cornered bite three
+   of them now remove seventeen raccoons from a 700-bird fight against a goat
+   trio's nineteen — deliberately parity, because the killing is not what you
+   are buying.
+
+   What you are buying is the aura, and it is worth more than it looks. Three
+   capybaras take peak simultaneous panic in that same fight from 265 birds to
+   41, and at night from 377 to 60. Nine metres each is only about a tenth of
+   the field, but panic moves through a flock as a cascade and a tenth of the
+   field is enough to break it — which is also why eight of them barely beat
+   three (35 against 41). Buy one trio, drop it where the line is folding, and
+   do not buy a second. */
 const DEPLOY=[
   {k:'goose',   n:6, cost:12},
   {k:'turkey',  n:5, cost:12},
   {k:'cat',     n:6, cost:14},
+  {k:'capybara',n:3, cost:18},
   {k:'goat',    n:3, cost:20},
   {k:'pig',     n:2, cost:20},
   {k:'llama',   n:2, cost:24},
@@ -2409,6 +2456,37 @@ function cmdReset(){
 }
 
 /* ============================================================
+   ADAPTIVE LOAD SHEDDING
+
+   The geometry tier is picked once, at spawn, and baked into the kits — it
+   cannot move mid-fight without rebuilding every mesh, which is exactly the
+   hitch you do not want in the middle of a melee. So the tier handles the
+   part we can predict from the unit count, and this handles the part we
+   cannot: how fast the machine actually turns out to be.
+
+   The sun's shadow is the valve, because it is the only expensive thing that
+   switches off and back on instantly, with no rebuild. Thresholds are far
+   apart and the timers deliberately unequal — a second and a half to shed
+   it, five seconds of comfortable headroom to take it back — because a valve
+   that flaps between two states every few frames is worse than one that
+   sticks in the cheaper one.
+   ============================================================ */
+let SHADOW_BASE=true;
+const PERF={slow:0, fast:0, dropped:false};
+function perfWatch(real){
+  if(!BATTLE.running || BATTLE.over || !SHADOW_BASE){ PERF.slow=PERF.fast=0; return; }
+  const ms=real*1000;
+  if(ms>22)      { PERF.slow+=real; PERF.fast=0; }   // under ~45fps
+  else if(ms<15) { PERF.fast+=real; PERF.slow=0; }   // comfortably over 60
+  else           { PERF.slow=PERF.fast=0; }
+  if(!PERF.dropped && PERF.slow>1.5){
+    sun.castShadow=false; PERF.dropped=true; PERF.slow=0;
+  } else if(PERF.dropped && PERF.fast>5.0){
+    sun.castShadow=true;  PERF.dropped=false; PERF.fast=0;
+  }
+}
+
+/* ============================================================
    SPAWNING — roster is a list of {k:'rooster', n:1000}
    ============================================================ */
 function spawnRoster(list,night){
@@ -2427,8 +2505,16 @@ function spawnRoster(list,night){
   const R=clamp(Math.sqrt(total*3.4/Math.PI)+10, 20, 78);
   buildArena(R,night); gridInit();
 
-  sun.castShadow = total<=1900;
-  const ms = total<=1500?4096:2048;
+  /* The sun's shadow pass draws every animal on the field a second time — at
+     the classic preset it measured 49% of every triangle submitted. It stays
+     the default look for fights small enough to afford it, and perfWatch()
+     takes it away at runtime on a machine that turns out not to be. The
+     4096 map is a 64MB depth buffer and was being handed to fights of
+     fifteen hundred; only the small ones get it now. */
+  SHADOW_BASE = total<=1200;
+  sun.castShadow = SHADOW_BASE;
+  PERF.dropped=false; PERF.slow=0; PERF.fast=0;
+  const ms = total<=700?4096:2048;
   if(sun.shadow.mapSize.x!==ms){
     sun.shadow.mapSize.set(ms,ms);
     if(sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map=null; }
@@ -2893,6 +2979,7 @@ function shove(j,dx,dz,f){
   A.hit[j]=0.24;
 }
 
+let BITING=0;   /* re-entrancy guard for retaliation — see the bite block below */
 function hurt(j,dmg,by,crit){
   if(A.st[j]===2) return;
   A.hp[j]-=dmg; A.hit[j]=0.18;
@@ -2908,6 +2995,18 @@ function hurt(j,dmg,by,crit){
        && SR()<(uh.build==='bird'?.85:.30)){
       A.vt[j]=BATTLE.t;
       sfx(uh.hurtv||(uh.build==='bird'?'bawk':'chitter'),A.x[j],A.z[j],'cry');
+    }
+    /* The cornered bite. Some animals have no offence worth the name and are
+       still a serious mistake to attack — the damage belongs on the response,
+       not on the swing, or the unit starts hunting and stops being itself.
+       Fires at whoever just connected, once, and only if they are still up.
+       BITING clamps it to a single step: two retaliators facing each other
+       would otherwise trade blows all the way down the stack. */
+    if(uh.bite && !BITING && by>=0 && by!==j && A.st[by]!==2
+       && A.team[by]!==A.team[j] && SR()<uh.bite[0]){
+      BITING=1;
+      hurt(by, uh.bite[1]*srnd(.8,1.25), j, false);
+      BITING=0;
     }
     return;
   }
@@ -4119,10 +4218,29 @@ function musicUpdate(dt){
    AGENT RENDER
    ============================================================ */
 const _mL=new THREE.Matrix4(), _mF=new THREE.Matrix4();
+/* Above this many animals still standing you cannot resolve a chicken's legs,
+   so they ride the body. Below it they walk.
+
+   This used to hang off the geometry tier, which was the wrong knob on both
+   counts. Animating the limbs is a CPU cost — one matrix build and one
+   multiply per agent — and it is tiny: measured at 0.19ms a frame for a
+   thousand birds and 0.50ms for five thousand, against a sim step that costs
+   twenty-two. The geometry tier is a GPU cost and answers a different
+   question. Tying them together meant that lowering the polygon thresholds
+   silently switched off the walk cycle at a thousand units to save a fifth of
+   a millisecond, which is a terrible trade — a yard full of running chickens
+   is most of the joke.
+
+   It also reads the LIVE count rather than the one the fight started with, so
+   Max Chaos opens as an indistinguishable mob and the survivors get their
+   gait back as the field thins. That is free: it is a per-frame branch, not a
+   rebuild. */
+const LIMB_MAX=2600;
 function renderAgents(){
   if(!SQUADS.length) return;
   for(let q=0;q<SQUADS.length;q++) if(SQUADS[q]) SQUADS[q].begin();
   let sN=0;
+  const LIMBS = (aliveA+aliveB) <= LIMB_MAX;
 
   for(let i=0;i<N;i++){
     const ki=A.kind[i], sq=SQUADS[ki];
@@ -4185,10 +4303,8 @@ function renderAgents(){
     _v.set(A.x[i],y,A.z[i]); _s.set(1,1,1);
     _m.compose(_v,_q,_s);
 
-    /* The limb transform is a matrix build plus a multiply for every agent,
-       every frame. In a mob you cannot resolve a chicken's legs anyway, so
-       above the top detail tier the limbs simply ride the body. */
-    if(DETAIL>=2){
+    /* see LIMB_MAX above — live count, not the spawn tier */
+    if(!LIMBS){
       sq.push(A.vr[i],_m,_m);
     }else{
       const ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
@@ -4884,7 +5000,7 @@ const PRESETS={
   silly   :{birds:4000,coons:600,kind:'rooster', arena:'field',
             mix:{hen:1900,rooster:1400,gamecock:700},
             foes:{fox:40,coyote:30,possum:50,hawk:30,bear:2},
-            allies:{guinea:40,goose:20,turkey:25,cat:5,capybara:4,goat:12,
+            allies:{guinea:40,goose:20,turkey:25,cat:5,capybara:6,goat:12,
                     pig:10,llama:2,donkey:2,dog:2,bull:1}}
 };
 document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',()=>{
@@ -5142,6 +5258,8 @@ function loop(now){
   hud(real);
   audioUpdate(real);
   worldFxUpdate(real);
+
+  perfWatch(real);
 
   fpsAcc+=real; fpsN++;
   if(fpsAcc>0.5){ $('fps').textContent=(fpsN/fpsAcc).toFixed(0)+' FPS · '+N+' UNITS'; fpsAcc=0; fpsN=0; }
