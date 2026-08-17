@@ -5,10 +5,17 @@ D = os.path.dirname(os.path.abspath(__file__))
 P = os.path.join(D, 'parts')
 
 ORDER = ['02_core.js','02b_quad.js','02c_units.js','03_world.js','07_sky.js',
-         '04_sim.js','05_view.js','06_ui.js']
+         '04_sim.js','05_view.js','06_ui.js','06b_tale.js']
 
 shell = open(os.path.join(P,'01_shell.html'), encoding='utf-8').read()
-three = open(os.path.join(D,'three.min.js'), encoding='utf-8').read()
+
+# three.min.js sits at the root in a working copy and under src/ in the repo,
+# so look in both rather than making a fresh clone fail on its first build.
+THREE = next((p for p in (os.path.join(D,'three.min.js'),
+                          os.path.join(D,'src','three.min.js')) if os.path.exists(p)), None)
+if THREE is None:
+    raise SystemExit('three.min.js not found — looked in ./ and ./src/')
+three = open(THREE, encoding='utf-8').read()
 
 CDN = '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>'
 assert CDN in shell, 'cdn tag not found in shell'
