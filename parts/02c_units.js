@@ -70,30 +70,43 @@ const UNITS=[
   build:'bird',kit:'hen',   blurb:'No spurs. No plan. No idea.'},
 {k:'rooster',  team:0, voice:'crow', hurtv:'bawk', cry:['bawk',.05], label:'Roosters',   hp:70,  dmg:4.3, rate:0.74,reach:1.30,speed:3.9, accel:11, nerve:0.68,cleave:1,rad:0.72,cost:2,
   build:'bird',kit:'rooster',crit:[0.08,1.9], blurb:'Loud, territorial, armed at the ankle.'},
-{k:'gamecock', team:0, voice:'crow', hurtv:'squawk', cry:['crow',.03], label:'Gamecocks',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
+{k:'gamecock', team:0, voice:'crow', hurtv:'squawk', cry:['crow',.03], label:'Warrior Fowls',  hp:93,  dmg:5.75,rate:0.66,reach:1.45,speed:4.4, accel:13, nerve:0.94,cleave:1,rad:0.72,cost:3,
   build:'bird',kit:'gamecock',crit:[0.17,2.4], blurb:'Bred for exactly one thing.'},
 {k:'guinea',   team:0, voice:'cackle', hurtv:'bawk', cry:['cackle',.10], label:'Guinea fowl',hp:42,  dmg:3.0, rate:0.9, reach:1.10,speed:4.6, accel:14, nerve:0.55,cleave:1,rad:0.62,cost:2,
   build:'bird',kit:'guinea', rally:[6.5,0.55], blurb:'Useless in a fight. Screams before anyone else notices.'},
-{k:'goose',    team:0, voice:'honk', hurtv:'honk', cry:['honk',.12], label:'Geese',      hp:210, dmg:14,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
+{k:'goose',    team:0, voice:'honk', hurtv:'honk', cry:['honk',.12], label:'Geese',      hp:280, dmg:32,  rate:0.85,reach:1.70,speed:3.1, accel:8,  nerve:0.90,cleave:2,rad:1.05,cost:6,
   build:'bird',kit:'goose', shove:1.5, blurb:'Genuinely wants to fight you. Always has.'},
-{k:'turkey',   team:0, voice:'gobble', hurtv:'gobble', cry:['gobble',.10], label:'Turkeys',    hp:240, dmg:16,  rate:1.05,reach:1.65,speed:2.7, accel:7,  nerve:0.72,cleave:1,rad:1.00,cost:5,
+{k:'turkey',   team:0, voice:'gobble', hurtv:'gobble', cry:['gobble',.10], label:'Turkeys',    hp:360, dmg:34,  rate:0.95,reach:1.65,speed:3.0, accel:8,  nerve:0.72,cleave:2,rad:1.00,cost:5,
   build:'bird',kit:'turkey', blurb:'Enormous. Slow. Weirdly confident.'},
-{k:'cat',      team:0, voice:'yowl', hurtv:'yowl', cry:['yowl',.08], label:'Barn cats',  hp:235, dmg:22,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
+{k:'cat',      team:0, voice:'yowl', hurtv:'yowl', cry:['yowl',.08], label:'Barn cats',  hp:270, dmg:32,  rate:0.55,reach:1.25,speed:5.6, accel:18, nerve:0.75,cleave:1,rad:0.66,cost:4,
   build:'quad',kit:'cat', crit:[0.30,2.2], blurb:'Will help. Will not be thanked.'},
-{k:'capybara', team:0, voice:'peep', hurtv:'peep', cry:['peep',.06], label:'Capybaras', hp:1900,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
-  build:'quad',kit:'capybara', calm:[9.0,0.60], blurb:'Will not fight. Will not panic. Will not move.'},
-{k:'goat',     team:0, voice:'bleat', hurtv:'bleat', cry:['bleat',.10], label:'Goats',      hp:1050,dmg:94,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
+/* The capybara sits deliberately above the prey-mammal durability line —
+   129 per unit of mass^0.75 against the ~64 a goat or a llama gets. That is
+   not a thumb on the scale. The prey factor assumes an animal whose plan is
+   to outrun the problem; a capybara's plan is to absorb it and walk into
+   water, and it is built accordingly: barrel-bodied, thick-hided, and almost
+   impossible to make panic (nerve 1.00).
+   All of its damage lives in `bite` instead of `dmg`. Offence stays at 6,
+   which is another way of saying it never kills anything it walks up to —
+   it genuinely will not start a fight. But it carries a pair of
+   continuously-growing incisors with 55kg behind them, and the real animal's
+   behaviour is to tolerate almost anything and then, if you keep going, take
+   a piece out of you. `bite` fires only in response, only at whoever just
+   connected. See hurt() in the sim. */
+{k:'capybara', team:0, voice:'peep', hurtv:'peep', cry:['peep',.06], label:'Capybaras', hp:2600,dmg:6,   rate:1.60,reach:1.60,speed:2.6, accel:7,  nerve:1.00,cleave:1,rad:1.30,cost:8,
+  build:'quad',kit:'capybara', calm:[9.0,0.60], bite:[0.25,40], blurb:'Will not start it. Will not panic. Will not be bitten twice.'},
+{k:'goat',     team:0, voice:'bleat', hurtv:'bleat', cry:['bleat',.10], label:'Goats',      hp:1050,dmg:130,  rate:1.10,reach:1.85,speed:4.6, accel:15, nerve:0.85,cleave:1,rad:1.10,cost:7,
   build:'quad',kit:'goat', shove:3.4, blurb:'Arrives head-first. Only knows the one move.'},
 {k:'pig',      team:0, voice:'squeal', hurtv:'squeal', cry:['squeal',.09], label:'Pigs',       hp:1850,dmg:92,  rate:0.95,reach:1.70,speed:3.2, accel:9,  nerve:0.80,cleave:2,rad:1.20,cost:7,
   build:'quad',kit:'pig', blurb:'Not a guardian animal. Simply large and hungry.'},
-{k:'llama',    team:0, voice:'orgle', hurtv:'orgle', cry:['orgle',.09], label:'Llamas',     hp:2850,dmg:70,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
+{k:'llama',    team:0, voice:'orgle', hurtv:'orgle', cry:['orgle',.09], label:'Llamas',     hp:2850,dmg:130,  rate:1.20,reach:4.60,speed:3.6, accel:10, nerve:0.95,cleave:1,rad:1.25,cost:9,
   build:'quad',kit:'llama', ranged:1, blurb:'A real livestock guardian. Spits with intent.'},
-{k:'donkey',   team:0, voice:'bray', hurtv:'bray', cry:['bray',.14], label:'Donkeys',    hp:3850,dmg:275,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
-  build:'quad',kit:'donkey', shove:3.0, sweep:[3.0,4,10,5.0], blurb:'Farmers use these on purpose. Kicks like a truck.'},
-{k:'dog',      team:0, voice:'bark', hurtv:'bark', cry:['bark',.30], label:'Farm dogs',  hp:3100,dmg:145,  rate:0.55,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
+{k:'donkey',   team:0, voice:'bray', hurtv:'bray', cry:['bray',.14], label:'Donkeys',    hp:3850,dmg:200,  rate:1.15,reach:2.10,speed:3.8, accel:10, nerve:0.98,cleave:2,rad:1.35,cost:12,
+  build:'quad',kit:'donkey', shove:3.0, sweep:[2.8,3,10,4.6], blurb:'Farmers use these on purpose. Kicks like a truck.'},
+{k:'dog',      team:0, voice:'bark', hurtv:'bark', cry:['bark',.30], label:'Farm dogs',  hp:3100,dmg:180,  rate:0.48,reach:1.95,speed:6.2, accel:20, nerve:1.00,cleave:2,rad:1.10,cost:16,
   build:'quad',kit:'dog', fear:9.0, blurb:'The reason most nights end quietly.'},
-{k:'bull',     team:0, voice:'bellow', hurtv:'bellow', cry:['bellow',.20], label:'Bulls',      hp:9500,dmg:510, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
-  build:'quad',kit:'bull', shove:5.5, sweep:[3.6,6,12,5.8], blurb:'A bad idea that works.'},
+{k:'bull',     team:0, voice:'bellow', hurtv:'bellow', cry:['bellow',.20], label:'Bulls',      hp:9500,dmg:360, rate:1.30,reach:2.30,speed:4.8, accel:11, nerve:1.00,cleave:3,rad:1.60,cost:22,
+  build:'quad',kit:'bull', shove:5.5, sweep:[3.4,4,12,5.6], blurb:'A bad idea that works.'},
 
 /* ---------------- what comes out of the treeline ---------------- */
 {k:'coon',     team:1, voice:'chitter', hurtv:'chitter', cry:['chitter',.05], label:'Raccoons',   hp:272, dmg:27,  rate:0.72,reach:1.75,speed:4.15,accel:12, nerve:0.80,cleave:3,rad:1.15,cost:10,
@@ -113,6 +126,41 @@ const UI_=(()=>{ const m={}; UNITS.forEach((u,i)=>{u.i=i; m[u.k]=i;}); return m;
 const ALLIES=UNITS.filter(u=>u.team===0), FOES=UNITS.filter(u=>u.team===1);
 /* anything that can strike something in the air */
 UNITS.forEach(u=>{ u.aa = !!(u.fly || u.ranged || u.k==='gamecock' || u.k==='cat' || u.k==='rooster'); });
+
+/* ---------------- how each row swings ----------------
+   No new authoring. Every constant below is read off fields the row already
+   carries, because the row already says what kind of fighter this is:
+
+     sweep  — it clears an arc. Long wind-up, the body rotates through a wide
+              yaw, the hinge flares hard. A bear rears and swings.
+     shove  — it goes through you. Short wind-up, small pitch, a big lunge
+              along its own heading. A goat and a bull shoulder in.
+     ranged — a llama spits. No lunge at all; the head snaps and that is it.
+     build  — a bird jabs from the neck (sharp pitch), a quadruped bites.
+     rate   — caps the swing so it can never outlast its own cooldown.
+     rad    — sizes the lunge, so a bear covers ground a hen cannot.
+
+   sw counts 1 -> 0. Contact happens at swC, which is why the wind-up gets the
+   1..swC part of the timer and the follow-through gets swC..0. swC depends
+   only on the wind/follow ratio, never on the total, so shortening a swing
+   for a fast animal does not move where the blow lands in it. */
+UNITS.forEach(u=>{
+  const wide=!!u.sweep, barge=!!u.shove, bird=u.build==='bird';
+  const wind=wide?0.26:(barge?0.13:(bird?0.07:0.09));   // seconds before contact
+  const foll=wide?0.40:(barge?0.30:(bird?0.20:0.24));   // seconds after
+  const tot =Math.min(wind+foll, Math.max(0.18,u.rate*0.92));
+  u.swC=foll/(wind+foll);        // sw at the instant the damage lands
+  u.swR=1/tot;                   // decay rate: sw drops 1 -> 0 over tot
+  u.swT=tot*(1-u.swC);           // real seconds of wind-up, for the telegraph
+  u.swI=1/(1-u.swC);             // reciprocals, so the renderer never divides
+  u.swJ=1/u.swC;
+  u.swK=wide?3.0:(barge?1.5:0.55);                                   // rear-back depth
+  u.swP=u.ranged?0.30:(wide?0.34:(barge?0.20:(bird?0.42:0.30)));     // peak pitch, rad
+  u.swL=u.ranged?0:(barge?u.rad*0.55:(wide?u.rad*0.22:u.rad*0.34));  // lunge, metres
+  u.swY=wide?0.55:(barge?0.10:(bird?0.16:0.12));                     // yaw arc, rad
+  u.swF=bird?(wide?1.05:0.85):(wide?0.45:(barge?0.30:0.34));         // hinge flare, rad
+  u.swD=(barge?0.05:0.03)*u.rad;                                     // weight dropping in
+});
 
 /* ---------------- geometry kits ---------------- */
 const KITS={

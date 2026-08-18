@@ -21,12 +21,17 @@ function showCard(o){
 function hideCard(){ card.classList.remove('on'); }
 
 const LABEL=(()=>{ const m={}; UNITS.forEach(u=>m[u.k]=u.label); return m; })();
+/* a mixed flock has no single name — the cards say what it actually is */
+function flockCount(){ return CFG.mix?Object.keys(CFG.mix).reduce((a,k)=>a+CFG.mix[k],0):CFG.birds; }
+function flockName(){ return CFG.mix?'BIRDS':LABEL[CFG.kind].toUpperCase(); }
+function flockBlurb(){ return CFG.mix?'Hens, roosters and warrior fowls. Everything with feathers.'
+                                     :UNITS[UI_[CFG.kind]].blurb; }
 /* the ally side is no longer picked in the panel — you call those in live, from
    the commander bar, out of the war chest. the panel keeps the predator list
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},seed:0};
+let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
 
 /* ============================================================
@@ -54,7 +59,7 @@ function fightURL(){
   return location.origin+location.pathname+'?'+encodeFight();
 }
 function decodeFight(){
-  CFG.allies={};                     // a link never carries a preset's allies
+  CFG.allies={}; CFG.mix=null;       // a link never carries a preset's allies or mix
   const q=new URLSearchParams(location.search);
   if(!q.has('s')&&!q.has('b')) return false;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
@@ -74,7 +79,13 @@ function pushFightURL(){
   try{ history.replaceState(null,'','?'+encodeFight()); }catch(e){}
 }
 function rosterList(){
-  const L=[{k:CFG.kind,n:CFG.birds},{k:'coon',n:CFG.coons}];
+  /* Normally the flock is one bird type on a slider. A preset can instead hand
+     over a mix — every kind of bird on the place at once — in which case the
+     slider value is ignored and CFG.mix is spawned verbatim. */
+  const L=[];
+  if(CFG.mix){ for(const k in CFG.mix) if(CFG.mix[k]>0) L.push({k,n:CFG.mix[k]}); }
+  else L.push({k:CFG.kind,n:CFG.birds});
+  L.push({k:'coon',n:CFG.coons});
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
   /* presets can field the whole farm at the whistle, not just the flock */
   for(const k in CFG.allies) if(CFG.allies[k]>0) L.push({k,n:CFG.allies[k]});
@@ -122,9 +133,19 @@ function callGrade(who){
 
 function setPhase(p){
   SEQ.phase=p; SEQ.t=0; DIR.snap=(p!=='result');   // let the final shot ride
+  /* The verdict is where the camera gets closest to an animal — the champion
+     close-up, then the card — and it is where the tier chosen for a thousand
+     birds is least deserved. Rebuild at what the field is now worth. Two
+     frames late, so showCard()'s 0.4s fade has already started painting and
+     the 12-49 ms lands underneath it rather than in front of it. Nothing can
+     be called in once the fight is over, so refineDetail() rebuilds only the
+     kinds still on the field and the commander bar's standby squads are not
+     paid for. If the viewer hits Run it back inside those two frames,
+     spawnRoster has already reset the tier and refineDetail declines. */
+  if(p==='result') requestAnimationFrame(()=>requestAnimationFrame(refineDetail));
   if(p==='introA'){ musicMode('tension');
-    showCard({thin:true, kick:'The flock', a:CFG.birds+' '+LABEL[CFG.kind].toUpperCase(),
-      sub:UNITS[UI_[CFG.kind]].blurb});
+    showCard({thin:true, kick:'The flock', a:flockCount()+' '+flockName(),
+      sub:flockBlurb()});
   }
   if(p==='introB'){
     const foe=EXTRA_B.filter(k=>CFG.foes[k]>0);
@@ -137,7 +158,7 @@ function setPhase(p){
   }
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
-      a:CFG.birds+' '+LABEL[CFG.kind].toUpperCase(), vs:'VS', b:CFG.coons+' RACCOONS',
+      a:flockCount()+' '+flockName(), vs:'VS', b:CFG.coons+' RACCOONS',
       sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field',
       call:true});
   }
@@ -151,6 +172,12 @@ function setPhase(p){
 function verdict(who,how){
   BATTLE.over=true; BATTLE.running=false;
   document.body.classList.remove('fighting');
+  /* and one per fight finished, so outcomes can be read against starts —
+     a gap between the two is people leaving mid-battle, which is worth
+     knowing on its own */
+  track('battle_end',{winner:who, how:how, seconds:Math.round(BATTLE.t),
+    flock:CFG.mix?'mixed':CFG.kind, birds_left:Math.max(0,aliveA),
+    raccoons_left:Math.max(0,aliveB), kills:BATTLE.totalKills});
   const mvp=BATTLE.champ>=0?(A.name[BATTLE.champ]||'an anonymous bird'):'nobody';
   const mk=BATTLE.champ>=0?A.kills[BATTLE.champ]:0;
   const survivors=Math.max(0,aliveA), coonsLeft=Math.max(0,aliveB);
@@ -159,12 +186,13 @@ function verdict(who,how){
     result:true,
     trib:who==='birds',          // the flock only gets its dedication when it earns it
     kick:how,
-    a:who==='birds'?LABEL[CFG.kind].toUpperCase()+' WIN':(who==='coons'?'RACCOONS WIN':'STALEMATE'),
+    a:who==='birds'?flockName()+' WIN':(who==='coons'?'RACCOONS WIN':'STALEMATE'),
     vs:'', b:'',
     sub:survivors+' of '+initA+' birds standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
         ' raccoons standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
+  renderTale(who,how);
   /* Build the mail link at verdict time so the subject carries the fight the
      person just watched — a suggestion is far more useful with that context,
      and it saves them describing it. */
@@ -294,8 +322,10 @@ function slowmo(dt){
   if(BATTLE.windowT>0.3){
     const thresh=Math.max(3,(initA*0.008)|0);
     if(BATTLE.deathsWindow>=thresh&&slowCool<=0&&SEQ.phase==='battle'){
-      BATTLE.slowT=1.0; slowCool=6; DIR.shot='clash'; DIR.t=0; DIR.dur=2.4; sting('slow');
-      DIR.ang=Math.random()*TAU;
+      /* the slow-motion beat holds a beat longer now, so it lands as a moment
+         rather than another cut in an already busy sequence */
+      BATTLE.slowT=1.0; slowCool=8; DIR.shot='clash'; DIR.t=0; DIR.dur=4.5; sting('slow');
+      DIR.ang=Math.random()*TAU; DIR.spin=Math.random()<0.5?-1:1;
     }
     BATTLE.deathsWindow=0; BATTLE.windowT=0;
   }
@@ -313,6 +343,12 @@ function slowmo(dt){
    ============================================================ */
 function startBattle(){
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
+  /* one event per fight started — this is the 'how many battles have been
+     simulated' number, and it carries the matchup so the answer to 'what do
+     people actually play' comes free with it */
+  track('battle_start',{flock:CFG.mix?'mixed':CFG.kind, birds:flockCount(),
+    raccoons:CFG.coons, arena:CFG.arena,
+    predators:EXTRA_B.filter(k=>CFG.foes[k]>0).join(',')||'none'});
   document.body.classList.add('live');   // slides the setup panel away immediately
   // the opening is a directed shot — if the viewer had grabbed the camera, take it back
   if(DIR.manual){ DIR.manual=false; $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; }
@@ -444,10 +480,12 @@ function syncSliders(){
 let reSpawn=null;
 function queueStandby(){ clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
 
-sA.addEventListener('input',()=>{CFG.birds=+sA.value;syncSliders();queueStandby();});
+sA.addEventListener('input',()=>{CFG.birds=+sA.value;CFG.mix=null;syncSliders();queueStandby();});
 sB.addEventListener('input',()=>{CFG.coons=+sB.value;syncSliders();queueStandby();});
+/* touching the flock controls drops out of a preset's mixed roster — you asked
+   for one kind of bird, so that is what you get */
 document.querySelectorAll('#segBird button').forEach(b=>
-  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;syncSliders();queueStandby();}));
+  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;CFG.mix=null;syncSliders();queueStandby();}));
 document.querySelectorAll('#segArena button').forEach(b=>
   b.addEventListener('click',()=>{CFG.arena=b.dataset.v;syncSliders();queueStandby();}));
 
@@ -462,15 +500,23 @@ const PRESETS={
      keep forty guinea fowl and one bull, not the reverse, and guardian llamas
      and donkeys are kept singly or in pairs because that is how they work.
      The result is measured, not chosen. */
-  silly   :{birds:2500,coons:300,kind:'rooster', arena:'field',
-            foes:{fox:30,coyote:20,possum:40,hawk:20,bear:1},
-            allies:{guinea:40,goose:20,turkey:25,cat:5,capybara:4,goat:12,
+  /* Max chaos is the ceiling: every bird on the place, every animal on the
+     place, and everything in the treeline, all on the field at the whistle.
+     Four thousand birds is the flock cap and it goes out as a real mix —
+     mostly hens, because that is what a yard is mostly made of. With the farm
+     and the treeline on top it lands a little under the five thousand two
+     hundred agent ceiling, which leaves room for whatever you call in on top. */
+  silly   :{birds:4000,coons:600,kind:'rooster', arena:'field',
+            mix:{hen:1900,rooster:1400,gamecock:700},
+            foes:{fox:40,coyote:30,possum:50,hawk:30,bear:2},
+            allies:{guinea:40,goose:20,turkey:25,cat:5,capybara:6,goat:12,
                     pig:10,llama:2,donkey:2,dog:2,bull:1}}
 };
 document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',()=>{
   const P=PRESETS[b.dataset.preset];
   EXTRA_B.forEach(k=>CFG.foes[k]=P.foes[k]||0);
   CFG.allies=P.allies||{};
+  CFG.mix=P.mix||null;
   CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
   syncSliders(); startBattle();
 }));
@@ -532,10 +578,25 @@ function rulesHide(){
   setTimeout(()=>document.body.classList.remove('rules'),520);
   audioResume();
 }
+/* 'Why this exists' opens the long version, not the welcome card — that one
+   stands between people and the game and has to stay short. */
+function aboutShow(){
+  track('story_opened');
+  document.body.classList.add('about');
+  const el=$('about'); if(el) el.scrollTop=0;
+  requestAnimationFrame(()=>document.body.classList.add('aboutIn'));
+}
+function aboutHide(){
+  document.body.classList.remove('aboutIn');
+  setTimeout(()=>document.body.classList.remove('about'),560);
+  audioResume();
+}
 $('storyGo').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 $('storySkip').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesHide(); });
 $('rulesGo').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); });
-$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); storyShow(); });
+$('storyOpen').addEventListener('click',e=>{ e.stopPropagation(); rulesHide(); storyHide(); aboutShow(); });
+$('aboutGo').addEventListener('click',e=>{ e.stopPropagation(); aboutHide(); });
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.body.classList.contains('about')) aboutHide(); });
 $('rulesOpen').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 
 $('go').addEventListener('click',()=>{
@@ -571,7 +632,11 @@ $('btnBlood').addEventListener('click',()=>{
 const AUDIO_EV=['pointerdown','pointerup','touchstart','touchend','click','keydown'];
 function audioPoke(){
   audioResume();
-  if(AC&&AC.state==='running') AUDIO_EV.forEach(ev=>removeEventListener(ev,audioPoke));
+  /* Both halves have to have landed before we stop trying: a running context
+     AND the silent element holding a playback session, or an iPad with the
+     ringer switch down still hears nothing. */
+  if(AC&&AC.state==='running'&&silentEl&&!silentEl.paused)
+    AUDIO_EV.forEach(ev=>removeEventListener(ev,audioPoke));
 }
 AUDIO_EV.forEach(ev=>addEventListener(ev,audioPoke,{passive:true}));
 /* iOS suspends the context when you leave the tab and doesn't always restore it */
@@ -703,6 +768,9 @@ function loop(now){
   audioUpdate(real);
   worldFxUpdate(real);
 
+  perfWatch(real);
+  refineWatch(real);
+
   fpsAcc+=real; fpsN++;
   if(fpsAcc>0.5){ $('fps').textContent=(fpsN/fpsAcc).toFixed(0)+' FPS · '+N+' UNITS'; fpsAcc=0; fpsN=0; }
 
@@ -728,7 +796,8 @@ buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 const LINKED=decodeFight();
 syncSliders();
 resize();
-standby();
+standby();          // sets the music mode to 'menu' before anything can play
+audioAutoStart();   // …and starts it right now if the browser will allow it
 if(!LINKED) storyShow();
 camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
 requestAnimationFrame(loop);

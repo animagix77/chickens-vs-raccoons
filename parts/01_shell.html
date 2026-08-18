@@ -4,6 +4,53 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Chickens vs Raccoons — Battle Simulator</title>
+<!-- Shared links used to arrive bare: no card, no picture, and whatever the
+     platform scraped off the page — usually the tail of the title. These are
+     the tags every messaging app and social site actually reads. Absolute URLs
+     are required; a relative image path is ignored by every scraper. -->
+<meta name="description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator. Pick your flock, call in the farm, and find out.">
+<link rel="canonical" href="https://chickensvraccoons.com/">
+<meta property="og:site_name" content="Chickens vs Raccoons">
+<meta property="og:title" content="Chickens vs Raccoons">
+<meta property="og:description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator. Pick your flock, call in the farm, and find out.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://chickensvraccoons.com/">
+<meta property="og:image" content="https://chickensvraccoons.com/assets/img/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A wall of roosters meeting a line of raccoons on open ground">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Chickens vs Raccoons">
+<meta name="twitter:description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator.">
+<meta name="twitter:image" content="https://chickensvraccoons.com/assets/img/share.jpg">
+<meta name="theme-color" content="#08070a">
+<meta name="apple-mobile-web-app-title" content="Chickens vs Raccoons">
+<!-- ---------- visitor counting ----------
+     Put your GA4 Measurement ID in GA_ID below and analytics turns itself on.
+     Leave it empty and nothing loads at all: no request to Google, no cookie,
+     no third-party anything. That matters more than it sounds — a tag that
+     fires with no property behind it still sets cookies and still puts you
+     inside consent-banner rules for no benefit whatsoever.
+
+     The ID is not a secret. It is designed to sit in public page source, so
+     there is nothing to protect here.
+
+     'anonymize_ip' trims the last octet before Google stores it. GA4 does
+     this by default now, but stating it explicitly means the behaviour does
+     not depend on a default someone might change later. -->
+<script>
+const GA_ID='G-EYGKSG41H1';   /* Chickens vs Raccoons web stream */
+window.dataLayer=window.dataLayer||[];
+function gtag(){ dataLayer.push(arguments); }
+function track(name,params){ if(GA_ID) try{ gtag('event',name,params||{}); }catch(e){} }
+if(GA_ID){
+  const s=document.createElement('script'); s.async=true;
+  s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;
+  document.head.appendChild(s);
+  gtag('js',new Date());
+  gtag('config',GA_ID,{anonymize_ip:true});
+}
+</script>
 <style>
   :root{
     --hot:#ffb020; --cool:#7fd4ff; --blood:#d8452f; --paper:#f4ead6;
@@ -87,6 +134,24 @@
   #card .vs{font-size:clamp(16px,3vmin,26px);color:var(--blood);font-weight:800;letter-spacing:.3em;margin:10px 0}
   #card .sub{margin-top:20px;font-size:12px;letter-spacing:.2em;opacity:.65;text-transform:uppercase;max-width:80%}
   #count{font-size:clamp(80px,26vmin,240px);font-weight:800;line-height:1;letter-spacing:-.05em}
+  /* ---------- the dispatch ----------
+     Set as a note pinned to the barn door rather than more HUD: serif, ragged
+     width, quiet. It sits under the statistics because it is commentary on
+     them, and it only exists on the result card. */
+  #cardTale{display:none;margin-top:26px;max-width:min(560px,86%);
+    font-family:Georgia,'Times New Roman',serif;line-height:1.5;
+    padding:16px 22px 15px;border-radius:10px;
+    background:rgba(12,10,17,.42);border:1px solid #ffffff14;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  #card.result #cardTale{display:block}
+  #cardTale b{display:block;font-family:var(--ui);font-size:12px;font-weight:800;
+    letter-spacing:.26em;color:var(--hot);text-transform:uppercase;margin-bottom:10px}
+  #cardTale span{display:block;font-size:15.5px;color:#f4ead6;opacity:.92;margin-bottom:5px}
+  #cardTale i{display:block;margin-top:9px;font-size:14px;opacity:.62}
+  body.narrow #cardTale{margin-top:18px;padding:13px 16px 12px}
+  body.narrow #cardTale span{font-size:14px}
+  body.narrow #cardTale i{font-size:12.5px}
+  body.short #cardTale{margin-top:14px;padding:11px 15px 10px}
   /* the card itself never eats clicks — only these buttons do, and only after a fight */
   #cardTrib{display:none;margin-top:22px;font-size:15px;letter-spacing:.05em;
     color:#e9d7ae;opacity:0;transition:opacity 1.4s ease .7s;
@@ -212,6 +277,39 @@
     font-family:inherit;font-size:9px;letter-spacing:.16em;text-transform:uppercase;
     color:#f4ead652;padding:2px 0}
   .storyLink:hover{color:#f4ead6a0}
+
+  /* ---------- the long version ----------
+     Same furniture as the story card, but this one is a read rather than a
+     doorway: the text is left-aligned in a proper measure, and the whole
+     column scrolls under a fixed Back button. */
+  #about{position:absolute;inset:0;z-index:31;display:none;flex-direction:column;
+    align-items:center;padding:5vmin 7vw 0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    background:radial-gradient(70% 70% at 50% 40%,rgba(6,5,9,.9),rgba(4,3,6,.985));
+    backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    opacity:0;transition:opacity .55s}
+  body.about #about{display:flex}
+  body.about.aboutIn #about{opacity:1}
+  #about .ab{max-width:34em;width:100%;text-align:left}
+  #aboutArt{display:none;width:min(30vh,190px);border-radius:13px;margin:0 auto 12px;
+    box-shadow:0 18px 46px #000c, 0 0 0 1px #ffffff1c}
+  #about p{margin:0 0 14px;font-size:clamp(13px,2.05vmin,16px);line-height:1.78;
+    color:#f4ead6b0;letter-spacing:.012em}
+  #about p.cap{text-align:center;font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(13px,2vmin,16px);color:#f0e2c0a8;margin-bottom:26px}
+  #about p.last{color:#f4ead6}
+  #about p.q{font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(17px,3.1vmin,26px);line-height:1.5;color:#f0e2c0;
+    text-align:center;margin:22px 0 24px}
+  #about p.sig{margin-top:26px;text-align:center;font-size:9.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:#f4ead65e}
+  #about .rule{width:52px;height:1px;background:#ffb02055;margin:24px auto 26px}
+  #aboutGo{flex:0 0 auto;margin:14px 0 7vmin;padding:13px 32px;font-size:11px;font-weight:800;
+    letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
+    font-family:inherit;border:1px solid #ffffff26;background:rgba(16,13,22,.8);
+    color:#f4ead6c0;transition:.15s}
+  #aboutGo:hover{color:#fff;border-color:#ffffff45}
+  body.narrow #about{padding:16px 22px 0}
+  body.narrow #aboutArt{width:min(24vh,150px)}
 
   /* ---------- call the winner ---------- */
   #callBar{display:none;flex-direction:column;align-items:center;gap:9px;margin-top:24px;
@@ -346,7 +444,15 @@
   body.narrow .dep{padding:5px 6px 6px}
   body.narrow .dep .dn{font-size:8px;letter-spacing:.04em}
   body.narrow #cmdpts{padding:5px 7px 6px}
-  body.short #cmddep{max-height:56px;overflow:hidden}
+  /* A short screen cannot spare more than about a row and a half for chips,
+     but `overflow:hidden` meant the rest were not merely off-screen, they
+     were unreachable — and because the row sorts by cost, the ones it ate
+     were always the expensive end: the dog, the donkey, the bull. Same cap,
+     but it scrolls now, so the bull is a swipe away instead of gone. The
+     scrollbar itself is hidden; it would sit across the play area. */
+  body.short #cmddep{max-height:56px;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior:contain}
+  body.short #cmddep::-webkit-scrollbar{display:none}
 
   /* five buttons now, so the row is allowed to wrap rather than run off a phone */
   #tools{position:absolute;z-index:13;right:16px;bottom:16px;display:flex;gap:6px;
@@ -469,6 +575,7 @@
     <div class="big" id="cardB"></div>
     <div id="count"></div>
     <div class="sub" id="cardSub"></div>
+    <div id="cardTale"></div>
     <div id="cardTrib">for Eenie &amp; Moe</div>
     <div id="callBar">
       <div class="ck">Call it</div>
@@ -557,6 +664,50 @@
     <button id="storySkip">Skip the lot</button>
   </div>
 
+  <!-- The long version, opened from 'Why this exists'. The welcome card has to
+       stay short — it stands between people and the game. This one is for the
+       ones who come back and want the whole thing. -->
+  <div id="about">
+    <div class="ab">
+      <img id="aboutArt" alt="Eenie and Moe">
+      <p class="cap">Eenie and Moe</p>
+      <p>We kept eight hens in the yard behind the house. My son named two of them
+         Eenie and Moe — he was three when they arrived, and those were the two he
+         could tell apart.</p>
+      <p>They were his. He'd carry them around the yard with their legs dangling,
+         narrating their opinions in a voice he invented for them. Eenie was the bold
+         one. Moe followed her everywhere and complained about it the whole way.</p>
+      <p>A family of raccoons got into the coop in the middle of the night. By the
+         time I got out there with a flashlight it was already over.</p>
+      <p class="last">Eenie and Moe didn't make it.</p>
+      <div class="rule"></div>
+      <p>He took it harder than I was ready for. It was his first real loss, and
+         there was no version of that morning I could fix for him — no explanation
+         that made it land any softer. He just kept asking me the same thing, over
+         and over, the way kids do when they're trying to find a door out of it:</p>
+      <p class="q">&ldquo;How many chickens would it have taken?&rdquo;</p>
+      <p>I didn't know. Nobody knows. It isn't the kind of question that has an
+         answer sitting around waiting for you.</p>
+      <p>But I'm a nerdy dad who writes code at the kitchen table, and it turns out
+         that when your kid asks you an impossible question, you can either say
+         &ldquo;I don't know&rdquo; or you can spend a few weeks building the machine
+         that finds out. So that's what this is.</p>
+      <p>Every bird in here fights like a real bird. The hens are brave and outmatched.
+         The roosters have spurs and know how to use them. The raccoons are quick and
+         clever and they do not lose to small numbers. Nothing is rigged in the flock's
+         favour, because a rigged answer wouldn't have meant anything to him.</p>
+      <p class="last">Somewhere in those numbers is the flock that would have been
+         enough. He found it on a Sunday afternoon, sitting on my lap, and he laughed
+         for the first time in about a week.</p>
+      <div class="rule"></div>
+      <p>The rest of the hens are fine, by the way. The coop has a proper latch now,
+         and a light on a sensor. We're getting two more in the spring. He's already
+         picked the names.</p>
+      <p class="sig">— for Eenie and Moe</p>
+    </div>
+    <button id="aboutGo">Back</button>
+  </div>
+
   <div id="tools">
     <button id="btnReel">Reel Mode</button>
     <button id="btnCam" class="on">Auto Cam</button>
@@ -585,7 +736,7 @@
       <div class="seg" id="segBird">
         <button data-v="hen">Hens</button>
         <button data-v="rooster" class="on">Roosters</button>
-        <button data-v="gamecock">Gamecocks</button>
+        <button data-v="gamecock">Warrior Fowls</button>
       </div>
     </div>
     <div class="row">

@@ -125,7 +125,8 @@ const _m=new THREE.Matrix4(), _m2=new THREE.Matrix4();
 const G_TIER=[
   { sph:[1,9,6], sphLo:[1,6,4], cyl:[1,1,1,6], cone:[1,1,6] },   // 0 full
   { sph:[1,7,5], sphLo:[1,5,3], cyl:[1,1,1,5], cone:[1,1,5] },   // 1 crowded
-  { sph:[1,5,4], sphLo:[1,4,3], cyl:[1,1,1,4], cone:[1,1,4] }    // 2 a mob
+  { sph:[1,5,4], sphLo:[1,4,3], cyl:[1,1,1,4], cone:[1,1,4] },   // 2 a mob
+  { sph:[1,4,3], sphLo:[1,3,2], cyl:[1,1,1,3], cone:[1,1,3] }    // 3 a horde
 ];
 const G = { box:new THREE.BoxGeometry(1,1,1) };
 let DETAIL=-1;
@@ -140,8 +141,30 @@ function setDetail(level){
   return true;                       // caller must rebuild anything cached
 }
 setDetail(0);
-/* how crowded is too crowded */
-function detailFor(total){ return total>1500?2:(total>650?1:0); }
+/* How crowded is too crowded. These were far too generous: the classic
+   preset — 1000 roosters against 100 raccoons, which is the fight most
+   people actually play — landed at tier 1 and submitted 1.68M triangles a
+   frame, more than a 2600-unit fight sitting at tier 2. The most-played
+   preset was the most expensive one on the board.
+   The thresholds are lower now because the thing they trade away is close to
+   invisible. Field radius grows as sqrt(total), so a bird's size on screen
+   falls off much more slowly than the count rises: at a thousand units a
+   rooster is already a few dozen pixels, and the difference between a
+   nine-segment sphere and a five-segment one at that size is nothing you can
+   see. What you can see is the frame rate. */
+function detailFor(total){ return total>2400?3:(total>900?2:(total>320?1:0)); }
+/* …and once, at the whistle, used to be the only time it was ever asked. A
+   fight that starts at four thousand ends at a few hundred, and the tier
+   picked for the crowd was still on screen for the champion close-up and the
+   verdict card — the two shots with the camera closest to an animal. It is
+   asked again mid-scene now, against a load rather than a head count.
+
+   A corpse is the same instance in the same mesh as a live bird and costs
+   exactly the same triangles, so it cannot be ignored; but it is lying flat,
+   it is behind the survivors, and nobody is looking at it. A third of a live
+   one is what the field can honestly be re-measured with — at that weight
+   every preset earns exactly one tier before the verdict and none earns two. */
+const DEAD_WEIGHT=0.34;
 
 /** build a coloured, transformed, non-indexed piece */
 function P(base,color,px,py,pz,rx,ry,rz,sx,sy,sz){

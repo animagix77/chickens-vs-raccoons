@@ -16,6 +16,12 @@ const A={
   dead:new Float32Array(MAXA),      // seconds since death
   panicT:new Float32Array(MAXA),
   hit:new Float32Array(MAXA),       // flinch timer
+  /* the swing. Counts 1 -> 0 across one blow: 1 is the start of the wind-up,
+     u.swC is the instant the damage actually lands, 0 is spent. Normalised
+     rather than in seconds so the renderer never divides — the per-kind rate
+     lives on the UNITS row as swR. Same life cycle as hit above: declared
+     here, zeroed on spawn, decayed in the tick, consumed by renderAgents. */
+  sw:new Float32Array(MAXA),
   fy:new Float32Array(MAXA),        // flight height
   rev:new Uint8Array(MAXA),         // possums: one free resurrection
   /* being launched: vertical speed, tumble angle and its rate, and who
@@ -28,6 +34,10 @@ const A={
 let N=0;
 let aliveA=0, aliveB=0, initA=0, initB=0, panicCount=0;
 let SQUADS=[], KIT_PIV=[], ROSTER_USED=[];
+/* what each standing squad was sized for. Kept so the instanced meshes can be
+   rebuilt at a finer polygon tier later without re-deriving the fight's needs
+   — which is the reason the rebuild could not be triggered from outside. */
+let SQUAD_NEED={};
 
 /* ---------- spatial hash ---------- */
 const CS=2.4;
@@ -38,22 +48,124 @@ function gridInit(){
   cellCount=gridW*gridW;
   cCount=new Int32Array(cellCount+1);
   cCursor=new Int32Array(cellCount+1);
+  tCount=[new Int32Array(cellCount+1),new Int32Array(cellCount+1)];
+  tCursor=[new Int32Array(cellCount+1),new Int32Array(cellCount+1)];
+  unitTables();
 }
 function cellOf(x,z){
   const gx=clamp(((x+ARENA_R+12)/CS)|0,0,gridW-1);
   const gz=clamp(((z+ARENA_R+12)/CS)|0,0,gridW-1);
   return gz*gridW+gx;
 }
+/* The same cells, bucketed by team as well as in total. Filled in ascending
+   agent index exactly like cItems, so a scan that already threw away same-team
+   neighbours now never looks at them and still sees what is left in the same
+   order — same candidates, same order, same arithmetic, just none of the misses. */
+let tCount=[new Int32Array(4),new Int32Array(4)],
+    tCursor=[new Int32Array(4),new Int32Array(4)];
+const tItems=[new Int32Array(MAXA),new Int32Array(MAXA)];
+/* Collision radius laid out in cItems order. It cannot change during a step, so
+   this is only a layout change: it replaces UNITS[A.kind[j]].rad — a megamorphic
+   load, because the UNITS rows have different shapes — with one sequential read.
+   Float64, not Float32: rounding 0.72 to 0.7200000286102295 diverges the fight. */
+const pkR=new Float64Array(MAXA);
+let U_RAD=new Float64Array(1), U_FLY=new Uint8Array(1);
+function unitTables(){
+  U_RAD=new Float64Array(UNITS.length); U_FLY=new Uint8Array(UNITS.length);
+  for(let i=0;i<UNITS.length;i++){ U_RAD[i]=UNITS[i].rad; U_FLY[i]=UNITS[i].fly?1:0; }
+}
 function gridBuild(){
-  cCount.fill(0);
-  for(let i=0;i<N;i++){ if(A.st[i]===2) continue; cCount[cellOf(A.x[i],A.z[i])+1]++; }
-  for(let i=0;i<cellCount;i++) cCount[i+1]+=cCount[i];
-  cCursor.set(cCount);
-  for(let i=0;i<N;i++){ if(A.st[i]===2) continue; cItems[cCursor[cellOf(A.x[i],A.z[i])]++]=i; }
+  cCount.fill(0); tCount[0].fill(0); tCount[1].fill(0);
+  for(let i=0;i<N;i++){ if(A.st[i]===2) continue;
+    const c=cellOf(A.x[i],A.z[i])+1; cCount[c]++; tCount[A.team[i]][c]++; }
+  for(let i=0;i<cellCount;i++){ cCount[i+1]+=cCount[i];
+    tCount[0][i+1]+=tCount[0][i]; tCount[1][i+1]+=tCount[1][i]; }
+  cCursor.set(cCount); tCursor[0].set(tCount[0]); tCursor[1].set(tCount[1]);
+  for(let i=0;i<N;i++){ if(A.st[i]===2) continue;
+    const c=cellOf(A.x[i],A.z[i]), t=A.team[i], k=cCursor[c]++;
+    cItems[k]=i; pkR[k]=U_RAD[A.kind[i]];
+    tItems[t][tCursor[t][c]++]=i; }
 }
 
 const KIT_CACHE={};
 function kitCache(k,fn){ if(!KIT_CACHE[k]) KIT_CACHE[k]=fn(); return KIT_CACHE[k]; }
+
+/* ---------- building the instanced meshes ----------
+   This used to be three fragments inline in spawnRoster, which meant the
+   polygon tier was decided once and could never be revisited: there was no way
+   to rebuild at tier N because the capacities were local to that call.
+   spawnRoster's behaviour through these functions is unchanged.
+
+   Everything the renderer reads comes out of here together — SQUADS, KIT_PIV
+   and, through kitCache, KIT_CACHE — so any caller may run it between frames,
+   with one condition: renderAgents() must run before the next draw. That is
+   not optional. A fresh THREE.InstancedMesh starts with count === max, so a
+   squad built after renderAgents() and drawn before the next one would put a
+   few thousand uninitialised matrices on screen for a frame. */
+function buildOneSquad(k){
+  const n=SQUAD_NEED[k]; if(n===undefined) return;
+  const u=UNITS[UI_[k]];
+  const kits=kitCache(u.kit,KITS[u.kit]);
+  SQUADS[u.i]=new Squad(kits,Math.max(2,n+4));
+  KIT_PIV[u.i]=kits.map(kk=>({y:kk.pivot.y,z:kk.pivot.z}));
+}
+/* `only`, when given, restricts the rebuild to the kinds named in it; the rest
+   stand down and are built on demand by deploy(). That is what makes a rebuild
+   affordable at all — the classic matchup has two kinds on the field and ten
+   more waiting on the commander bar, and merging those ten is 50 of the 60 ms. */
+function buildSquads(need,only){
+  SQUAD_NEED=need;
+  SQUADS.forEach(s=>s&&s.dispose());
+  SQUADS=new Array(UNITS.length).fill(null);
+  KIT_PIV=new Array(UNITS.length).fill(null);
+  for(const k in need){ if(only&&!only[k]) continue; buildOneSquad(k); }
+}
+/* The kits bake the primitives in at build time, so a tier change throws all of
+   them away. They were previously dropped from the cache and left to the
+   garbage collector, which never frees the GPU buffers — five rebuilds of Max
+   Chaos leaked 420 geometries out of renderer.info.memory. Hand them back
+   explicitly, and only once the squads holding them are gone. */
+function dropKitCache(){
+  const old=[];
+  for(const k in KIT_CACHE){ old.push.apply(old,KIT_CACHE[k]); delete KIT_CACHE[k]; }
+  return old;
+}
+function disposeKits(list){ for(const kit of list){ kit.core.dispose(); kit.flap.dispose(); } }
+
+/* Move the whole scene to another polygon tier without disturbing the fight.
+   Returns false if the tier did not actually move. */
+function setDetailLive(level,only){
+  if(!setDetail(level)) return false;
+  const stale=dropKitCache();
+  buildSquads(SQUAD_NEED,only);
+  disposeKits(stale);
+  renderAgents();            // see buildSquads — never leave a squad undrawn
+  return true;
+}
+
+/* How heavy the field looks right now, and which kinds are standing on it.
+   Corpses are drawn for thirty seconds after they fall and cost full price in
+   triangles, so they are counted — at DEAD_WEIGHT, because nobody is looking
+   at them. `out`, when given, collects the kinds a rebuild has to cover;
+   that set includes corpses, because a corpse without a squad vanishes. */
+function fieldLoad(out){
+  let live=0,gone=0;
+  for(let i=0;i<N;i++){
+    if(A.st[i]===2&&A.dead[i]>30) continue;
+    if(out) out[UNITS[A.kind[i]].k]=1;
+    if(A.st[i]===2) gone++; else live++;
+  }
+  return live+gone*DEAD_WEIGHT;
+}
+/* Improve the geometry to whatever the field can now afford. Only ever finer:
+   the tier never gets worse once a fight has started, so there is nothing for
+   a rebuild to flap between. */
+function refineDetail(){
+  const drawn={};
+  const want=detailFor(fieldLoad(drawn));
+  if(want>=DETAIL) return false;
+  return setDetailLive(want,drawn);
+}
 
 /* ============================================================
    THE COMMANDER — four things you can do while it is happening
@@ -69,18 +181,36 @@ const CMD_DEF=[
 ];
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
+/* Guinea fowl were a trap on this bar and stay off it: at equal spend they
+   removed half a percent of the raccoon force, and half a flight was dead
+   inside three and a half seconds. They are still in Max Chaos, where a
+   screaming alarm bird belongs, but nobody should spend a war chest on one.
+
+   Capybaras were pulled for the same reason and have earned their way back.
+   The old row was the trap: 1900 health and 6 damage is a unit that soaks for
+   seventeen seconds, kills nothing, and leaves. With the cornered bite three
+   of them now remove seventeen raccoons from a 700-bird fight against a goat
+   trio's nineteen — deliberately parity, because the killing is not what you
+   are buying.
+
+   What you are buying is the aura, and it is worth more than it looks. Three
+   capybaras take peak simultaneous panic in that same fight from 265 birds to
+   41, and at night from 377 to 60. Nine metres each is only about a tenth of
+   the field, but panic moves through a flock as a cascade and a tenth of the
+   field is enough to break it — which is also why eight of them barely beat
+   three (35 against 41). Buy one trio, drop it where the line is folding, and
+   do not buy a second. */
 const DEPLOY=[
-  {k:'guinea',  n:8, cost:8},
   {k:'goose',   n:6, cost:12},
   {k:'turkey',  n:5, cost:12},
   {k:'cat',     n:6, cost:14},
-  {k:'capybara',n:2, cost:16},
+  {k:'capybara',n:3, cost:18},
   {k:'goat',    n:3, cost:20},
   {k:'pig',     n:2, cost:20},
   {k:'llama',   n:2, cost:24},
-  {k:'donkey',  n:1, cost:26},
+  {k:'donkey',  n:1, cost:30},
   {k:'dog',     n:1, cost:28},
-  {k:'bull',    n:1, cost:44}
+  {k:'bull',    n:1, cost:58}
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
@@ -89,7 +219,15 @@ function canDeploy(d){ return BATTLE.running && !BATTLE.over && CMD.pts>=d.cost;
 function deploy(d){
   if(!canDeploy(d)) return false;
   CMD.pts-=d.cost;
+  TALE.spent+=d.cost;
+  TALE.bought[d.k]=(TALE.bought[d.k]||0)+d.n;
   const u=UNITS[UI_[d.k]];
+  /* a mid-fight fidelity upgrade only rebuilds what is on the field, so the
+     squad for a packet nobody has called in yet may be standing down. Build it
+     here — one kind is 1.5 to 8 ms, under the cover of the dust puff and the
+     animal's own arrival cry. It draws no seeded numbers and it runs before
+     the SR() below, so the fight the seed describes is unchanged. */
+  if(!SQUADS[u.i]) buildOneSquad(d.k);
   if(!SQUADS[u.i]) return false;
   const base=Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
@@ -140,34 +278,139 @@ function cmdReset(){
 }
 
 /* ============================================================
+   THE DISPATCH LEDGER
+
+   The result card can only be as specific as what we bothered to write down,
+   and a survivor count throws away almost everything that made a fight worth
+   watching. It says a thousand birds went in and six came out; it does not
+   say that four hundred of them died in the first eleven seconds, or that
+   the bull you panic-bought at the end killed nothing at all.
+
+   These are the facts the stats line loses. Everything the dispatch prints is
+   read out of here, which is the whole point — the writing is only funny
+   while it is also true, so nothing gets invented at the card.
+   ============================================================ */
+const TALE={
+  early:0,          // flock losses inside the first ten seconds
+  peakPanic:0,      // most birds running the wrong way at one time
+  spent:0,          // war chest actually committed
+  bought:{},        // what you called in, by kind
+  boughtKills:{},   // and what it did once it arrived
+  revived:0,        // possums that got back up
+  firstBlood:-1,    // seconds to the first death
+  lastGasp:Infinity // closest the flock came to being wiped out
+};
+function taleReset(){
+  TALE.early=0; TALE.peakPanic=0; TALE.spent=0;
+  TALE.bought={}; TALE.boughtKills={};
+  TALE.revived=0; TALE.firstBlood=-1; TALE.lastGasp=Infinity;
+}
+
+/* ============================================================
+   ADAPTIVE LOAD SHEDDING
+
+   The geometry tier is picked once, at spawn, and baked into the kits — it
+   cannot move mid-fight without rebuilding every mesh, which is exactly the
+   hitch you do not want in the middle of a melee. So the tier handles the
+   part we can predict from the unit count, and this handles the part we
+   cannot: how fast the machine actually turns out to be.
+
+   The sun's shadow is the valve, because it is the only expensive thing that
+   switches off and back on instantly, with no rebuild. Thresholds are far
+   apart and the timers deliberately unequal — a second and a half to shed
+   it, five seconds of comfortable headroom to take it back — because a valve
+   that flaps between two states every few frames is worse than one that
+   sticks in the cheaper one.
+   ============================================================ */
+let SHADOW_BASE=true;
+const PERF={slow:0, fast:0, dropped:false};
+function perfWatch(real){
+  if(!BATTLE.running || BATTLE.over || !SHADOW_BASE){ PERF.slow=PERF.fast=0; return; }
+  const ms=real*1000;
+  if(ms>22)      { PERF.slow+=real; PERF.fast=0; }   // under ~45fps
+  else if(ms<15) { PERF.fast+=real; PERF.slow=0; }   // comfortably over 60
+  else           { PERF.slow=PERF.fast=0; }
+  if(!PERF.dropped && PERF.slow>1.5){
+    sun.castShadow=false; PERF.dropped=true; PERF.slow=0;
+  } else if(PERF.dropped && PERF.fast>5.0){
+    sun.castShadow=true;  PERF.dropped=false; PERF.fast=0;
+  }
+}
+
+/* ---------- buying the geometry back ----------
+   perfWatch above trades quality away when the machine turns out to be slow.
+   This is the other direction: the tier is chosen from the starting count, and
+   a fight sheds most of that count in half a minute. Measured across the four
+   presets, classic can afford tier 1 by ten seconds in, massacre by sixteen,
+   even reaches tier 0 by thirteen, and Max Chaos reaches tier 2 by twenty-five
+   — every one of them exactly one step, none of them two.
+
+   A rebuild costs 12 ms with two kinds on the field and 49 ms with twenty, so
+   it needs cover, and it gets two layers of it. The improved tier has to hold
+   for HOLD seconds first, which keeps a routing army from triggering on a
+   number it is still falling through; then it waits for the next slow-motion
+   beat, where the world is running at 0.22x and a dropped frame costs a fifth
+   of what it costs at speed. If no beat arrives within WAIT seconds it goes
+   anyway, because a fight can end without one. The load only falls, so a
+   second trigger is not a reversal of the first.
+
+   Only the kinds on the field are rebuilt; the standby squads on the commander
+   bar stand down and deploy() builds them back on demand. That is the whole
+   difference between 12 ms and 60 ms. */
+const REFINE={held:0, waiting:0, scan:0, load:1e9};
+const REFINE_HOLD=5, REFINE_WAIT=7;
+function refineWatch(dt){
+  if(!BATTLE.running||BATTLE.over||DETAIL<=0){ REFINE.held=0; REFINE.waiting=0; return; }
+  /* the scan walks every agent; four times a second is plenty for a number
+     that moves no faster than animals die */
+  REFINE.scan-=dt;
+  if(REFINE.scan<=0){ REFINE.scan=0.25; REFINE.load=fieldLoad(null); }
+  if(detailFor(REFINE.load)>=DETAIL){ REFINE.held=0; REFINE.waiting=0; return; }
+  if(REFINE.held<REFINE_HOLD){ REFINE.held+=dt; return; }
+  REFINE.waiting+=dt;
+  if(BATTLE.slowT>0 || REFINE.waiting>REFINE_WAIT){
+    REFINE.held=0; REFINE.waiting=0;
+    refineDetail();
+  }
+}
+
+/* ============================================================
    SPAWNING — roster is a list of {k:'rooster', n:1000}
    ============================================================ */
 function spawnRoster(list,night){
   N=0; aliveA=0; aliveB=0; initA=0; initB=0; panicCount=0;
+  resetNames();   // the per-round counters restart; the session's name book does not
+  taleReset();
   const rows=list.filter(r=>r.n>0);
   let total=0; rows.forEach(r=>total+=r.n);
   total=Math.max(1,total);
 
   /* pick the polygon budget before any kit gets built, and throw away the
-     cached kits if the tier moved — they bake the primitives in at build time */
-  if(setDetail(detailFor(total))){
-    for(const k in KIT_CACHE) delete KIT_CACHE[k];
-  }
+     cached kits if the tier moved — they bake the primitives in at build time.
+     The old geometries are disposed further down, once the squads that were
+     holding them have been replaced. */
+  const stale = setDetail(detailFor(total)) ? dropKitCache() : null;
 
   const R=clamp(Math.sqrt(total*3.4/Math.PI)+10, 20, 78);
   buildArena(R,night); gridInit();
 
-  sun.castShadow = total<=1900;
-  const ms = total<=1500?4096:2048;
+  /* The sun's shadow pass draws every animal on the field a second time — at
+     the classic preset it measured 49% of every triangle submitted. It stays
+     the default look for fights small enough to afford it, and perfWatch()
+     takes it away at runtime on a machine that turns out not to be. The
+     4096 map is a 64MB depth buffer and was being handed to fights of
+     fifteen hundred; only the small ones get it now. */
+  SHADOW_BASE = total<=1200;
+  sun.castShadow = SHADOW_BASE;
+  PERF.dropped=false; PERF.slow=0; PERF.fast=0;
+  REFINE.held=0; REFINE.waiting=0; REFINE.scan=0; REFINE.load=1e9;
+  const ms = total<=700?4096:2048;
   if(sun.shadow.mapSize.x!==ms){
     sun.shadow.mapSize.set(ms,ms);
     if(sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map=null; }
   }
 
   /* rebuild only the squads this fight actually needs */
-  SQUADS.forEach(s=>s&&s.dispose());
-  SQUADS=new Array(UNITS.length).fill(null);
-  KIT_PIV=new Array(UNITS.length).fill(null);
   ROSTER_USED=rows.map(r=>r.k);
 
   /* every callable reinforcement needs a squad standing by, even at zero */
@@ -176,12 +419,8 @@ function spawnRoster(list,night){
      packet all match, so size each standby squad for exactly that */
   const purse=PTS_START+CAP_T*PTS_RATE;
   DEPLOY.forEach(d=>{ need[d.k]=(need[d.k]||0)+Math.ceil(purse/d.cost)*d.n; });
-  for(const k in need){
-    const u=UNITS[UI_[k]];
-    const kits=kitCache(u.kit,KITS[u.kit]);
-    SQUADS[u.i]=new Squad(kits,Math.max(2,need[k]+4));
-    KIT_PIV[u.i]=kits.map(kk=>({y:kk.pivot.y,z:kk.pivot.z}));
-  }
+  buildSquads(need);
+  if(stale) disposeKits(stale);
   for(const row of rows){
     const u=UNITS[UI_[row.k]];
     const kits=KIT_PIV[u.i];
@@ -203,7 +442,7 @@ function spawnRoster(list,night){
   moraleTimer=0; recentKills=0; moraleMul=1;
   BATTLE.totalKills=0; BATTLE.champ=-1; BATTLE.routed=0;
   BATTLE.deathsWindow=0; BATTLE.windowT=0;
-  BATTLE.hotX=0; BATTLE.hotZ=0; BATTLE.hotN=0; BATTLE.hsx=0; BATTLE.hsz=0;
+  BATTLE.hsx=0; BATTLE.hsz=0;
   BATTLE.cx=0; BATTLE.cz=0;
   TC.lead[0]=TC.lead[1]=0;
   BATTLE.conSeen=0; BATTLE.conAge=9; BATTLE.conN=0;
@@ -217,7 +456,7 @@ function addAgent(x,z,kindIdx,vr){
   A.hp[i]=A.hpMax[i]=u.hp*srnd(.9,1.12);
   A.cd[i]=srnd(0,.5); A.tgt[i]=-1; A.team[i]=u.team; A.vr[i]=vr; A.kind[i]=kindIdx;
   A.st[i]=0; A.kills[i]=0; A.name[i]=null;
-  A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0;
+  A.ph[i]=SR()*TAU; A.dead[i]=0; A.panicT[i]=0; A.hit[i]=0; A.sw[i]=0;
   A.fy[i]=u.fly||0; A.rev[i]=u.playDead?1:0;
   A.vy[i]=0; A.tum[i]=0; A.spin[i]=0; A.lby[i]=-1; A.vt[i]=-9;
   A.cyc[i]=SR()*9;                  // stagger them so they don't dive as one
@@ -229,7 +468,7 @@ function addAgent(x,z,kindIdx,vr){
    ============================================================ */
 const BATTLE={
   running:false, t:0, over:false, winner:'', timeScale:1, slowT:0,
-  deathsWindow:0, windowT:0, cx:0, cz:0, hotX:0, hotZ:0, hotN:0, hsx:0, hsz:0,
+  deathsWindow:0, windowT:0, cx:0, cz:0, hsx:0, hsz:0,
   conX:0, conZ:0, conN:0, conAge:9, conSeen:0,
   champ:-1, totalKills:0, routed:0
 };
@@ -277,7 +516,6 @@ function enemyCentroids(){
 function stepSim(dt){
   gridBuild(); enemyCentroids(); cmdStep(dt);
   const cells=[-1,0,1];
-  let hotBestN=0, hotX=0, hotZ=0;
   /* the densest point is almost always deep inside the bird mass, which is not
      where the fight is. Track the centroid of everyone actually in contact with
      the other side — that's the front, and it's what the camera should watch. */
@@ -293,6 +531,7 @@ function stepSim(dt){
     const dimmed=(!isAlly&&CMD.light>0)?1:0;
     A.cd[i]-=dt*(hasted?1.35:1)*(dimmed?(1-0.35*floodPower()):1);
     A.hit[i]=Math.max(0,A.hit[i]-dt);
+    if(A.sw[i]>0) A.sw[i]=Math.max(0,A.sw[i]-dt*mine.swR);
     const wasHigh=A.fy[i]>SKY_LINE;
     const diving=mine.fly?flierStep(i,mine,dt):false;
     if(mine.soar&&wasHigh&&A.fy[i]<=SKY_LINE) sfx('stoop',A.x[i],A.z[i],'cry');
@@ -306,17 +545,22 @@ function stepSim(dt){
       let best=-1,bd=1e9;
       const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
       const gz=clamp(((A.z[i]+ARENA_R+12)/CS)|0,0,gridW-1);
+      const EC=tCount[A.team[i]^1], EI=tItems[A.team[i]^1], aa=mine.aa?1:0;
+      const xi0=A.x[i], zi0=A.z[i];
       for(let ring=1;ring<=2 && best<0;ring++){
         for(let dz=-ring;dz<=ring;dz++)for(let dx=-ring;dx<=ring;dx++){
           if(ring>1 && Math.abs(dx)<ring && Math.abs(dz)<ring) continue;
           const cx2=gx+dx, cz2=gz+dz;
           if(cx2<0||cz2<0||cx2>=gridW||cz2>=gridW) continue;
           const c=cz2*gridW+cx2;
-          for(let k=cCount[c];k<cCount[c+1];k++){
-            const j=cItems[k];
-            if(A.team[j]===A.team[i]||A.st[j]===2) continue;
-            if(outOfReach(j,mine)) continue;                // still out of reach
-            const d=(A.x[j]-A.x[i])**2+(A.z[j]-A.z[i])**2;
+          for(let k=EC[c];k<EC[c+1];k++){
+            const j=EI[k];
+            /* the buckets are a start-of-step snapshot, so anything killed
+               earlier in this same step is still listed — exactly as it was
+               still listed in cItems. This check is not optional. */
+            if(A.st[j]===2) continue;
+            if(!aa && U_FLY[A.kind[j]] && A.fy[j]>SKY_LINE) continue;   // outOfReach
+            const d=(A.x[j]-xi0)**2+(A.z[j]-zi0)**2;
             if(d<bd){bd=d;best=j;}
           }
         }
@@ -344,6 +588,12 @@ function stepSim(dt){
       if(dist<reach){
         spd*=mine.ranged?0.02:0.12;
         if(A.cd[i]<=0) attack(i,tg,mine,dist);
+        /* the telegraph. A heavy animal that only starts moving on the frame
+           the damage lands has no wind-up, and a bear with no wind-up is just
+           a bear that teleports. The cooldown is already counting toward the
+           blow, so the animation can start early for free: swT seconds out,
+           and only for something actually standing in reach of a target. */
+        else if(A.sw[i]<=0 && A.cd[i]<mine.swT) A.sw[i]=1;
       }else if(dist<reach*2.2) spd*=0.82;
       if(A.st[i]===1){
         spd*=1.20;
@@ -359,27 +609,25 @@ function stepSim(dt){
     let sx=0,sz=0;
     const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
     const gz=clamp(((A.z[i]+ARENA_R+12)/CS)|0,0,gridW-1);
-    let localN=0, touching=0;
-    const myR=mine.rad;
+    const myR=mine.rad, xi=A.x[i], zi=A.z[i];
     for(let a=0;a<3;a++)for(let b=0;b<3;b++){
       const cx2=gx+cells[a], cz2=gz+cells[b];
       if(cx2<0||cz2<0||cx2>=gridW||cz2>=gridW) continue;
       const c=cz2*gridW+cx2;
       for(let k=cCount[c];k<cCount[c+1];k++){
-        const j=cItems[k]; if(j===i) continue;
-        const ox=A.x[i]-A.x[j], oz=A.z[i]-A.z[j];
+        /* positions stay live: an agent processed earlier this step has already
+           moved, and the crowd relies on reading it where it now is. Packing x
+           and z here into cItems order diverges the fight inside 300 steps. */
+        const j=cItems[k];
+        const ox=xi-A.x[j], oz=zi-A.z[j];
         const d2=ox*ox+oz*oz;
-        const rad=(myR+UNITS[A.kind[j]].rad)*0.5;
+        const rad=(myR+pkR[k])*0.5;
         if(d2<rad*rad && d2>1e-6){
           const d=Math.sqrt(d2), w=(rad-d)/rad;
           sx+=ox/d*w; sz+=oz/d*w;
         }
-        if(d2<9) localN++;
-        if(d2<7.3 && A.team[j]!==A.team[i]) touching=1;
       }
     }
-    if(localN>hotBestN){ hotBestN=localN; hotX=A.x[i]; hotZ=A.z[i]; }
-    if(touching){ conX+=A.x[i]; conZ+=A.z[i]; conN++; }
 
     const sepW=1.6+myR*0.9;
     desX+=sx*sepW; desZ+=sz*sepW;
@@ -409,7 +657,14 @@ function stepSim(dt){
     A.ph[i]+=dt*(4.5+sp*3.4);
   }
 
-  BATTLE.hotX=hotX; BATTLE.hotZ=hotZ; BATTLE.hotN=hotBestN;
+  /* the contact front, read straight off the cells instead of out of the
+     innermost neighbour loop: any cell holding both armies is the clash */
+  for(let c=0;c<cellCount;c++){
+    const n0=tCount[0][c+1]-tCount[0][c]; if(!n0) continue;
+    const n1=tCount[1][c+1]-tCount[1][c]; if(!n1) continue;
+    for(let k=cCount[c];k<cCount[c+1];k++){ const j=cItems[k]; conX+=A.x[j]; conZ+=A.z[j]; }
+    conN+=n0+n1;
+  }
   /* hold the last contact point for a moment after the lines separate, so a
      one-frame gap in the melee doesn't fling the camera back into the flock */
   BATTLE.conN=conN;
@@ -418,6 +673,8 @@ function stepSim(dt){
   moraleTimer-=dt;
   if(moraleTimer<=0){ moraleTimer=0.45; moraleTick(); }
   centroidUpdate();
+  if(panicCount>TALE.peakPanic) TALE.peakPanic=panicCount;
+  if(aliveA<TALE.lastGasp) TALE.lastGasp=aliveA;
 }
 
 const CALM_MAX=24;
@@ -477,6 +734,11 @@ function attack(i,tg,mine,dist){
      noon, so the strength follows the arena rather than being flat */
   const dimmed=(mine.team===1&&CMD.light>0)?(1-0.45*floodPower()):1;
   A.cd[i]=mine.rate*srnd(.82,1.2)*wild;
+  /* pin the pose to the blow. If the telegraph above already ran this is
+     within a frame or two of where sw already is; if the animal walked into
+     reach with its cooldown already spent, it skips the wind-up and connects,
+     which is exactly right. */
+  A.sw[i]=mine.swC;
   let dmg=mine.dmg*srnd(.8,1.25)/wild*dimmed*(CMD.horn>0&&mine.team===0?1.15:1);
   let crit=false;
   if(mine.crit && SR()<mine.crit[0]){ dmg*=mine.crit[1]; crit=true; }
@@ -553,7 +815,7 @@ function launch(j,dx,dz,force,up,by){
   A.vz[j]=dz/l*m*srnd(.75,1.25);
   A.vy[j]=up/(0.55+u.rad*1.0)*srnd(.85,1.3);
   A.fy[j]=Math.max(A.fy[j],0.06);
-  A.spin[j]=srnd(-11,11); A.tum[j]=0;
+  A.spin[j]=srnd(-11,11); A.tum[j]=0; A.sw[j]=0;
   A.lby[j]=by; A.hit[j]=0.3;
   spawnFeathers(A.x[j],0.75,A.z[j],u.build==='bird'?4:2,1.9);
   if(u.build==='bird'&&SR()<0.55) sfx('wingbeat',A.x[j],A.z[j],'cry');
@@ -623,9 +885,16 @@ function shove(j,dx,dz,f){
   A.hit[j]=0.24;
 }
 
+let BITING=0;   /* re-entrancy guard for retaliation — see the bite block below */
 function hurt(j,dmg,by,crit){
   if(A.st[j]===2) return;
   A.hp[j]-=dmg; A.hit[j]=0.18;
+  /* remember who did it, so the flinch can be a recoil in the right direction
+     instead of a wobble. Guarded: airborne() reads lby at the landing to
+     credit a launch kill, so anything already in the air keeps the launcher
+     it was given. launch() re-writes lby immediately after this call, so at
+     the moment of a launch nothing changes. */
+  if(A.fy[j]<=0.001||UNITS[A.kind[j]].fly) A.lby[j]=by;
   if(A.hp[j]>0){
     /* Getting hit and living should be loud — that panicked BAWK is most of
        what a coop raid actually sounds like. Throttled per bird so a single
@@ -639,12 +908,30 @@ function hurt(j,dmg,by,crit){
       A.vt[j]=BATTLE.t;
       sfx(uh.hurtv||(uh.build==='bird'?'bawk':'chitter'),A.x[j],A.z[j],'cry');
     }
+    /* The cornered bite. Some animals have no offence worth the name and are
+       still a serious mistake to attack — the damage belongs on the response,
+       not on the swing, or the unit starts hunting and stops being itself.
+       Fires at whoever just connected, once, and only if they are still up.
+       BITING clamps it to a single step: two retaliators facing each other
+       would otherwise trade blows all the way down the stack. */
+    if(uh.bite && !BITING && by>=0 && by!==j && A.st[by]!==2
+       && A.team[by]!==A.team[j] && SR()<uh.bite[0]){
+      BITING=1;
+      hurt(by, uh.bite[1]*srnd(.8,1.25), j, false);
+      BITING=0;
+    }
     return;
   }
   const u=UNITS[A.kind[j]];
   /* possums take the coward's exit and get back up */
   if(A.rev[j]===1){ A.rev[j]=2; A.st[j]=2; A.dead[j]=0; A.hp[j]=0; return; }
-  A.st[j]=2; A.dead[j]=0; A.rev[j]=0;
+  A.st[j]=2; A.dead[j]=0; A.rev[j]=0; A.sw[j]=0;
+  if(TALE.firstBlood<0) TALE.firstBlood=BATTLE.t;
+  if(A.team[j]===0 && BATTLE.t<=10) TALE.early++;
+  /* credit a reinforcement's work to the thing you paid for, so the card can
+     tell you the bull was a waste of money without guessing */
+  if(A.team[by]===0){ const bk=UNITS[A.kind[by]].k;
+    if(TALE.bought[bk]) TALE.boughtKills[bk]=(TALE.boughtKills[bk]||0)+1; }
   if(A.team[j]===0) aliveA--; else aliveB--;
   A.kills[by]++; BATTLE.totalKills++; BATTLE.deathsWindow++; recentKills+=1;
   const hy=0.5+(A.fy[j]||0);
@@ -654,7 +941,7 @@ function hurt(j,dmg,by,crit){
   spawnMist(A.x[j],hy,A.z[j],u.rad>1.1?0.6:0.42);
   addStain(A.x[j],A.z[j],clamp(u.rad*0.55,0.4,1.5));
   if(SR()<0.45) spawnPuff(A.x[j],0.1,A.z[j],0.34);
-  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=spick(A.team[by]===0?BIRD_NAMES:COON_NAMES);
+  if(A.name[by]==null && A.kills[by]>=2) A.name[by]=earnName(A.kind[by],A.team[by]);
   if(BATTLE.champ<0 || A.kills[by]>A.kills[BATTLE.champ]) BATTLE.champ=by;
   killFeed(by,j,crit);
   sfx(u.build==='bird'?'birddeath':'coondeath', A.x[j], A.z[j], 'key');
@@ -663,7 +950,8 @@ function hurt(j,dmg,by,crit){
 function reviveCheck(i,dt){
   if(A.dead[i]<srnd(2.4,2.6)) return;
   A.rev[i]=0; A.st[i]=0; A.dead[i]=0;
-  A.hp[i]=A.hpMax[i]*0.55; A.hit[i]=0;
+  TALE.revived++;
+  A.hp[i]=A.hpMax[i]*0.55; A.hit[i]=0; A.sw[i]=0;
   sfx('hiss',A.x[i],A.z[i]);
   if(SR()<0.3) killFeedRaw('<i>a possum</i> was not, in fact, dead');
 }

@@ -8,9 +8,59 @@ const BIRD_NAMES=['Nugget','Cluck Norris','Sir Pecksalot','Beakzilla','Hen Solo'
  'Clucky Balboa','Karen','The Undertaker','Big Chungus','Colonel Regret','Doom Hen','Kevin',
  'Marshal Drumstick','Gary the Terrible','Poultrygeist','Wingus','Dwayne the Cock','Chairman Miao',
  'Steve','Lil Beak','The Omelette Ender','Bartholomew','Cocktopus Prime','Nugget II: Revenge'];
-const COON_NAMES=['Bandito','Trash Panda Prime','Dumpster Dave','Rocket','Meatball','Trashley',
- 'Garbage Gary','The Hamburglar','Ring King','Nocturne','Snackrifice','Lord Rummage','Bin Laden Jr',
- 'Pillage','Tiny Hands McGee','Mask','Chonk','The Night Shift','Debris','Nacho','Sir Rummages-a-Lot'];
+/* 'Jimothy' is the round raccoon from Ballard, Seattle — a wild animal a
+   passer-by nicknamed on camera in July 2026. Nobody wrote him and nobody
+   owns him, so there is nothing here to infringe. */
+const COON_NAMES=['Bandito','Trash Panda Prime','Dumpster Dave','Jimothy','Meatball','Trashley',
+ 'Garbage Gary','The Hamburglar','Ring King','Nocturne','Snackrifice','Lord Rummage','Chonk',
+ 'Pillage','Tiny Hands McGee','Mask','Sir Rummages-a-Lot','The Night Shift','Debris','Nacho',
+ 'Short Spine Steve','Rolypoly','The Ballard Menace'];
+
+/* ---------- names that stick ----------
+   A name used to be drawn fresh from the seeded stream every fight, and since
+   'Run it back' rolls a new seed on purpose, the bear came back each round
+   under a different name. Every run really is a new fight, so nothing was
+   broken — but a boss that renames itself between rounds reads as a bug, and
+   the bear is the one animal on the field people expect to recognise.
+
+   Names are now remembered for the session, in the order they are earned, per
+   kind of animal. The first bear to earn a name IS the bear, all evening. The
+   first raccoon to earn one keeps that name in every later round too.
+
+   The seeded draw still happens on every single naming, whether or not the
+   answer is already known, because the simulation's random sequence has to be
+   byte-identical across runs of a seed. If we skipped the draw when the book
+   already had an entry, a shared link would stop replaying the same fight for
+   the person who opened it. */
+const NAME_BOOK={};                       // kind -> names, in the order earned
+const NAME_USED={0:new Set(),1:new Set()};// no two animals on a side share one
+const NAME_LAP={0:0,1:0};                 // how many times round the list we are
+const ROMAN=['',' II',' III',' IV',' V',' VI',' VII',' VIII',' IX',' X'];
+let NAME_SEQ={};                          // kind -> how many named this round
+function resetNames(){ NAME_SEQ={}; }
+function earnName(kindIdx,team){
+  const key=UNITS[kindIdx].k;
+  const i=(NAME_SEQ[key]=(NAME_SEQ[key]||0)+1)-1;
+  const pool=team===0?BIRD_NAMES:COON_NAMES;
+  const drawn=spick(pool);                // always drawn — see the note above
+  const book=NAME_BOOK[key]||(NAME_BOOK[key]=[]);
+  if(book[i]!=null) return book[i];
+  /* A big fight names more animals than there are names, so the list gets
+     reused in laps — the second time round is 'Meatball II', the third
+     'Meatball III'. Walking on from the drawn name rather than redrawing
+     means a collision costs nothing out of the seeded stream. */
+  const lap=NAME_LAP[team]||(NAME_LAP[team]=0), tag=ROMAN[Math.min(lap,ROMAN.length-1)];
+  let n=drawn, at=pool.indexOf(drawn), guard=0;
+  while(NAME_USED[team].has(n+tag) && guard++<pool.length) n=pool[(++at)%pool.length];
+  let full=n+tag;
+  if(NAME_USED[team].has(full)){          // that whole lap is spoken for
+    NAME_LAP[team]=lap+1;
+    full=n+ROMAN[Math.min(lap+1,ROMAN.length-1)];
+    if(NAME_USED[team].has(full)) full=n+' '+(i+1);
+  }
+  NAME_USED[team].add(full); book[i]=full;
+  return full;
+}
 
 const KILL_VERBS_BIRD=['spurred','flogged','erased','dismantled','pecked into orbit','unmade',
  'sent to the shadow realm','deleted','beaked','folded','ratio’d','turned into a hat'];
@@ -132,24 +182,58 @@ function audioInit(){
    The old code hooked one listener with {once:true}. A single failed attempt
    meant silence for the rest of the visit, with no way back. */
 let audioPrimed=false, silentEl=null;
-/* 0.35s of digital silence — enough for iOS to grant a playback session */
-const SILENT_WAV='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAgD4AAAB9AAACABAAZGF0YQAAAAA=';
+/* Half a second of near-silence, looped. The previous data URI declared a
+   data chunk of zero bytes — a file with no samples in it. Safari accepted
+   the element, ended it immediately, and never handed over a playback
+   session, so on any iPad with the ringer switch down WebAudio stayed filed
+   under 'ambient' and the whole game was mute while reporting itself fine.
+   The samples below alternate one LSB either side of zero: inaudible, but
+   real audio, which is what iOS actually wants to see. */
+const SILENT_WAV='data:audio/wav;base64,UklGRmQfAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAfAAABAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//wEA//8BAP//AQD//w==';
 function audioPrime(){
-  if(audioPrimed||!AC) return;
+  if(!AC) return;
+  if(!audioPrimed){
+    try{
+      const b=AC.createBuffer(1,1,AC.sampleRate);
+      const src=AC.createBufferSource();
+      src.buffer=b; src.connect(AC.destination); src.start(0);
+    }catch(e){}
+    audioPrimed=true;
+  }
+  /* Keep asking until the element is genuinely playing. One refused attempt
+     used to cost the whole visit; now every later gesture gets another go. */
   try{
-    const b=AC.createBuffer(1,1,AC.sampleRate);
-    const src=AC.createBufferSource();
-    src.buffer=b; src.connect(AC.destination); src.start(0);
-  }catch(e){}
-  try{
-    if(!silentEl){
-      silentEl=new Audio(SILENT_WAV);
-      silentEl.loop=true; silentEl.volume=0.0001;
-      silentEl.setAttribute('playsinline','');
+    makeSilentEl();
+    if(silentEl&&silentEl.paused){
+      const pr=silentEl.play(); if(pr&&pr.catch) pr.catch(()=>{});
     }
-    const pr=silentEl.play(); if(pr&&pr.catch) pr.catch(()=>{});
   }catch(e){}
-  audioPrimed=true;
+}
+function makeSilentEl(){
+  if(silentEl) return silentEl;
+  silentEl=new Audio(SILENT_WAV);
+  silentEl.loop=true; silentEl.volume=0.02; silentEl.preload='auto';
+  silentEl.setAttribute('playsinline','');
+  silentEl.setAttribute('webkit-playsinline','');
+  silentEl.style.cssText='position:absolute;width:0;height:0;opacity:0;pointer-events:none';
+  document.body.appendChild(silentEl);
+  return silentEl;
+}
+/* ---------- starting the theme on landing ----------
+   The theme should be playing while someone reads the story card, not waiting
+   behind the setup screen. Browsers won't let a page make noise unprompted, so
+   this asks politely: it tries to play the inaudible clip, and only if the
+   browser allows it does it build the context and start the music. Chrome
+   grants this on a site you've visited before, and a desktop that already
+   trusts the origin grants it outright; a first-time phone visit refuses, the
+   promise rejects, nothing happens, and the ordinary first-tap path takes over.
+   Nothing here can leave audio in a worse state than not trying. */
+function audioAutoStart(){
+  if(AC) return;
+  let el; try{ el=makeSilentEl(); }catch(e){ return; }
+  let pr; try{ pr=el.play(); }catch(e){ return; }
+  if(!pr||!pr.then) return;
+  pr.then(()=>{ audioResume(); }).catch(()=>{});
 }
 function audioResume(){
   audioInit();
@@ -603,6 +687,13 @@ async function loadAssets(){
     art.onerror=()=>{ art.style.display='none'; };
     art.src=ASSET_BASE+'img/eeniemoe.jpg';
   }
+  /* the same portrait heads the long version */
+  const aart=$('aboutArt');
+  if(aart){
+    aart.onload=()=>{ aart.style.display='block'; };
+    aart.onerror=()=>{ aart.style.display='none'; };
+    aart.src=ASSET_BASE+'img/eeniemoe.jpg';
+  }
   /* Weight the bar by the real sizes so it doesn't stall on the big beds.
      Unknown lengths fall back to counting files. */
   let total=0, done=0, files=0;
@@ -624,6 +715,10 @@ async function loadAssets(){
     assetsFetched=false;
     assetProgress(1,'Ready');
   }
+  /* If the first tap landed while these were still downloading, decodeAssets()
+     bailed on !assetsFetched and nothing ever called it again — the visit ran
+     on synthesized music with the beds sitting decoded-never in memory. */
+  decodeAssets();
   loadDone();
 }
 const ASSET_TOTAL_GUESS=4400000;   // roughly the folder size; only drives the bar
@@ -1083,10 +1178,29 @@ function musicUpdate(dt){
    AGENT RENDER
    ============================================================ */
 const _mL=new THREE.Matrix4(), _mF=new THREE.Matrix4();
+/* Above this many animals still standing you cannot resolve a chicken's legs,
+   so they ride the body. Below it they walk.
+
+   This used to hang off the geometry tier, which was the wrong knob on both
+   counts. Animating the limbs is a CPU cost — one matrix build and one
+   multiply per agent — and it is tiny: measured at 0.19ms a frame for a
+   thousand birds and 0.50ms for five thousand, against a sim step that costs
+   twenty-two. The geometry tier is a GPU cost and answers a different
+   question. Tying them together meant that lowering the polygon thresholds
+   silently switched off the walk cycle at a thousand units to save a fifth of
+   a millisecond, which is a terrible trade — a yard full of running chickens
+   is most of the joke.
+
+   It also reads the LIVE count rather than the one the fight started with, so
+   Max Chaos opens as an indistinguishable mob and the survivors get their
+   gait back as the field thins. That is free: it is a per-frame branch, not a
+   rebuild. */
+const LIMB_MAX=2600;
 function renderAgents(){
   if(!SQUADS.length) return;
   for(let q=0;q<SQUADS.length;q++) if(SQUADS[q]) SQUADS[q].begin();
   let sN=0;
+  const LIMBS = (aliveA+aliveB) <= LIMB_MAX;
 
   for(let i=0;i<N;i++){
     const ki=A.kind[i], sq=SQUADS[ki];
@@ -1094,6 +1208,7 @@ function renderAgents(){
     const u=UNITS[ki], kit=KIT_PIV[ki][A.vr[i]];
     const st=A.st[i], bird=u.build==='bird';
     let y=A.fy[i]||0, roll=0, pitch=0, amp, fr;
+    let ex=0, swYaw=0, lx=0, lz=0;   // strike extension, its yaw arc, its lunge
 
     /* thrown: ignore the gait and the corpse pose entirely and just cartwheel.
        A dead bird keeps its arc — dying mid-flight shouldn't stop it. */
@@ -1132,8 +1247,41 @@ function renderAgents(){
       const sp=Math.hypot(A.vx[i],A.vz[i]);
       y+=Math.abs(Math.sin(A.ph[i]))*(bird?0.05:0.035)*(0.35+sp*0.2);
       pitch=-clamp(sp*0.045,0,0.26)+Math.sin(A.ph[i]*2)*(bird?0.028:0.02);
-      if(A.hit[i]>0){ roll=Math.sin(A.hit[i]*70)*0.28; pitch+=0.12; }
+
       amp=st===1?(bird?0.62:0.40):(bird?0.24:0.16); fr=st===1?11:5.2;
+      /* ---- the blow, and being on the end of one ----
+         Both read the animal's heading, so they share one sin/cos and one
+         branch. Everything in here is arithmetic on state the sim already
+         wrote — no random anywhere, so a seed still replays exactly. */
+      const swv=A.sw[i], hitv=A.hit[i];
+      if(swv>0||hitv>0){
+        const sy=Math.sin(A.yaw[i]), cy=Math.cos(A.yaw[i]);
+        if(swv>0){
+          /* ex runs 0 -> about -swK/4 (rearing back) -> +1 on contact -> 0.
+             Two curves meeting at 1: a quadratic that dips on the way in, and
+             f*f on the way out, which sheds most of the pose in the first
+             third of the follow-through and then settles. Snap, not a fade. */
+          if(swv>u.swC){ const a=1-(swv-u.swC)*u.swI; ex=a*(a*(1+u.swK)-u.swK); }
+          else         { const f=swv*u.swJ; ex=f*f; }
+          pitch-=ex*u.swP;                       // drive the head down into it
+          y-=ex*u.swD;                           // and the weight with it
+          swYaw=ex*u.swY*((i&1)?1:-1);           // heavies swing wide, half each way
+          const L=ex*u.swL;                      // and the whole animal commits
+          lx=sy*L; lz=cy*L;
+        }
+        if(hitv>0){
+          /* the recoil. lby is whoever just connected, so the direction is
+             free: resolve it into the victim's own frame and rock the body
+             away along that vector instead of shaking it on the spot. */
+          const by=A.lby[i], k=hitv*hitv*12;
+          if(by>=0&&by!==i){
+            const ax=A.x[i]-A.x[by], az=A.z[i]-A.z[by];
+            const il=k/(Math.hypot(ax,az)||1);
+            pitch-=(ax*sy+az*cy)*il*0.42;        // hit from the front, head comes up
+            roll -=(ax*cy-az*sy)*il*0.55;        // hit from the side, it tips
+          }else pitch+=k*0.10;                   // no attacker on record: just flinch
+        }
+      }
       /* A soaring raptor holds its wings still and banks; it only beats them
          to climb or when it is about to hit something. */
       if(u.soar){
@@ -1144,18 +1292,21 @@ function renderAgents(){
       }
     }
 
-    const yaw=A.yaw[i]+(st===1?Math.sin(A.ph[i]*3.1)*0.28:0);
+    const yaw=A.yaw[i]+swYaw+(st===1?Math.sin(A.ph[i]*3.1)*0.28:0);
     _e.set(pitch,yaw,roll,'YXZ'); _q.setFromEuler(_e);
-    _v.set(A.x[i],y,A.z[i]); _s.set(1,1,1);
+    _v.set(A.x[i]+lx,y,A.z[i]+lz); _s.set(1,1,1);
     _m.compose(_v,_q,_s);
 
-    /* The limb transform is a matrix build plus a multiply for every agent,
-       every frame. In a mob you cannot resolve a chicken's legs anyway, so
-       above the top detail tier the limbs simply ride the body. */
-    if(DETAIL>=2){
+    /* see LIMB_MAX above — live count, not the spawn tier */
+    if(!LIMBS){
       sq.push(A.vr[i],_m,_m);
     }else{
-      const ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
+      let ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
+      /* the hinge stops oscillating and flares. Sign does the work for free:
+         positive lifts a bird's tail and drops its wings, and drops a
+         quadruped's shoulders while its tail comes up — a strike. Negative,
+         which is where the wind-up lives, is the mirror of both: rearing. */
+      if(ex!==0){ const ae=ex<0?-ex:ex; ang=ang*(ae<1?1-ae:0)+ex*u.swF; }
       const c=Math.cos(ang), s2=Math.sin(ang), py=kit.y, pz=kit.z;
       _mL.set(1,0,0,0,
               0,c,-s2, py-c*py+s2*pz,
@@ -1167,7 +1318,7 @@ function renderAgents(){
 
     if(sN<6000){
       const sc=u.rad*(bird?0.46:0.55)*(st===2?0.8:1)*(A.fy[i]>0.4?0.6:1);
-      _v.set(A.x[i],0.024,A.z[i]); _q.identity(); _s.set(sc,1,sc*1.2);
+      _v.set(A.x[i]+lx,0.024,A.z[i]+lz); _q.identity(); _s.set(sc,1,sc*1.2);
       _m2.compose(_v,_q,_s);
       shadowIM.setMatrixAt(sN++,_m2);
     }
@@ -1179,22 +1330,47 @@ function renderAgents(){
 /* ============================================================
    CAMERA DIRECTOR
    ============================================================ */
-const DIR={shot:'wide',t:0,dur:5,ang:0,seed:0,manual:false,snap:false,
+const DIR={shot:'wide',t:0,dur:5,ang:0,seed:0,manual:false,snap:false,spin:1,
   orbA:0.9,orbH:0.55,orbD:1.0,drag:false,px:0,py:0};
 const camPos=new THREE.Vector3(0,30,60), camAim=new THREE.Vector3(0,0,0);
 
+/* ---------- keeping the camera watchable ----------
+   The first cut of this director orbited fast and cut every three seconds,
+   which is exactly the recipe for making someone queasy: constant sideways
+   optic flow, never long enough to settle. It reads as energy on a five
+   second clip and as motion sickness on a two minute fight.
+
+   Three changes fix it without making the camera static. Shots hold roughly
+   twice as long. The orbits run at about a third of the old rate and ease up
+   from a standstill instead of snapping into motion on the cut. And the
+   movement that remains is mostly radial — a slow push toward the fight —
+   because moving toward something produces far less optic flow than sliding
+   past it. */
+const ORB_EASE=1.15;
+/* the integral of (1-e^(-t/T)) — angle that starts still and eases to speed */
+function orbT(){ return DIR.t-ORB_EASE*(1-Math.exp(-DIR.t/ORB_EASE)); }
+/* a slow push in across the life of the shot */
+function pushIn(){ return 1.05-0.075*clamp(DIR.t/Math.max(0.001,DIR.dur),0,1); }
+
 function pickShot(){
-  const r=Math.random();
   const hasChamp=BATTLE.champ>=0&&A.st[BATTLE.champ]!==2;
+  const prev=DIR.shot;
   let s;
-  if(r<0.24) s='wide';
-  else if(r<0.46) s='clash';
-  else if(r<0.66) s='low';
-  else if(r<0.82) s=hasChamp?'champ':'clash';
-  else if(r<0.92) s='top';
-  else s='sweep';
-  DIR.shot=s; DIR.t=0; DIR.dur=s==='wide'?rnd(5,7):rnd(3.2,5.2);
+  for(let tries=0;tries<4;tries++){
+    const r=Math.random();
+    if(r<0.30) s='wide';
+    else if(r<0.50) s='low';
+    else if(r<0.68) s='clash';
+    else if(r<0.84) s=hasChamp?'champ':'low';
+    else if(r<0.93) s='sweep';
+    else s='top';
+    if(s!==prev) break;                 // don't cut from a setup to itself
+  }
+  DIR.shot=s; DIR.t=0;
+  /* long enough to actually read the shot */
+  DIR.dur=s==='wide'?rnd(9,13):(s==='sweep'?rnd(8,11):rnd(6.5,9.5));
   DIR.ang=Math.random()*TAU; DIR.seed=Math.random()*100;
+  DIR.spin=Math.random()<0.5?-1:1;      // orbit both ways, not one endless drift
 }
 
 function director(dt,real,wall){
@@ -1226,7 +1402,7 @@ function director(dt,real,wall){
   let fx,fz;
   if(BATTLE.conSeen && BATTLE.conAge<2.5){ fx=BATTLE.conX; fz=BATTLE.conZ; }
   else { fx=TC.afx; fz=TC.afz; }   // not joined yet — watch the front of the flock
-  const kh=1-Math.pow(0.30,real);
+  const kh=1-Math.pow(0.55,real);   // the focal point drifts to the clash, it doesn't chase it
   BATTLE.hsx=lerp(BATTLE.hsx,fx,kh);
   BATTLE.hsz=lerp(BATTLE.hsz,fz,kh);
   const hx=BATTLE.hsx, hz=BATTLE.hsz;
@@ -1237,38 +1413,41 @@ function director(dt,real,wall){
 
   switch(DIR.shot){
     case 'wide':{
-      const a=DIR.ang+t*0.09, d=R*1.24*zoom;
+      const a=DIR.ang+DIR.spin*orbT()*0.042, d=R*1.24*zoom*pushIn();
       tx=wx+Math.cos(a)*d; ty=R*0.50; tz=wz+Math.sin(a)*d;
       ax=hx; ay=0; az=hz; fov=44;
       break;}
     case 'top':{
-      tx=hx+Math.sin(t*0.16)*R*0.35; ty=R*1.45*zoom;
-      tz=hz+Math.cos(t*0.16)*R*0.35;
+      const a=DIR.ang+DIR.spin*orbT()*0.055;
+      tx=hx+Math.sin(a)*R*0.32; ty=R*1.45*zoom*pushIn();
+      tz=hz+Math.cos(a)*R*0.32;
       ax=hx; ay=0; az=hz; fov=42;
       break;}
     case 'low':{
-      const a=DIR.ang+DIR.t*0.10, d=(R*0.34+7)*zoom;
-      tx=hx+Math.cos(a)*d; ty=(NIGHT?3.4:1.15)+Math.sin(DIR.t*0.6)*0.25; tz=hz+Math.sin(a)*d;
+      const a=DIR.ang+DIR.spin*orbT()*0.048, d=(R*0.34+7)*zoom*pushIn();
+      tx=hx+Math.cos(a)*d; ty=(NIGHT?3.4:1.15)+Math.sin(DIR.t*0.30)*0.12; tz=hz+Math.sin(a)*d;
       ax=hx; ay=NIGHT?0.9:0.75; az=hz; fov=52;
       break;}
     case 'clash':{
-      const a=DIR.ang+DIR.t*0.22, d=8.6*zoom;
+      /* the tightest setup, so it gets the slowest orbit — this is the one that
+         used to swing the whole frame around every couple of seconds */
+      const a=DIR.ang+DIR.spin*orbT()*0.075, d=8.6*zoom*pushIn();
       tx=hx+Math.cos(a)*d; ty=NIGHT?3.6:2.5; tz=hz+Math.sin(a)*d;
       ax=hx; ay=0.85; az=hz; fov=40;
       break;}
     case 'champ':{
       const c=BATTLE.champ>=0?BATTLE.champ:0;
       const yw=A.yaw[c]||0;
-      const cd=5.0*zoom;
+      const cd=5.0*zoom*pushIn();
       tx=A.x[c]-Math.sin(yw)*cd; ty=(NIGHT?3.2:2.1)*(reel?1.25:1); tz=A.z[c]-Math.cos(yw)*cd;
       ax=A.x[c]+Math.sin(yw)*2.5; ay=0.85; az=A.z[c]+Math.cos(yw)*2.5; fov=44;
       break;}
     default:{ // sweep — long dolly across the front
       const p=(DIR.t/DIR.dur)*2-1;
       const a=DIR.ang;
-      tx=wx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.9;
-      ty=(NIGHT?3.5:2.0)+Math.sin(DIR.t)*0.3;
-      tz=wz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.9;
+      tx=wx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.78;
+      ty=(NIGHT?3.5:2.0)+Math.sin(DIR.t*0.42)*0.16;
+      tz=wz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.78;
       ax=hx; ay=0.9; az=hz; fov=48;   // dolly past the arena, but look at the fight
     }
   }
@@ -1296,20 +1475,25 @@ function director(dt,real,wall){
     ax=TC.afx*0.5; ay=0.6; az=TC.afz*0.5; fov=42;
   }
 
-  // handheld
-  const n=DIR.seed+t;
-  tx+=Math.sin(n*1.7)*0.16+Math.sin(n*0.53)*0.3;
-  ty+=Math.cos(n*1.3)*0.12;
-  tz+=Math.cos(n*1.9)*0.16+Math.cos(n*0.47)*0.3;
+  /* handheld — slower, smaller, and scaled by how far out we are. A fixed
+     amount of wobble is a breath of life from across the field and a shaky
+     phone from five metres away. */
+  const n=DIR.seed+t*0.5;
+  const hs=clamp(Math.hypot(tx-ax,tz-az)/38,0.25,1)*0.6;
+  tx+=(Math.sin(n*1.1)*0.14+Math.sin(n*0.37)*0.26)*hs;
+  ty+=Math.cos(n*0.85)*0.10*hs;
+  tz+=(Math.cos(n*1.25)*0.14+Math.cos(n*0.31)*0.26)*hs;
 
   if(DIR.snap){                                  // hard cut, no swooping between setups
     DIR.snap=false;
     camPos.set(tx,ty,tz); camAim.set(ax,ay,az);
     camera.fov=fov; camera.updateProjectionMatrix();
   }
-  const kp=BATTLE.slowT>0?0.02:(SEQ.phase==='introA'||SEQ.phase==='introB'?0.25:0.006);
+  /* Softer glide on both the position and the aim. Higher constant = longer
+     settle; the camera arrives at its mark rather than snapping to it. */
+  const kp=BATTLE.slowT>0?0.02:(SEQ.phase==='introA'||SEQ.phase==='introB'?0.25:0.045);
   camPos.lerp(_v.set(tx,ty,tz),1-Math.pow(kp,real));
-  camAim.lerp(_v.set(ax,ay,az),1-Math.pow(0.008,real));
+  camAim.lerp(_v.set(ax,ay,az),1-Math.pow(0.03,real));
   camera.position.copy(camPos); camera.lookAt(camAim);
   if(Math.abs(camera.fov-fov)>0.05){ camera.fov=lerp(camera.fov,fov,1-Math.pow(0.05,real)); camera.updateProjectionMatrix(); }
 }
