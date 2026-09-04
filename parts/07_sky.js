@@ -154,11 +154,19 @@ function setGrade(night){
   if(typeof matComp==='undefined'||!matComp) return;
   const u=matComp.uniforms;
   u.uExposure.value = night?0.88:0.95;
-  u.uBloom.value    = night?0.22:0.30;
-  u.uVig.value      = night?0.44:0.40;
+  const film=POST.film;
+  u.uBloom.value    = film?(night?0.22:0.30):(night?0.15:0.18);
+  u.uVig.value      = film?(night?0.44:0.40):(night?0.26:0.18);
+  u.uGrain.value    = film?0.026:0.003;
+  u.uCA.value       = film?1.0:0.0;
   u.uSat.value      = night?0.97:1.10;   // the bulb goes orange fast; pull it back
   u.uContrast.value = night?1.06:1.075;
   if(typeof matBright!=='undefined'&&matBright) matBright.uniforms.uThresh.value = night?1.30:1.10;
+}
+function setFilmLook(enabled){
+  POST.film=!!enabled;
+  document.body.classList.toggle('filmLook',POST.film);
+  setGrade(SKY_U.uNight.value>0.5);
 }
 function setSky(night){
   SKY_U.uNight.value=night?1:0;
@@ -225,7 +233,7 @@ void main(){
   gl_FragColor=vec4(col,1.0);
 }`;
 
-const POST={on:true,scale:0.25};
+const POST={on:true,scale:0.25,film:false};
 const fsGeo=new THREE.BufferGeometry();
 fsGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([-1,-1,0, 3,-1,0, -1,3,0]),3));
 fsGeo.setAttribute('uv',new THREE.BufferAttribute(new Float32Array([0,0, 2,0, 0,2]),2));
@@ -241,7 +249,7 @@ const matBlur=new THREE.RawShaderMaterial({vertexShader:'precision highp float;\
 const matComp=new THREE.RawShaderMaterial({vertexShader:'precision highp float;\nattribute vec3 position;\nattribute vec2 uv;\n'+FS_VERT,
   fragmentShader:COMP_FRAG, depthTest:false, depthWrite:false,
   uniforms:{tScene:{value:null},tBloom:{value:null},uBloom:{value:0.30},uExposure:{value:0.95},
-    uVig:{value:0.40},uGrain:{value:0.026},uCA:{value:1.0},uSat:{value:1.10},
+    uVig:{value:0.18},uGrain:{value:0.003},uCA:{value:0.0},uSat:{value:1.10},
     uContrast:{value:1.075},uTime:{value:0}}});
 
 let rtScene=null, rtA=null, rtB=null;
@@ -280,6 +288,9 @@ function renderFrame(dt){
   SKY_U.uCam.value.copy(camera.position);
   if(GRASS_MAT.userData.u) GRASS_MAT.userData.u.uTime.value+=dt;
   trackShadow();
+  // Keep presentation preferences out of the fixed simulation and its RNG.
+  const calm=typeof VIEW!=='undefined'&&VIEW.reducedMotion;
+  matComp.uniforms.uGrain.value=calm?0:(POST.film?0.026:0.003);
 
   if(!POST.on||!rtScene){ renderer.setRenderTarget(null); renderer.render(scene,camera); return; }
   postT+=dt;

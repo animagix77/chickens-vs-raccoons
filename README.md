@@ -4,13 +4,17 @@ A family of raccoons raided the coop in the middle of the night. Eenie and Moe d
 
 So this is a simulator built to answer the question that comes after it: how many chickens would it have taken?
 
-**[▶ Play it](https://animagix77.github.io/chickens-vs-raccoons/)**
+**[▶ Play it](https://chickensvraccoons.com/)**
 
 The whole thing is one HTML file. No build step required to play it, no dependencies to install, no network access needed — Three.js is inlined, every sound is synthesized in the browser, every model is generated from primitives at load time. Open `index.html` and it runs.
 
+## September 2026 update
+
+Tactical view, pause and playback speed, accessible mobile controls, articulated rooster/raccoon models with bounded close-up detail, and full-roster replays with recorded commands. See [release notes](RELEASE-NOTES.md) for implementation and validation details. Earlier measurements below describe the original release.
+
 ## What it does
 
-Set a matchup — up to 4000 birds against 500 raccoons, on an open field in daylight or inside a coop at night — and watch it play out with a cinematic camera that holds on the front of the flock before contact and on the clash line once the fight joins. Then command the farm live.
+Set a matchup — up to 4000 birds against 600 raccoons, on an open field in daylight or inside a coop at night — and watch it play out with a cinematic camera that holds on the front of the flock before contact and on the clash line once the fight joins. Then command the farm live.
 
 **The war chest.** You don't pick your reinforcements up front. A points pool fills while the fight runs, and a bar of deploy chips lets you spend it as things develop: eight guinea fowl for 8 points, two capybaras for 16, a donkey for 26, a bull for 44. Animals walk in from your line and join the fight immediately. Over a typical match you'll get four or five packets, so it's a real decision rather than a menu.
 
@@ -115,7 +119,7 @@ The two random streams are the load-bearing idea behind shareable links. One str
 python3 build.py
 ```
 
-That writes `index.html`. The part files are ordinary HTML and JS with no module system — they share one scope by design, which keeps the hot loop free of import indirection.
+That writes identical `index.html` and `chickens-vs-raccoons.html` entry points. The part files are ordinary HTML and JS with no module system — they share one scope by design, which keeps the hot loop free of import indirection.
 
 | File | What's in it |
 |---|---|
@@ -128,6 +132,8 @@ That writes `index.html`. The part files are ordinary HTML and JS with no module
 | `parts/05_view.js` | Sound engine and its iOS unlock, music engine, kill feed, camera director |
 | `parts/06_ui.js` | Sequencer, seeds and links, calling the winner, controls, main loop |
 | `parts/07_sky.js` | Sky shader, environment bake, post-processing chain |
+
+Run `node tests/regression.cjs --checks-only` for replay/capacity checks or `node tests/regression.cjs` for seeded battle regressions. Serve the project over HTTP to load the recorded audio assets.
 
 ## Support
 

@@ -214,13 +214,10 @@ const DEPLOY=[
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
-function cmdReady(k){ return BATTLE.running && !BATTLE.over && CMD.cd[k]<=0; }
-function canDeploy(d){ return BATTLE.running && !BATTLE.over && CMD.pts>=d.cost; }
-function deploy(d){
+function cmdReady(k){ return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
+function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
+function applyDeploy(d){
   if(!canDeploy(d)) return false;
-  CMD.pts-=d.cost;
-  TALE.spent+=d.cost;
-  TALE.bought[d.k]=(TALE.bought[d.k]||0)+d.n;
   const u=UNITS[UI_[d.k]];
   /* a mid-fight fidelity upgrade only rebuilds what is on the field, so the
      squad for a packet nobody has called in yet may be standing down. Build it
@@ -229,6 +226,8 @@ function deploy(d){
      the SR() below, so the fight the seed describes is unchanged. */
   if(!SQUADS[u.i]) buildOneSquad(d.k);
   if(!SQUADS[u.i]) return false;
+  CMD.pts-=d.cost; TALE.spent+=d.cost;
+  TALE.bought[d.k]=(TALE.bought[d.k]||0)+d.n;
   const base=Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
     const a=base+srnd(-0.30,0.30), r=ARENA_R*srnd(0.86,0.95);
@@ -242,19 +241,22 @@ function deploy(d){
      rather than one loud one. */
   const vc=u.voice||(u.build==='bird'?'cackle':'growl');
   const voices=Math.min(d.n,4);
-  for(let i=0;i<voices;i++)
-    setTimeout(()=>sfx(vc,TC.ax+srnd(-2,2),TC.az+srnd(-2,2),'cry'),i*srnd(90,240));
+  const generation=REPLAY.generation;
+  for(let i=0;i<voices;i++){
+    const x=TC.ax+rnd(-2,2), z=TC.az+rnd(-2,2);
+    setTimeout(()=>{ if(REPLAY.generation===generation) sfx(vc,x,z,'cry'); },i*rnd(90,240));
+  }
   killFeedRaw('<b>'+(d.n>1?d.n+' ':'')+u.label.toUpperCase()+'</b> joined the line');
   return true;
 }
-function cmdFire(k){
+function applyCommand(k){
   if(!cmdReady(k)) return false;
   const d=CMD_DEF.find(c=>c.k===k);
   if(k==='horn'){ CMD.horn=d.dur; if(!oneShot('horn',0.95)) sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
   if(k==='feed'){
     CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+srnd(-4,4); CMD.feedZ=BATTLE.cz+srnd(-4,4);
-    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+srnd(-1.4,1.4),0.15,CMD.feedZ+srnd(-1.4,1.4),0.22);
+    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+rnd(-1.4,1.4),0.15,CMD.feedZ+rnd(-1.4,1.4),0.22);
     sfx('buk',CMD.feedX,CMD.feedZ);
   }
   CMD.cd[k]=d.cool||1e9;
@@ -269,7 +271,7 @@ function cmdStep(dt){
     CMD.ptAcc+=dt*PTS_RATE;
     while(CMD.ptAcc>=1){ CMD.ptAcc-=1; CMD.pts=Math.min(PTS_CAP,CMD.pts+1); }
   }
-  if(CMD.feedT>0 && SR()<dt*8) spawnPuff(CMD.feedX+srnd(-1,1),0.12,CMD.feedZ+srnd(-1,1),0.16);
+  if(CMD.feedT>0 && VR()<dt*8) spawnPuff(CMD.feedX+rnd(-1,1),0.12,CMD.feedZ+rnd(-1,1),0.16);
 }
 function cmdReset(){
   CMD.horn=CMD.light=CMD.feedT=0;
@@ -304,6 +306,13 @@ function taleReset(){
   TALE.early=0; TALE.peakPanic=0; TALE.spent=0;
   TALE.bought={}; TALE.boughtKills={};
   TALE.revived=0; TALE.firstBlood=-1; TALE.lastGasp=Infinity;
+}
+// The historical panic counter includes animals that died while fleeing.
+// Read living farm units for player-facing morale facts without changing combat.
+function farmFleeing(){
+  let count=0;
+  for(let i=0;i<N;i++) if(A.team[i]===0&&A.st[i]===1) count++;
+  return count;
 }
 
 /* ============================================================
@@ -378,6 +387,7 @@ function refineWatch(dt){
    SPAWNING — roster is a list of {k:'rooster', n:1000}
    ============================================================ */
 function spawnRoster(list,night){
+  validateRoster(list);
   N=0; aliveA=0; aliveB=0; initA=0; initB=0; panicCount=0;
   resetNames();   // the per-round counters restart; the session's name book does not
   taleReset();
@@ -450,8 +460,8 @@ function spawnRoster(list,night){
   cmdReset();
 }
 function addAgent(x,z,kindIdx,vr){
+  if(N>=MAXA) return -1;
   const u=UNITS[kindIdx], i=N++;
-  if(i>=MAXA) { N=MAXA; return MAXA-1; }
   A.x[i]=x; A.z[i]=z; A.vx[i]=0; A.vz[i]=0;
   A.hp[i]=A.hpMax[i]=u.hp*srnd(.9,1.12);
   A.cd[i]=srnd(0,.5); A.tgt[i]=-1; A.team[i]=u.team; A.vr[i]=vr; A.kind[i]=kindIdx;
@@ -467,7 +477,7 @@ function addAgent(x,z,kindIdx,vr){
    BATTLE STATE
    ============================================================ */
 const BATTLE={
-  running:false, t:0, over:false, winner:'', timeScale:1, slowT:0,
+  running:false, tick:0, t:0, over:false, winner:'', timeScale:1, slowT:0,
   deathsWindow:0, windowT:0, cx:0, cz:0, hsx:0, hsz:0,
   conX:0, conZ:0, conN:0, conAge:9, conSeen:0,
   champ:-1, totalKills:0, routed:0
@@ -673,7 +683,7 @@ function stepSim(dt){
   moraleTimer-=dt;
   if(moraleTimer<=0){ moraleTimer=0.45; moraleTick(); }
   centroidUpdate();
-  if(panicCount>TALE.peakPanic) TALE.peakPanic=panicCount;
+  TALE.peakPanic=Math.max(TALE.peakPanic,farmFleeing());
   if(aliveA<TALE.lastGasp) TALE.lastGasp=aliveA;
 }
 

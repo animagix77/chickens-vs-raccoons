@@ -545,6 +545,147 @@ if(GA_ID){
   body.short .coffee{margin-top:7px;padding:6px 8px}
   body.short .mini button{padding:5px 2px;font-size:8.5px}
   body.short #champ .nm{font-size:21px}
+  /* ---------- readable controls, tactical play and touch layouts ---------- */
+  .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
+    outline:3px solid var(--cool);outline-offset:4px}
+  button:disabled{cursor:default}
+  #battleReadout{display:flex;justify-content:space-between;margin:6px 18px 0;font-size:10px;
+    color:#e4daca;letter-spacing:.04em;text-shadow:0 1px 4px #000}
+  #moraleReadout{color:#ffdb94}
+  #panel{width:326px;padding:16px;background:rgba(12,10,17,.89)}
+  #panel h1{font-size:12px;letter-spacing:.08em;align-items:baseline}
+  #panel h1 span{font-size:8px;letter-spacing:0;white-space:nowrap;margin-left:8px}
+  .row label{font-size:11px;letter-spacing:.07em;opacity:.9}
+  input[type=range]{height:6px;margin:12px 0 9px}
+  input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px}
+  .seg button,.mini button{min-height:36px;font-size:10px;letter-spacing:.02em}
+  .hint{font-size:11px;line-height:1.5;color:#cec3b2}
+  #foeOptions{border-top:1px solid #ffffff15;padding-top:8px}
+  #foeOptions summary{min-height:28px;cursor:pointer;font-size:11px;letter-spacing:.03em;color:#ded3c1}
+  #foeOptions summary b{float:right;font-size:10px;color:var(--cool);margin-right:3px}
+  #foeOptions[open] summary{margin-bottom:7px}
+  .roster{max-height:148px;gap:5px}
+  .ru{font-size:11px;text-transform:none;letter-spacing:0}
+  .ru button{width:32px;height:32px;font-size:17px}
+  #rosterPreview{margin-top:12px;padding:10px 11px;border:1px solid #ffb02025;border-radius:8px;
+    background:#ffb0200b;color:#e8dcc6;font-size:11px;line-height:1.55;max-height:86px;overflow:auto}
+  #quickControl{display:flex;align-items:center;gap:7px;font-size:11px;margin-top:10px;min-height:30px}
+  #quickControl span{margin-left:auto;font-size:10px;color:#b9ad9d}
+  input[type=checkbox]{accent-color:var(--hot);width:17px;height:17px;flex:0 0 auto}
+  .panelLinks{display:flex;gap:10px;margin-top:8px}
+  .panelLinks .storyLink{font-size:10px;letter-spacing:.04em;min-height:32px;margin:0;color:#c3b7a6}
+  #panel .coffee{margin-top:7px}
+  #tools{align-items:center;gap:5px;z-index:24;overflow:visible}
+  #tools>button,#tools select,#settings>summary{min-height:40px;padding:8px 12px;font-size:10px;
+    letter-spacing:.035em;font-weight:700;border:1px solid #ffffff2b;border-radius:8px;
+    color:#f0e5d3;background:rgba(12,10,17,.92);font-family:inherit}
+  #tools>button.on{background:var(--paper);color:#0d0b12}
+  #tools>button:disabled{opacity:.4}
+  #tools select{cursor:pointer;min-width:62px;color-scheme:dark}
+  #settings{position:relative}
+  #settings>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:center;
+    min-width:40px;font-size:15px;letter-spacing:1px}
+  #settings>summary::-webkit-details-marker{display:none}
+  #settings[open]>summary{border-color:var(--hot);color:var(--hot)}
+  #settingsPanel{position:absolute;right:0;bottom:calc(100% + 9px);width:216px;padding:13px;
+    display:grid;grid-template-columns:1fr 1fr;gap:7px;background:#15111c;
+    border:1px solid #ffffff30;border-radius:12px;box-shadow:0 12px 50px #0009}
+  .settingsTitle{grid-column:1/-1;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:#bfaf98;margin:0 0 4px}
+  #settingsPanel button{min-height:38px;font-size:10px;letter-spacing:.04em}
+  #settingsPanel label{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:12px;min-height:33px}
+  #cmdhead{display:flex;gap:8px;align-items:center;width:100%}
+  #cmdpts{flex-direction:row;gap:8px;padding:8px 11px;min-height:36px}
+  #cmdpts span{font-size:9px;letter-spacing:.08em;margin:0}
+  #btnDeploy{border:0;background:none;color:#e9ddc9;font-family:inherit;cursor:pointer;
+    font-size:11px;letter-spacing:.05em;min-height:36px;padding:7px 9px;pointer-events:none}
+  #btnDeploy span{display:none}
+  .dep{min-width:87px;min-height:60px;padding:9px 10px;gap:4px;align-items:flex-start}
+  .dep .dn{font-size:10px;letter-spacing:.02em}
+  .dep .dc{font-size:10px;letter-spacing:0;color:#e5b868}
+  .dep .dr{font-size:10px;color:#d0c5b4;font-weight:400;white-space:nowrap}
+  .dep:disabled{opacity:.48}
+  .cmd{min-height:56px;min-width:142px;padding:9px 12px}
+  .cmd .cn{font-size:10px;letter-spacing:.06em}
+  .cmd .ck{font-size:10px;letter-spacing:.02em;opacity:.85}
+  .cmd:disabled{opacity:.55}
+  .cmd.live:disabled{opacity:1}
+  body.fighting:not(.reel) #cmdbar{bottom:70px;max-width:min(1060px,calc(100% - 32px))}
+  body.paused #phase{color:var(--hot)}
+  body.finished #topui,body.finished #feed,body.finished #champ{visibility:hidden}
+  body.finished #tools{opacity:0;pointer-events:none}
+  body.reel #tools{max-width:calc(100% - 20px);flex-wrap:nowrap}
+  body.reel #tools>button,body.reel #tools select{padding:8px;font-size:9px}
+  body.reel #cmdbar{bottom:72px}
+  body.hideui #cmdhead,body.hideui #battleReadout{display:none}
+  #card.result{overflow-y:auto;justify-content:flex-start;padding:clamp(50px,9vh,105px) 16px 30px;
+    pointer-events:auto;overscroll-behavior:contain}
+  #card.result>*{flex-shrink:0}
+  #cardBtns{gap:8px;max-width:560px}
+  #cardBtns button{min-height:44px;letter-spacing:.06em;font-size:11px;padding:11px 16px}
+  #storySkip{min-height:44px;color:#c5b8a8;font-size:11px}
+  #rulesList .rl .tx{color:#dfd2bf}
+  #rulesList .rl .kx{font-size:10px}
+  body.reducedMotion *,body.reducedMotion *::before,body.reducedMotion *::after{
+    animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  body.reducedMotion #grain,body.reducedMotion #slowmo{display:none!important}
+  #grain{opacity:.012;animation:none}
+  #grade{opacity:.45}
+  body.filmLook #grain{opacity:.055;animation:gr .7s steps(3) infinite}
+  body.filmLook #grade{opacity:.95}
+  body.narrow #tools,body.narrow:not(.reel) #tools{left:12px;right:12px;top:12px;bottom:auto;
+    max-width:none;transform:none;justify-content:space-between;flex-wrap:nowrap;gap:4px}
+  body.narrow #tools>button,body.narrow:not(.reel) #tools>button,
+  body.narrow #tools select,body.narrow #settings>summary{min-height:44px;padding:8px 9px;font-size:10px;letter-spacing:0}
+  body.narrow #tools select{min-width:56px}
+  body.narrow #tools>button{flex:1;white-space:nowrap}
+  body.narrow #settingsPanel{bottom:auto;top:calc(100% + 9px)}
+  body.narrow #settingsPanel button,body.narrow #settingsPanel label{min-height:44px}
+  body.narrow #scoreboard,body.narrow:not(.reel) #scoreboard{padding-top:72px}
+  body.narrow #battleReadout{font-size:10px;margin-top:5px}
+  body.narrow #panel{max-height:calc(100% - 159px);padding:14px;width:calc(100% - 24px)}
+  body.narrow .seg button,body.narrow .mini button{min-height:44px;font-size:10px}
+  body.narrow .ru button{width:44px;height:44px}
+  body.narrow input[type=range]{margin:15px 0 13px}
+  body.narrow #quickControl{min-height:38px}
+  body.narrow .panelLinks .storyLink{min-height:44px}
+  body.narrow #cmdbar,body.narrow.fighting:not(.reel) #cmdbar{left:12px;bottom:max(12px,env(safe-area-inset-bottom));
+    transform:none;width:calc(100% - 24px);max-width:none;gap:7px;align-items:stretch}
+  body.narrow #cmdhead{padding:6px;border:1px solid #ffffff24;border-radius:11px;background:rgba(12,10,17,.94)}
+  body.narrow #cmdpts{border:0;background:transparent;min-height:36px;padding:4px 7px;gap:6px}
+  body.narrow #cmdpts span{font-size:8px;max-width:38px;line-height:1.2}
+  body.narrow #btnDeploy{pointer-events:auto;min-height:44px;flex:1;text-align:right;font-size:11px}
+  body.narrow #btnDeploy span{display:inline-block;margin-left:10px;font-size:18px;transition:transform .2s}
+  body.narrow.deployOpen #btnDeploy span{transform:rotate(180deg)}
+  body.narrow #cmddep{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+    max-height:min(43vh,360px);overflow-y:auto;padding:8px;border:1px solid #ffffff28;
+    border-radius:11px;background:rgba(12,10,17,.97);scrollbar-width:thin;scrollbar-color:#ffffff55 transparent}
+  body.narrow.deployOpen #cmddep{display:grid}
+  body.narrow .dep{min-width:0;min-height:76px;padding:9px 7px}
+  body.narrow .dep .dn{font-size:10px;white-space:normal;line-height:1.3}
+  body.narrow .dep .dr{font-size:9px;white-space:normal}
+  body.narrow #cmdact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  body.narrow .cmd{min-width:0;min-height:57px;padding:9px 5px}
+  body.narrow .cmd .cn{font-size:9px;letter-spacing:0}
+  body.narrow .cmd .ck{font-size:9px;letter-spacing:0}
+  body.narrow #card.result{padding-top:62px}
+  body.narrow #card .sub{max-width:94%;font-size:11px;letter-spacing:.05em;line-height:1.5}
+  body.short #tools{top:10px;bottom:auto}
+  body.short #settingsPanel{top:calc(100% + 9px);bottom:auto;max-height:calc(100vh - 75px);overflow-y:auto}
+  body.short #scoreboard{padding-top:65px}
+  body.short #feed{display:none}
+  body.short #panel{max-height:calc(100% - 142px)}
+  body.short #cmdbar,body.short.fighting:not(.reel) #cmdbar{bottom:12px}
+  body.short:not(.narrow) #cmddep{display:none;max-height:95px;overflow-y:auto;
+    padding:8px;background:rgba(12,10,17,.97);border:1px solid #ffffff25;border-radius:10px}
+  body.short:not(.narrow).deployOpen #cmddep{display:flex}
+  body.short #btnDeploy{pointer-events:auto;min-height:44px;background:#141019;border:1px solid #ffffff25;border-radius:9px}
+  body.short #btnDeploy span{display:inline-block;margin-left:8px}
+  body.short.deployOpen #btnDeploy span{transform:rotate(180deg)}
+  body.short #card.result{padding-top:25px}
 </style>
 </head>
 <body>
@@ -555,9 +696,10 @@ if(GA_ID){
   <div id="scoreboard">
     <div class="team" id="teamA"><div class="nm" id="nameA">Roosters</div><div class="ct" id="ctA">0</div></div>
     <div id="clock"><div class="t" id="tmr">0.0s</div><div class="s" id="phase">Standby</div></div>
-    <div class="team r" id="teamB"><div class="nm">Raccoons</div><div class="ct" id="ctB">0</div></div>
+    <div class="team r" id="teamB"><div class="nm" id="nameB">Raccoons</div><div class="ct" id="ctB">0</div></div>
   </div>
   <div id="bar"><div id="barA" style="width:50%"></div><div id="barB"></div></div>
+  <div id="battleReadout"><span>Army remaining</span><span id="moraleReadout">Ready to deploy</span></div>
   </div>
 
   <div class="hud" id="feed"></div>
@@ -583,11 +725,12 @@ if(GA_ID){
         <button class="callb" data-s="birds">The flock</button>
         <button class="callb" data-s="coons">The raccoons</button>
       </div>
-      <div id="callNote">Locks when the countdown ends</div>
+      <div id="callNote">Locks when the battle starts</div>
     </div>
     <div id="callScore"></div>
     <div id="cardBtns">
-      <button id="again" class="prime">Run it back</button>
+      <button id="again" class="prime">New rematch</button>
+      <button id="replay">Replay battle</button>
       <button id="setup">Change matchup</button>
       <button id="share">Copy link</button>
     </div>
@@ -613,8 +756,8 @@ if(GA_ID){
 
   <button id="sndhint">Tap for sound</button>
 
-  <div id="rules">
-    <h2>How this works</h2>
+  <div id="rules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1">
+    <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList">
       <div class="rl hot"><div class="kx">War chest</div><div class="tx">
@@ -648,12 +791,13 @@ if(GA_ID){
         make someone argue with you about it.</div></div>
       <div class="rl"><div class="kx">R &nbsp;B &nbsp;H</div><div class="tx">
         <b>Reel</b> crops to 9:16 for video. <b>Blood</b> is off by default and toggles on.
-        <b>H</b> hides the interface for a clean recording. Space starts a fight.</div></div>
+        <b>H</b> hides the interface for a clean recording. Space starts or pauses a fight.
+        Tactical gives you a steady overhead view. Choose a playback speed next to Pause.</div></div>
     </div>
     <button id="rulesGo">Got it</button>
   </div>
 
-  <div id="story">
+  <div id="story" role="dialog" aria-modal="true" aria-label="Why this battle exists" tabindex="-1">
     <img id="storyArt" alt="Eenie and Moe">
     <p>A family of raccoons raided the coop in the middle of the night.</p>
     <p class="last">Eenie and Moe didn't make it.</p>
@@ -667,7 +811,7 @@ if(GA_ID){
   <!-- The long version, opened from 'Why this exists'. The welcome card has to
        stay short — it stands between people and the game. This one is for the
        ones who come back and want the whole thing. -->
-  <div id="about">
+  <div id="about" role="dialog" aria-modal="true" aria-label="The story behind the simulator" tabindex="-1">
     <div class="ab">
       <img id="aboutArt" alt="Eenie and Moe">
       <p class="cap">Eenie and Moe</p>
@@ -708,28 +852,39 @@ if(GA_ID){
     <button id="aboutGo">Back</button>
   </div>
 
-  <div id="tools">
-    <button id="btnReel">Reel Mode</button>
-    <button id="btnCam" class="on">Auto Cam</button>
-    <button id="btnSound" class="on">Sound</button>
-    <button id="btnMusic" class="on">Music</button>
-    <button id="btnBlood">Blood</button>
+  <div id="tools" aria-label="Battle controls">
+    <button id="btnPause" disabled title="Pause or resume (Space)">Pause</button>
+    <button id="btnTactical" aria-pressed="false">Tactical</button>
+    <label class="speedControl"><span class="sr-only">Playback speed</span><select id="playbackSpeed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+    <button id="btnCam" class="on" aria-pressed="true">Auto Cam</button>
+    <details id="settings"><summary aria-label="View and audio settings" title="View and audio settings">•••</summary>
+      <div id="settingsPanel">
+        <div class="settingsTitle">View &amp; audio</div>
+        <button id="btnReel" aria-pressed="false">Reel mode</button>
+        <button id="btnSound" class="on" aria-pressed="true">Sound</button>
+        <button id="btnMusic" class="on" aria-pressed="true">Music</button>
+        <button id="btnBlood" aria-pressed="false">Blood</button>
+        <label><input id="btnFilm" type="checkbox"> Film look</label>
+        <label><input id="btnMotion" type="checkbox"> Reduce motion</label>
+      </div>
+    </details>
   </div>
 
   <div id="cmdbar">
-    <div id="cmddep"><div id="cmdpts"><b>0</b><span>war chest</span></div></div>
+    <div id="cmdhead"><div id="cmdpts"><b>0</b><span>war chest</span></div><button id="btnDeploy" aria-controls="cmddep" aria-expanded="false">Reinforcements <span>⌃</span></button></div>
+    <div id="cmddep" aria-label="Reinforcements"></div>
     <div id="cmdact"></div>
   </div>
 
   <div id="panel">
     <h1>Chickens vs Raccoons <span id="fps">v1.0</span></h1>
     <div class="row">
-      <label>Birds <b id="vA">1000</b></label>
-      <input type="range" id="sA" min="0" max="4000" step="25" value="1000">
+      <label for="sA">Birds <b id="vA">1000</b></label>
+      <input type="range" id="sA" min="0" max="4000" step="1" value="1000">
     </div>
     <div class="row">
-      <label>Raccoons <b id="vB">100</b></label>
-      <input type="range" id="sB" min="0" max="500" step="5" value="100">
+      <label for="sB">Raccoons <b id="vB">100</b></label>
+      <input type="range" id="sB" min="0" max="600" step="1" value="100">
     </div>
     <div class="row">
       <label>Bird type</label>
@@ -746,26 +901,28 @@ if(GA_ID){
         <button data-v="coop">Night Coop</button>
       </div>
     </div>
-    <div class="row rost">
-      <label>Also in the treeline <b id="costB">0</b></label>
+    <details class="row rost" id="foeOptions">
+      <summary>Also in the treeline <b id="costB">0</b></summary>
       <div id="rosterFoe" class="roster"></div>
-    </div>
+    </details>
     <div class="hint">You call the farm in <em>during</em> the fight — the war chest fills
       while the birds hold the line.</div>
-    <button id="go">Fight</button>
-    <button class="storyLink" id="rulesOpen">How to play</button>
-    <button class="storyLink" id="storyOpen">Why this exists</button>
+    <div id="rosterPreview" aria-live="polite">1,000 roosters · 100 raccoons</div>
     <div class="mini">
       <button data-preset="classic">1000 v 100</button>
       <button data-preset="massacre">Massacre</button>
       <button data-preset="even">Fair Fight</button>
       <button data-preset="silly">Max Chaos</button>
     </div>
+    <label id="quickControl"><input id="btnQuick" type="checkbox" checked> Quick start <span>Skip the cinematic intro</span></label>
+    <button id="go">Fight</button>
+    <div class="panelLinks"><button class="storyLink" id="rulesOpen">How to play</button><button class="storyLink" id="storyOpen">Why this exists</button></div>
     <a class="coffee" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
       <span>Buy me a coffee</span>
     </a>
   </div>
+  <div id="battleStatus" class="sr-only" role="status" aria-live="polite"></div>
 </div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

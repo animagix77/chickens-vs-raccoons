@@ -1178,36 +1178,49 @@ function musicUpdate(dt){
    AGENT RENDER
    ============================================================ */
 const _mL=new THREE.Matrix4(), _mF=new THREE.Matrix4();
-/* Above this many animals still standing you cannot resolve a chicken's legs,
-   so they ride the body. Below it they walk.
-
-   This used to hang off the geometry tier, which was the wrong knob on both
-   counts. Animating the limbs is a CPU cost — one matrix build and one
-   multiply per agent — and it is tiny: measured at 0.19ms a frame for a
-   thousand birds and 0.50ms for five thousand, against a sim step that costs
-   twenty-two. The geometry tier is a GPU cost and answers a different
-   question. Tying them together meant that lowering the polygon thresholds
-   silently switched off the walk cycle at a thousand units to save a fifth of
-   a millisecond, which is a terrible trade — a yard full of running chickens
-   is most of the joke.
-
-   It also reads the LIVE count rather than the one the fight started with, so
-   Max Chaos opens as an indistinguishable mob and the survivors get their
-   gait back as the field thins. That is free: it is a per-frame branch, not a
-   rebuild. */
+/* Crowd hinge motion still follows live count; the articulated legs and neck
+   are a separate shader path enabled within 32 world units of the camera.
+   Thus a close subject keeps its gait even during a 5,000-animal battle.
+   Up to 24 visible headline animals additionally use prebuilt hero geometry. */
 const LIMB_MAX=2600;
+const HERO_MAX=24,HERO_ON=new Uint8Array(5200),HERO_IDS=new Int32Array(HERO_MAX),HERO_D=new Float32Array(HERO_MAX);
+const heroFrustum=new THREE.Frustum(),heroMatrix=new THREE.Matrix4(),heroSphere=new THREE.Sphere();
+/* At most 24 close, visible headline animals get fine geometry. Selection has
+   a small incumbent bias so neighbors do not flicker between LODs. No rebuild. */
+function selectHeroAnimals(){
+  heroMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);
+  heroFrustum.setFromProjectionMatrix(heroMatrix);let used=0;
+  for(let i=0;i<N;i++){
+    if(A.st[i]===2)continue;
+    const u=UNITS[A.kind[i]],sq=SQUADS[A.kind[i]];
+    if((u.k!=='rooster'&&u.k!=='coon')||!sq||!sq.hero)continue;
+    const x=A.x[i]-camera.position.x,y=(A.fy[i]||0)+.55-camera.position.y,z=A.z[i]-camera.position.z;
+    const d=(x*x+y*y+z*z)*(HERO_ON[i]?.88:1);
+    if(d>484)continue;
+    heroSphere.center.set(A.x[i],(A.fy[i]||0)+.55,A.z[i]);heroSphere.radius=u.rad*.7;
+    if(!heroFrustum.intersectsSphere(heroSphere))continue;
+    let at=used;while(at>0&&d<HERO_D[at-1])at--;
+    if(at>=HERO_MAX)continue;
+    for(let j=Math.min(used,HERO_MAX-1);j>at;j--){HERO_D[j]=HERO_D[j-1];HERO_IDS[j]=HERO_IDS[j-1];}
+    HERO_D[at]=d;HERO_IDS[at]=i;used=Math.min(HERO_MAX,used+1);
+  }
+  HERO_ON.fill(0);for(let i=0;i<used;i++)HERO_ON[HERO_IDS[i]]=1;
+}
+
 function renderAgents(){
   if(!SQUADS.length) return;
   for(let q=0;q<SQUADS.length;q++) if(SQUADS[q]) SQUADS[q].begin();
   let sN=0;
   const LIMBS = (aliveA+aliveB) <= LIMB_MAX;
+  selectHeroAnimals();
+  const calmMotion=typeof VIEW!=='undefined'&&VIEW.reducedMotion;
 
   for(let i=0;i<N;i++){
     const ki=A.kind[i], sq=SQUADS[ki];
     if(!sq) continue;
     const u=UNITS[ki], kit=KIT_PIV[ki][A.vr[i]];
     const st=A.st[i], bird=u.build==='bird';
-    let y=A.fy[i]||0, roll=0, pitch=0, amp, fr;
+    let y=A.fy[i]||0, roll=0, pitch=0, amp, fr, motionSpeed=0;
     let ex=0, swYaw=0, lx=0, lz=0;   // strike extension, its yaw arc, its lunge
 
     /* thrown: ignore the gait and the corpse pose entirely and just cartwheel.
@@ -1226,7 +1239,7 @@ function renderAgents(){
               0,s3, c2, pz2-s3*py2-c2*pz2,
               0,0,0,1);
       _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF);
+      sq.push(A.vr[i],_m,_mF,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
       continue;                       // no blob shadow while it's off the ground
     }
 
@@ -1244,7 +1257,7 @@ function renderAgents(){
       }
       amp=0; fr=0;
     }else{
-      const sp=Math.hypot(A.vx[i],A.vz[i]);
+      const sp=motionSpeed=Math.hypot(A.vx[i],A.vz[i]);
       y+=Math.abs(Math.sin(A.ph[i]))*(bird?0.05:0.035)*(0.35+sp*0.2);
       pitch=-clamp(sp*0.045,0,0.26)+Math.sin(A.ph[i]*2)*(bird?0.028:0.02);
 
@@ -1297,9 +1310,13 @@ function renderAgents(){
     _v.set(A.x[i]+lx,y,A.z[i]+lz); _s.set(1,1,1);
     _m.compose(_v,_q,_s);
 
-    /* see LIMB_MAX above — live count, not the spawn tier */
-    if(!LIMBS){
-      sq.push(A.vr[i],_m,_m);
+    const nx=A.x[i]-camera.position.x,nz=A.z[i]-camera.position.z,ny=camera.position.y-y;
+    const near=nx*nx+nz*nz+ny*ny<1024;
+    const articulate=st===2?0:(near?(calmMotion?.55:1):0);
+    const gait=st===2?0:clamp(motionSpeed*.32,0,1);
+    /* Nearby subjects keep their joints even while distant crowds are cheap. */
+    if(!LIMBS&&!near){
+      sq.push(A.vr[i],_m,_m,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
     }else{
       let ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
       /* the hinge stops oscillating and flares. Sign does the work for free:
@@ -1307,13 +1324,14 @@ function renderAgents(){
          quadruped's shoulders while its tail comes up — a strike. Negative,
          which is where the wind-up lives, is the mirror of both: rearing. */
       if(ex!==0){ const ae=ex<0?-ex:ex; ang=ang*(ae<1?1-ae:0)+ex*u.swF; }
+      if(calmMotion)ang*=.55;
       const c=Math.cos(ang), s2=Math.sin(ang), py=kit.y, pz=kit.z;
       _mL.set(1,0,0,0,
               0,c,-s2, py-c*py+s2*pz,
               0,s2, c, pz-s2*py-c*pz,
               0,0,0,1);
       _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF);
+      sq.push(A.vr[i],_m,_mF,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
     }
 
     if(sN<6000){
@@ -1378,6 +1396,18 @@ function director(dt,real,wall){
   const R=ARENA_R;
   const zoom=reel?1.62:1.0;
   let tx,ty,tz,ax,ay,az,fov=46;
+  const tactical=typeof VIEW!=='undefined'&&VIEW.tactical;
+  const reduced=typeof VIEW!=='undefined'&&VIEW.reducedMotion;
+  const frozen=typeof VIEW!=='undefined'&&VIEW.paused;
+  if(tactical || (reduced&&!DIR.manual)){
+    // Fixed compass, no orbit, and enough framing for both deployment zones.
+    const fit=1/Math.min(1,camera.aspect),height=R*2.55*fit;
+    camPos.set(0,height,R*.58);camAim.set(0,0,0);
+    camera.position.copy(camPos);camera.lookAt(camAim);
+    if(camera.fov!==46){camera.fov=46;camera.updateProjectionMatrix();}
+    return;
+  }
+  if(frozen&&!DIR.manual)return;
 
   if(DIR.manual){
     const d=R*2.0*DIR.orbD;
@@ -1425,28 +1455,28 @@ function director(dt,real,wall){
       break;}
     case 'low':{
       const a=DIR.ang+DIR.spin*orbT()*0.048, d=(R*0.34+7)*zoom*pushIn();
-      tx=hx+Math.cos(a)*d; ty=(NIGHT?3.4:1.15)+Math.sin(DIR.t*0.30)*0.12; tz=hz+Math.sin(a)*d;
+      tx=hx+Math.cos(a)*d; ty=Math.max(NIGHT?4.2:3.4,R*.14)+Math.sin(DIR.t*0.30)*0.08; tz=hz+Math.sin(a)*d;
       ax=hx; ay=NIGHT?0.9:0.75; az=hz; fov=52;
       break;}
     case 'clash':{
       /* the tightest setup, so it gets the slowest orbit — this is the one that
          used to swing the whole frame around every couple of seconds */
       const a=DIR.ang+DIR.spin*orbT()*0.075, d=8.6*zoom*pushIn();
-      tx=hx+Math.cos(a)*d; ty=NIGHT?3.6:2.5; tz=hz+Math.sin(a)*d;
+      tx=hx+Math.cos(a)*d; ty=NIGHT?4.6:4.0; tz=hz+Math.sin(a)*d;
       ax=hx; ay=0.85; az=hz; fov=40;
       break;}
     case 'champ':{
       const c=BATTLE.champ>=0?BATTLE.champ:0;
       const yw=A.yaw[c]||0;
       const cd=5.0*zoom*pushIn();
-      tx=A.x[c]-Math.sin(yw)*cd; ty=(NIGHT?3.2:2.1)*(reel?1.25:1); tz=A.z[c]-Math.cos(yw)*cd;
+      tx=A.x[c]-Math.sin(yw)*cd; ty=Math.max(NIGHT?4.2:3.5,UNITS[A.kind[c]].rad*2.1)*(reel?1.25:1); tz=A.z[c]-Math.cos(yw)*cd;
       ax=A.x[c]+Math.sin(yw)*2.5; ay=0.85; az=A.z[c]+Math.cos(yw)*2.5; fov=44;
       break;}
     default:{ // sweep — long dolly across the front
       const p=(DIR.t/DIR.dur)*2-1;
       const a=DIR.ang;
       tx=wx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.78;
-      ty=(NIGHT?3.5:2.0)+Math.sin(DIR.t*0.42)*0.16;
+      ty=Math.max(NIGHT?4.5:3.8,R*.16)+Math.sin(DIR.t*0.42)*0.10;
       tz=wz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.78;
       ax=hx; ay=0.9; az=hz; fov=48;   // dolly past the arena, but look at the fight
     }
@@ -1466,13 +1496,28 @@ function director(dt,real,wall){
     const side =(p-0.5)*R*(isA?1.0:0.62);
     tx=cx-ca*inset-sa*side;
     tz=cz-sa*inset+ca*side;
-    ty=1.30+p*0.80;
+    ty=3.2+p*1.2;
     ax=cx-sa*side*0.30; ay=0.80; az=cz+ca*side*0.30;
     fov=lerp(51,43,p);
   }else if(SEQ.phase!=='battle'&&SEQ.phase!=='result'){
     const a=-1.57+Math.sin(t*0.2)*0.25, d=R*1.15*zoom;
     tx=Math.cos(a)*d; ty=R*0.30; tz=Math.sin(a)*d;
     ax=TC.afx*0.5; ay=0.6; az=TC.afz*0.5; fov=42;
+  }
+
+  /* Lift tight automatic shots above nearby bodies. Test the actual sight
+     corridor, including large animals; a distant crowd cannot trigger this. */
+  if(ty<R*.35){
+    const dx=ax-tx,dz=az-tz,dd=dx*dx+dz*dz;
+    if(dd>1)for(let i=0;i<N;i++){
+      if(A.st[i]===2)continue;
+      const px=A.x[i]-tx,pz=A.z[i]-tz,t=(px*dx+pz*dz)/dd;
+      if(t<0||t>.70)continue;
+      const sideX=px-dx*t,sideZ=pz-dz*t,u=UNITS[A.kind[i]],clearance=u.rad*.7+.3;
+      if(sideX*sideX+sideZ*sideZ>clearance*clearance)continue;
+      const top=(A.fy[i]||0)+u.rad*1.35+.6;
+      ty=Math.max(ty,(top-ay*t)/(1-t));
+    }
   }
 
   /* handheld — slower, smaller, and scaled by how far out we are. A fixed

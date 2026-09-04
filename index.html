@@ -545,6 +545,147 @@ if(GA_ID){
   body.short .coffee{margin-top:7px;padding:6px 8px}
   body.short .mini button{padding:5px 2px;font-size:8.5px}
   body.short #champ .nm{font-size:21px}
+  /* ---------- readable controls, tactical play and touch layouts ---------- */
+  .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{
+    outline:3px solid var(--cool);outline-offset:4px}
+  button:disabled{cursor:default}
+  #battleReadout{display:flex;justify-content:space-between;margin:6px 18px 0;font-size:10px;
+    color:#e4daca;letter-spacing:.04em;text-shadow:0 1px 4px #000}
+  #moraleReadout{color:#ffdb94}
+  #panel{width:326px;padding:16px;background:rgba(12,10,17,.89)}
+  #panel h1{font-size:12px;letter-spacing:.08em;align-items:baseline}
+  #panel h1 span{font-size:8px;letter-spacing:0;white-space:nowrap;margin-left:8px}
+  .row label{font-size:11px;letter-spacing:.07em;opacity:.9}
+  input[type=range]{height:6px;margin:12px 0 9px}
+  input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
+  input[type=range]::-moz-range-thumb{width:22px;height:22px}
+  .seg button,.mini button{min-height:36px;font-size:10px;letter-spacing:.02em}
+  .hint{font-size:11px;line-height:1.5;color:#cec3b2}
+  #foeOptions{border-top:1px solid #ffffff15;padding-top:8px}
+  #foeOptions summary{min-height:28px;cursor:pointer;font-size:11px;letter-spacing:.03em;color:#ded3c1}
+  #foeOptions summary b{float:right;font-size:10px;color:var(--cool);margin-right:3px}
+  #foeOptions[open] summary{margin-bottom:7px}
+  .roster{max-height:148px;gap:5px}
+  .ru{font-size:11px;text-transform:none;letter-spacing:0}
+  .ru button{width:32px;height:32px;font-size:17px}
+  #rosterPreview{margin-top:12px;padding:10px 11px;border:1px solid #ffb02025;border-radius:8px;
+    background:#ffb0200b;color:#e8dcc6;font-size:11px;line-height:1.55;max-height:86px;overflow:auto}
+  #quickControl{display:flex;align-items:center;gap:7px;font-size:11px;margin-top:10px;min-height:30px}
+  #quickControl span{margin-left:auto;font-size:10px;color:#b9ad9d}
+  input[type=checkbox]{accent-color:var(--hot);width:17px;height:17px;flex:0 0 auto}
+  .panelLinks{display:flex;gap:10px;margin-top:8px}
+  .panelLinks .storyLink{font-size:10px;letter-spacing:.04em;min-height:32px;margin:0;color:#c3b7a6}
+  #panel .coffee{margin-top:7px}
+  #tools{align-items:center;gap:5px;z-index:24;overflow:visible}
+  #tools>button,#tools select,#settings>summary{min-height:40px;padding:8px 12px;font-size:10px;
+    letter-spacing:.035em;font-weight:700;border:1px solid #ffffff2b;border-radius:8px;
+    color:#f0e5d3;background:rgba(12,10,17,.92);font-family:inherit}
+  #tools>button.on{background:var(--paper);color:#0d0b12}
+  #tools>button:disabled{opacity:.4}
+  #tools select{cursor:pointer;min-width:62px;color-scheme:dark}
+  #settings{position:relative}
+  #settings>summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:center;
+    min-width:40px;font-size:15px;letter-spacing:1px}
+  #settings>summary::-webkit-details-marker{display:none}
+  #settings[open]>summary{border-color:var(--hot);color:var(--hot)}
+  #settingsPanel{position:absolute;right:0;bottom:calc(100% + 9px);width:216px;padding:13px;
+    display:grid;grid-template-columns:1fr 1fr;gap:7px;background:#15111c;
+    border:1px solid #ffffff30;border-radius:12px;box-shadow:0 12px 50px #0009}
+  .settingsTitle{grid-column:1/-1;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:#bfaf98;margin:0 0 4px}
+  #settingsPanel button{min-height:38px;font-size:10px;letter-spacing:.04em}
+  #settingsPanel label{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:12px;min-height:33px}
+  #cmdhead{display:flex;gap:8px;align-items:center;width:100%}
+  #cmdpts{flex-direction:row;gap:8px;padding:8px 11px;min-height:36px}
+  #cmdpts span{font-size:9px;letter-spacing:.08em;margin:0}
+  #btnDeploy{border:0;background:none;color:#e9ddc9;font-family:inherit;cursor:pointer;
+    font-size:11px;letter-spacing:.05em;min-height:36px;padding:7px 9px;pointer-events:none}
+  #btnDeploy span{display:none}
+  .dep{min-width:87px;min-height:60px;padding:9px 10px;gap:4px;align-items:flex-start}
+  .dep .dn{font-size:10px;letter-spacing:.02em}
+  .dep .dc{font-size:10px;letter-spacing:0;color:#e5b868}
+  .dep .dr{font-size:10px;color:#d0c5b4;font-weight:400;white-space:nowrap}
+  .dep:disabled{opacity:.48}
+  .cmd{min-height:56px;min-width:142px;padding:9px 12px}
+  .cmd .cn{font-size:10px;letter-spacing:.06em}
+  .cmd .ck{font-size:10px;letter-spacing:.02em;opacity:.85}
+  .cmd:disabled{opacity:.55}
+  .cmd.live:disabled{opacity:1}
+  body.fighting:not(.reel) #cmdbar{bottom:70px;max-width:min(1060px,calc(100% - 32px))}
+  body.paused #phase{color:var(--hot)}
+  body.finished #topui,body.finished #feed,body.finished #champ{visibility:hidden}
+  body.finished #tools{opacity:0;pointer-events:none}
+  body.reel #tools{max-width:calc(100% - 20px);flex-wrap:nowrap}
+  body.reel #tools>button,body.reel #tools select{padding:8px;font-size:9px}
+  body.reel #cmdbar{bottom:72px}
+  body.hideui #cmdhead,body.hideui #battleReadout{display:none}
+  #card.result{overflow-y:auto;justify-content:flex-start;padding:clamp(50px,9vh,105px) 16px 30px;
+    pointer-events:auto;overscroll-behavior:contain}
+  #card.result>*{flex-shrink:0}
+  #cardBtns{gap:8px;max-width:560px}
+  #cardBtns button{min-height:44px;letter-spacing:.06em;font-size:11px;padding:11px 16px}
+  #storySkip{min-height:44px;color:#c5b8a8;font-size:11px}
+  #rulesList .rl .tx{color:#dfd2bf}
+  #rulesList .rl .kx{font-size:10px}
+  body.reducedMotion *,body.reducedMotion *::before,body.reducedMotion *::after{
+    animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  body.reducedMotion #grain,body.reducedMotion #slowmo{display:none!important}
+  #grain{opacity:.012;animation:none}
+  #grade{opacity:.45}
+  body.filmLook #grain{opacity:.055;animation:gr .7s steps(3) infinite}
+  body.filmLook #grade{opacity:.95}
+  body.narrow #tools,body.narrow:not(.reel) #tools{left:12px;right:12px;top:12px;bottom:auto;
+    max-width:none;transform:none;justify-content:space-between;flex-wrap:nowrap;gap:4px}
+  body.narrow #tools>button,body.narrow:not(.reel) #tools>button,
+  body.narrow #tools select,body.narrow #settings>summary{min-height:44px;padding:8px 9px;font-size:10px;letter-spacing:0}
+  body.narrow #tools select{min-width:56px}
+  body.narrow #tools>button{flex:1;white-space:nowrap}
+  body.narrow #settingsPanel{bottom:auto;top:calc(100% + 9px)}
+  body.narrow #settingsPanel button,body.narrow #settingsPanel label{min-height:44px}
+  body.narrow #scoreboard,body.narrow:not(.reel) #scoreboard{padding-top:72px}
+  body.narrow #battleReadout{font-size:10px;margin-top:5px}
+  body.narrow #panel{max-height:calc(100% - 159px);padding:14px;width:calc(100% - 24px)}
+  body.narrow .seg button,body.narrow .mini button{min-height:44px;font-size:10px}
+  body.narrow .ru button{width:44px;height:44px}
+  body.narrow input[type=range]{margin:15px 0 13px}
+  body.narrow #quickControl{min-height:38px}
+  body.narrow .panelLinks .storyLink{min-height:44px}
+  body.narrow #cmdbar,body.narrow.fighting:not(.reel) #cmdbar{left:12px;bottom:max(12px,env(safe-area-inset-bottom));
+    transform:none;width:calc(100% - 24px);max-width:none;gap:7px;align-items:stretch}
+  body.narrow #cmdhead{padding:6px;border:1px solid #ffffff24;border-radius:11px;background:rgba(12,10,17,.94)}
+  body.narrow #cmdpts{border:0;background:transparent;min-height:36px;padding:4px 7px;gap:6px}
+  body.narrow #cmdpts span{font-size:8px;max-width:38px;line-height:1.2}
+  body.narrow #btnDeploy{pointer-events:auto;min-height:44px;flex:1;text-align:right;font-size:11px}
+  body.narrow #btnDeploy span{display:inline-block;margin-left:10px;font-size:18px;transition:transform .2s}
+  body.narrow.deployOpen #btnDeploy span{transform:rotate(180deg)}
+  body.narrow #cmddep{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+    max-height:min(43vh,360px);overflow-y:auto;padding:8px;border:1px solid #ffffff28;
+    border-radius:11px;background:rgba(12,10,17,.97);scrollbar-width:thin;scrollbar-color:#ffffff55 transparent}
+  body.narrow.deployOpen #cmddep{display:grid}
+  body.narrow .dep{min-width:0;min-height:76px;padding:9px 7px}
+  body.narrow .dep .dn{font-size:10px;white-space:normal;line-height:1.3}
+  body.narrow .dep .dr{font-size:9px;white-space:normal}
+  body.narrow #cmdact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  body.narrow .cmd{min-width:0;min-height:57px;padding:9px 5px}
+  body.narrow .cmd .cn{font-size:9px;letter-spacing:0}
+  body.narrow .cmd .ck{font-size:9px;letter-spacing:0}
+  body.narrow #card.result{padding-top:62px}
+  body.narrow #card .sub{max-width:94%;font-size:11px;letter-spacing:.05em;line-height:1.5}
+  body.short #tools{top:10px;bottom:auto}
+  body.short #settingsPanel{top:calc(100% + 9px);bottom:auto;max-height:calc(100vh - 75px);overflow-y:auto}
+  body.short #scoreboard{padding-top:65px}
+  body.short #feed{display:none}
+  body.short #panel{max-height:calc(100% - 142px)}
+  body.short #cmdbar,body.short.fighting:not(.reel) #cmdbar{bottom:12px}
+  body.short:not(.narrow) #cmddep{display:none;max-height:95px;overflow-y:auto;
+    padding:8px;background:rgba(12,10,17,.97);border:1px solid #ffffff25;border-radius:10px}
+  body.short:not(.narrow).deployOpen #cmddep{display:flex}
+  body.short #btnDeploy{pointer-events:auto;min-height:44px;background:#141019;border:1px solid #ffffff25;border-radius:9px}
+  body.short #btnDeploy span{display:inline-block;margin-left:8px}
+  body.short.deployOpen #btnDeploy span{transform:rotate(180deg)}
+  body.short #card.result{padding-top:25px}
 </style>
 </head>
 <body>
@@ -555,9 +696,10 @@ if(GA_ID){
   <div id="scoreboard">
     <div class="team" id="teamA"><div class="nm" id="nameA">Roosters</div><div class="ct" id="ctA">0</div></div>
     <div id="clock"><div class="t" id="tmr">0.0s</div><div class="s" id="phase">Standby</div></div>
-    <div class="team r" id="teamB"><div class="nm">Raccoons</div><div class="ct" id="ctB">0</div></div>
+    <div class="team r" id="teamB"><div class="nm" id="nameB">Raccoons</div><div class="ct" id="ctB">0</div></div>
   </div>
   <div id="bar"><div id="barA" style="width:50%"></div><div id="barB"></div></div>
+  <div id="battleReadout"><span>Army remaining</span><span id="moraleReadout">Ready to deploy</span></div>
   </div>
 
   <div class="hud" id="feed"></div>
@@ -583,11 +725,12 @@ if(GA_ID){
         <button class="callb" data-s="birds">The flock</button>
         <button class="callb" data-s="coons">The raccoons</button>
       </div>
-      <div id="callNote">Locks when the countdown ends</div>
+      <div id="callNote">Locks when the battle starts</div>
     </div>
     <div id="callScore"></div>
     <div id="cardBtns">
-      <button id="again" class="prime">Run it back</button>
+      <button id="again" class="prime">New rematch</button>
+      <button id="replay">Replay battle</button>
       <button id="setup">Change matchup</button>
       <button id="share">Copy link</button>
     </div>
@@ -613,8 +756,8 @@ if(GA_ID){
 
   <button id="sndhint">Tap for sound</button>
 
-  <div id="rules">
-    <h2>How this works</h2>
+  <div id="rules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1">
+    <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList">
       <div class="rl hot"><div class="kx">War chest</div><div class="tx">
@@ -648,12 +791,13 @@ if(GA_ID){
         make someone argue with you about it.</div></div>
       <div class="rl"><div class="kx">R &nbsp;B &nbsp;H</div><div class="tx">
         <b>Reel</b> crops to 9:16 for video. <b>Blood</b> is off by default and toggles on.
-        <b>H</b> hides the interface for a clean recording. Space starts a fight.</div></div>
+        <b>H</b> hides the interface for a clean recording. Space starts or pauses a fight.
+        Tactical gives you a steady overhead view. Choose a playback speed next to Pause.</div></div>
     </div>
     <button id="rulesGo">Got it</button>
   </div>
 
-  <div id="story">
+  <div id="story" role="dialog" aria-modal="true" aria-label="Why this battle exists" tabindex="-1">
     <img id="storyArt" alt="Eenie and Moe">
     <p>A family of raccoons raided the coop in the middle of the night.</p>
     <p class="last">Eenie and Moe didn't make it.</p>
@@ -667,7 +811,7 @@ if(GA_ID){
   <!-- The long version, opened from 'Why this exists'. The welcome card has to
        stay short — it stands between people and the game. This one is for the
        ones who come back and want the whole thing. -->
-  <div id="about">
+  <div id="about" role="dialog" aria-modal="true" aria-label="The story behind the simulator" tabindex="-1">
     <div class="ab">
       <img id="aboutArt" alt="Eenie and Moe">
       <p class="cap">Eenie and Moe</p>
@@ -708,28 +852,39 @@ if(GA_ID){
     <button id="aboutGo">Back</button>
   </div>
 
-  <div id="tools">
-    <button id="btnReel">Reel Mode</button>
-    <button id="btnCam" class="on">Auto Cam</button>
-    <button id="btnSound" class="on">Sound</button>
-    <button id="btnMusic" class="on">Music</button>
-    <button id="btnBlood">Blood</button>
+  <div id="tools" aria-label="Battle controls">
+    <button id="btnPause" disabled title="Pause or resume (Space)">Pause</button>
+    <button id="btnTactical" aria-pressed="false">Tactical</button>
+    <label class="speedControl"><span class="sr-only">Playback speed</span><select id="playbackSpeed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+    <button id="btnCam" class="on" aria-pressed="true">Auto Cam</button>
+    <details id="settings"><summary aria-label="View and audio settings" title="View and audio settings">•••</summary>
+      <div id="settingsPanel">
+        <div class="settingsTitle">View &amp; audio</div>
+        <button id="btnReel" aria-pressed="false">Reel mode</button>
+        <button id="btnSound" class="on" aria-pressed="true">Sound</button>
+        <button id="btnMusic" class="on" aria-pressed="true">Music</button>
+        <button id="btnBlood" aria-pressed="false">Blood</button>
+        <label><input id="btnFilm" type="checkbox"> Film look</label>
+        <label><input id="btnMotion" type="checkbox"> Reduce motion</label>
+      </div>
+    </details>
   </div>
 
   <div id="cmdbar">
-    <div id="cmddep"><div id="cmdpts"><b>0</b><span>war chest</span></div></div>
+    <div id="cmdhead"><div id="cmdpts"><b>0</b><span>war chest</span></div><button id="btnDeploy" aria-controls="cmddep" aria-expanded="false">Reinforcements <span>⌃</span></button></div>
+    <div id="cmddep" aria-label="Reinforcements"></div>
     <div id="cmdact"></div>
   </div>
 
   <div id="panel">
     <h1>Chickens vs Raccoons <span id="fps">v1.0</span></h1>
     <div class="row">
-      <label>Birds <b id="vA">1000</b></label>
-      <input type="range" id="sA" min="0" max="4000" step="25" value="1000">
+      <label for="sA">Birds <b id="vA">1000</b></label>
+      <input type="range" id="sA" min="0" max="4000" step="1" value="1000">
     </div>
     <div class="row">
-      <label>Raccoons <b id="vB">100</b></label>
-      <input type="range" id="sB" min="0" max="500" step="5" value="100">
+      <label for="sB">Raccoons <b id="vB">100</b></label>
+      <input type="range" id="sB" min="0" max="600" step="1" value="100">
     </div>
     <div class="row">
       <label>Bird type</label>
@@ -746,26 +901,28 @@ if(GA_ID){
         <button data-v="coop">Night Coop</button>
       </div>
     </div>
-    <div class="row rost">
-      <label>Also in the treeline <b id="costB">0</b></label>
+    <details class="row rost" id="foeOptions">
+      <summary>Also in the treeline <b id="costB">0</b></summary>
       <div id="rosterFoe" class="roster"></div>
-    </div>
+    </details>
     <div class="hint">You call the farm in <em>during</em> the fight — the war chest fills
       while the birds hold the line.</div>
-    <button id="go">Fight</button>
-    <button class="storyLink" id="rulesOpen">How to play</button>
-    <button class="storyLink" id="storyOpen">Why this exists</button>
+    <div id="rosterPreview" aria-live="polite">1,000 roosters · 100 raccoons</div>
     <div class="mini">
       <button data-preset="classic">1000 v 100</button>
       <button data-preset="massacre">Massacre</button>
       <button data-preset="even">Fair Fight</button>
       <button data-preset="silly">Max Chaos</button>
     </div>
+    <label id="quickControl"><input id="btnQuick" type="checkbox" checked> Quick start <span>Skip the cinematic intro</span></label>
+    <button id="go">Fight</button>
+    <div class="panelLinks"><button class="storyLink" id="rulesOpen">How to play</button><button class="storyLink" id="storyOpen">Why this exists</button></div>
     <a class="coffee" href="https://buymeacoffee.com/wfhpapa" target="_blank" rel="noopener noreferrer">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M16 9.5h1.6a2.4 2.4 0 0 1 0 4.8H16"/><path d="M7 5.2V3.4M10 5.2V3.4M13 5.2V3.4"/></svg>
       <span>Buy me a coffee</span>
     </a>
   </div>
+  <div id="battleStatus" class="sr-only" role="status" aria-live="polite"></div>
 </div></div>
 
 <script>/**
@@ -964,11 +1121,14 @@ function P(base,color,px,py,pz,rx,ry,rz,sx,sy,sz){
 function mergeAll(list){
   let total=0; for(const g of list) total+=g.attributes.position.count;
   const pos=new Float32Array(total*3), nor=new Float32Array(total*3), col=new Float32Array(total*3);
+  const animated=list.some(g=>g.attributes.animPart);
+  const part=animated?new Float32Array(total*4):null;
   let o=0;
   for(const g of list){
     pos.set(g.attributes.position.array,o*3);
     nor.set(g.attributes.normal.array,o*3);
     col.set(g.attributes.color.array,o*3);
+    if(part&&g.attributes.animPart) part.set(g.attributes.animPart.array,o*4);
     o+=g.attributes.position.count;
     g.dispose();
   }
@@ -976,12 +1136,93 @@ function mergeAll(list){
   out.setAttribute('position',new THREE.BufferAttribute(pos,3));
   out.setAttribute('normal',  new THREE.BufferAttribute(nor,3));
   out.setAttribute('color',   new THREE.BufferAttribute(col,3));
+  if(part) out.setAttribute('animPart',new THREE.BufferAttribute(part,4));
   out.computeBoundingSphere();
   return out;
 }
 
 const MAT = new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.80,metalness:0.0});
 const MAT_FLAT = new THREE.MeshBasicMaterial({vertexColors:true});
+/* Authored profiles keep silhouette detail without adding overlapping solids.
+   A loft is one continuous surface, including the raccoon's painted tail rings. */
+function loftAnimal(points,radii,colors,sides){
+  const pos=[],idx=[],col=[];
+  for(let j=0;j<points.length;j++){
+    const p=points[j], prev=points[Math.max(0,j-1)], next=points[Math.min(points.length-1,j+1)];
+    const dy=next[1]-prev[1], dz=next[2]-prev[2], len=Math.hypot(dy,dz)||1;
+    const c=new THREE.Color(Array.isArray(colors)?colors[Math.min(j,colors.length-1)]:colors).convertSRGBToLinear();
+    for(let k=0;k<sides;k++){
+      const a=k/sides*TAU, cs=Math.cos(a), sn=Math.sin(a), r=radii[j];
+      pos.push(p[0]+cs*r[0],p[1]+sn*r[1]*dz/len,p[2]-sn*r[1]*dy/len);
+      const shade=.82+.18*Math.max(0,sn*dz/len);
+      col.push(c.r*shade,c.g*shade,c.b*shade);
+      if(j<points.length-1 && (Math.abs(points[j+1][1]-p[1])+Math.abs(points[j+1][2]-p[2])>1e-7)){const a0=j*sides+k,b0=j*sides+(k+1)%sides;
+        idx.push(a0,b0,a0+sides,b0,b0+sides,a0+sides);}
+    }
+  }
+  for(let k=1;k<sides-1;k++){idx.push(0,k+1,k); const b=(points.length-1)*sides;idx.push(b,b+k,b+k+1);}
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  g.setIndex(idx);g.computeVertexNormals();
+  const out=g.toNonIndexed();g.dispose();return out;
+}
+function profileAnimal(outline,width,color,x){
+  outline=outline.slice();
+  const points=outline.map(p=>new THREE.Vector2(p[0],p[1]));
+  if(THREE.ShapeUtils.isClockWise(points)){points.reverse();outline.reverse();}
+  const tris=THREE.ShapeUtils.triangulateShape(points,[]),pos=[];
+  const push=(i,side)=>{const p=outline[i];pos.push((x||0)+side*width*.5,p[1],p[0]);};
+  for(const t of tris){for(const i of t)push(i,1);for(const i of t.slice().reverse())push(i,-1);}
+  if(width>0)for(let i=0;i<outline.length;i++){
+    const j=(i+1)%outline.length;push(i,1);push(j,-1);push(j,1);push(i,1);push(i,-1);push(j,-1);
+  }
+  // Mapping the 2D profile into Z/Y reverses handedness. Keep outward faces.
+  for(let i=0;i<pos.length;i+=9)for(let k=0;k<3;k++){const t=pos[i+3+k];pos[i+3+k]=pos[i+6+k];pos[i+6+k]=t;}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();
+  const c=new THREE.Color(color).convertSRGBToLinear(),a=new Float32Array(pos.length);
+  for(let i=0;i<a.length;i+=3){a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b;}
+  g.setAttribute('color',new THREE.BufferAttribute(a,3));return g;
+}
+function animalJoint(g,x,y,z,type){
+  const a=new Float32Array(g.attributes.position.count*4);
+  for(let i=0;i<a.length;i+=4){a[i]=x;a[i+1]=y;a[i+2]=z;a[i+3]=type;}
+  g.setAttribute('animPart',new THREE.BufferAttribute(a,4));return g;
+}
+function scaleAnimal(g,s){
+  g.scale(s,s,s);const a=g.attributes.animPart;
+  if(a)for(let i=0;i<a.count;i++){a.setXYZ(i,a.getX(i)*s,a.getY(i)*s,a.getZ(i)*s);}
+}
+/* One additional vec4 per instance drives leg joints and the neck. The same
+   deformation runs in the shadow pass; no skeleton or per-limb draw call. */
+const ANIMAL_JOINT_GLSL=`
+attribute vec4 animPart;
+attribute vec4 animalPose;
+float animalAngle(){
+  float kind=abs(animPart.w);
+  if(kind<0.5)return 0.0;
+  if(abs(kind-2.0)<0.25)return animalPose.z*animalPose.w*0.78;
+  float stepWave=sin(animalPose.x)*sign(animPart.w);
+  float angle=stepWave*animalPose.y*0.58;
+  if(kind>2.5)angle-=animalPose.z*0.85*step(0.0,animPart.w);
+  return angle*animalPose.w;
+}
+vec3 animalRotate(vec3 v,float a){float c=cos(a),s=sin(a);return vec3(v.x,c*v.y-s*v.z,s*v.y+c*v.z);}
+`;
+function animalShader(shader){
+  shader.vertexShader=ANIMAL_JOINT_GLSL+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>',
+    '#include <beginnormal_vertex>\nobjectNormal=animalRotate(objectNormal,animalAngle());');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+    '#include <begin_vertex>\ntransformed=animalRotate(transformed-animPart.xyz,animalAngle())+animPart.xyz;');
+}
+const ANIMAL_HERO_G={box:G.box,sph:new THREE.SphereGeometry(1,12,8),sphLo:new THREE.SphereGeometry(1,8,6),
+  cyl:new THREE.CylinderGeometry(1,1,1,8),cone:new THREE.ConeGeometry(1,1,8)};
+const ANIMAL_MAT=MAT.clone();ANIMAL_MAT.onBeforeCompile=animalShader;
+ANIMAL_MAT.customProgramCacheKey=()=> 'animal-joints-v1';
+const ANIMAL_DEPTH=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});
+ANIMAL_DEPTH.onBeforeCompile=animalShader;ANIMAL_DEPTH.customProgramCacheKey=()=> 'animal-depth-v1';
+
 /* ground cover gets its own material so it can sway without touching the birds */
 const GRASS_MAT = new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.95,metalness:0.0});
 GRASS_MAT.onBeforeCompile = sh => {
@@ -997,55 +1238,58 @@ GRASS_MAT.onBeforeCompile = sh => {
 /* ---------- the birds ---------- */
 /* Attempted-realistic proportions executed entirely in spheres and cones.
    The eyes are deliberately one size too large. This is the whole joke. */
-function buildBird(o){
+function buildBird(o,hero=false){
+  hero=hero===true; // Array.map supplies an index as its second argument.
+  const Q=hero?ANIMAL_HERO_G:G;
   const F=o.feather, W=o.wingC||o.feather, T=o.tail, R=o.red, Y='#e8a423', K='#131118';
   const s=o.scale;
   const core=[
     // legs + feet
-    P(G.cyl,Y, .085,.14,-.01, .1,0,0, .022,.28,.022),
-    P(G.cyl,Y,-.085,.14,-.01, .1,0,0, .022,.28,.022),
-    P(G.box,Y, .085,.015,.05, 0,0,0, .07,.03,.15),
-    P(G.box,Y,-.085,.015,.05, 0,0,0, .07,.03,.15),
+    P(Q.cyl,Y, .085,.14,-.01, .1,0,0, .022,.28,.022),
+    P(Q.cyl,Y,-.085,.14,-.01, .1,0,0, .022,.28,.022),
+    P(Q.box,Y, .085,.015,.05, 0,0,0, .07,.03,.15),
+    P(Q.box,Y,-.085,.015,.05, 0,0,0, .07,.03,.15),
     // plump body
-    P(G.sph,F, 0,.44,-.02, -.12,0,0, .30,.28,.40),
-    P(G.sph,F, 0,.40,-.20, 0,0,0, .24,.22,.20),          // rump
+    P(Q.sph,F, 0,.44,-.02, -.12,0,0, .30,.28,.40),
+    P(Q.sph,F, 0,.40,-.20, 0,0,0, .24,.22,.20),          // rump
     // neck
-    P(G.cyl,F, 0,.65,.13, -.36,0,0, .095,.30,.085),
-    P(G.sph,F, 0,.60,.07, 0,0,0, .13,.13,.13),           // neck base blend
+    P(Q.cyl,F, 0,.65,.13, -.36,0,0, .095,.30,.085),
+    P(Q.sph,F, 0,.60,.07, 0,0,0, .13,.13,.13),           // neck base blend
     // head
-    P(G.sph,F, 0,.83,.26, 0,0,0, .115,.115,.125),
+    P(Q.sph,F, 0,.83,.26, 0,0,0, .115,.115,.125),
     // beak (upper + lower, slightly ajar — permanently mid-scream)
-    P(G.cone,Y, 0,.825,.40, 1.62,0,0, .055,.15,.045),
-    P(G.cone,'#c98a1a', 0,.795,.39, 1.72,0,0, .045,.12,.035),
-    // comb
-    P(G.sphLo,R, 0,.925,.20, 0,0,0, .035*o.comb,.075*o.comb,.045*o.comb),
-    P(G.sphLo,R, 0,.945,.26, 0,0,0, .035*o.comb,.085*o.comb,.045*o.comb),
-    P(G.sphLo,R, 0,.935,.32, 0,0,0, .033*o.comb,.070*o.comb,.042*o.comb),
+    P(Q.cone,Y, 0,.825,.40, 1.62,0,0, .055,.15,.045),
+    P(Q.cone,'#c98a1a', 0,.795,.39, 1.72,0,0, .045,.12,.035),
+    // continuous scalloped comb
+    profileAnimal([[.16,.91],[.17,.95],[.18,1.01],[.22,.975],[.25,1.045],[.28,.985],[.32,1.02],[.355,.945],[.34,.91]].map(p=>[.255+(p[0]-.255)*o.comb,.91+(p[1]-.91)*o.comb]),!hero&&DETAIL>=2?0:.043,R),
     // wattles
-    P(G.sphLo,R, .035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
-    P(G.sphLo,R,-.035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
+    P(Q.sphLo,R, .035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
+    P(Q.sphLo,R,-.035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
     // EYES — too big, forward-set, wrong for a bird. correct for the internet.
-    P(G.sphLo,'#fdfcf8', .078,.855,.315, 0,0,0, .052,.052,.046),
-    P(G.sphLo,'#fdfcf8',-.078,.855,.315, 0,0,0, .052,.052,.046),
-    P(G.sphLo,K, .086,.855,.348, 0,0,0, .030,.030,.022),
-    P(G.sphLo,K,-.086,.855,.348, 0,0,0, .030,.030,.022),
+    P(Q.sphLo,'#fdfcf8', .078,.855,.315, 0,0,0, .052,.052,.046),
+    P(Q.sphLo,'#fdfcf8',-.078,.855,.315, 0,0,0, .052,.052,.046),
+    P(Q.sphLo,K, .086,.855,.348, 0,0,0, .030,.030,.022),
+    P(Q.sphLo,K,-.086,.855,.348, 0,0,0, .030,.030,.022),
   ];
+  core.forEach((g,i)=>{if(i<4)animalJoint(g,(i%2?-.085:.085),.285,-.01,i%2?-1:1);else if(i>=6)animalJoint(g,0,.59,.10,2);});
   if(o.spur){ // gamecock leg spurs
-    core.push(P(G.cone,'#f2e6c8', .115,.20,-.03, 1.2,0,-.5, .018,.11,.018));
-    core.push(P(G.cone,'#f2e6c8',-.115,.20,-.03, 1.2,0, .5, .018,.11,.018));
+    core.push(P(Q.cone,'#f2e6c8', .115,.20,-.03, 1.2,0,-.5, .018,.11,.018));
+    core.push(P(Q.cone,'#f2e6c8',-.115,.20,-.03, 1.2,0, .5, .018,.11,.018));
   }
   const flap=[
     // wings
-    P(G.sph,W, .215,.46,.02, 0,0,-.2, .055,.17,.27),
-    P(G.sph,W,-.215,.46,.02, 0,0, .2, .055,.17,.27),
-    // sickle tail fan
-    P(G.cone,T, 0,.52,-.30, -.95+o.tailUp,0,0, .20*o.tailW,.52*o.tailL,.055),
-    P(G.cone,T, .07,.50,-.29, -1.15+o.tailUp,0,.22, .12*o.tailW,.44*o.tailL,.05),
-    P(G.cone,T,-.07,.50,-.29, -1.15+o.tailUp,0,-.22,.12*o.tailW,.44*o.tailL,.05),
+    P(Q.sph,W, .215,.46,.02, 0,0,-.2, .055,.17,.27),
+    P(Q.sph,W,-.215,.46,.02, 0,0, .2, .055,.17,.27),
+    // Three curved sickle feathers hold their shape even at crowd LOD.
+    ...[-1,0,1].map((side)=>profileAnimal(
+      [[-.24,.52],[-.38,.73],[-.51,.89],[-.67,.96],[-.78,.88],[-.82,.66],[-.75,.73],[-.65,.79],[-.54,.74],[-.38,.49]]
+        .filter((p,i)=>hero||DETAIL<3||[0,2,3,5,7,9].includes(i))
+        .map(p=>[-.27+(p[0]+.27)*o.tailL,.5+(p[1]-.5)*o.tailW*(1-o.tailUp*.4)]),
+      !hero&&DETAIL>=2?0:.032,T,side*.08)),
   ];
   const gc=mergeAll(core), gf=mergeAll(flap);
-  gc.scale(s,s,s); gf.scale(s,s,s);
-  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s)};
+  scaleAnimal(gc,s); scaleAnimal(gf,s);
+  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s),heroFactory:(!hero&&o.comb>=1&&o.tailW<1.5)?()=>buildBird(o,true):null};
 }
 
 /* A hawk is not a chicken with a small comb. It reads as a raptor because of
@@ -1096,58 +1340,66 @@ function buildHawk(o){
     P(G.cone,T,-.075,.515,-.235, -1.46,0,-.20,.085,.255,.030)
   ];
   const gc=mergeAll(core), gf=mergeAll(flap);
-  gc.scale(s,s,s); gf.scale(s,s,s);
+  scaleAnimal(gc,s); scaleAnimal(gf,s);
   /* hinge at the shoulders, so the beat pivots the whole wing */
   return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.55*s,.02*s)};
 }
 
 /* ---------- the raccoon ---------- */
-function buildCoon(o){
+function buildCoon(o,hero=false){
+  hero=hero===true;
+  const Q=hero?ANIMAL_HERO_G:G;
   const GY=o.gy, DK=o.dk, LT=o.lt, K='#131118';
   const core=[
     // four legs, planted wide and low
-    P(G.cyl,DK, .175,.16,.24, 0,0,0, .046,.32,.046),
-    P(G.cyl,DK,-.175,.16,.24, 0,0,0, .046,.32,.046),
-    P(G.cyl,DK, .175,.16,-.20, 0,0,0, .046,.32,.046),
-    P(G.cyl,DK,-.175,.16,-.20, 0,0,0, .046,.32,.046),
-    P(G.box,K, .175,.03,.28, 0,0,0, .10,.05,.16),
-    P(G.box,K,-.175,.03,.28, 0,0,0, .10,.05,.16),
-    P(G.box,K, .175,.03,-.24, 0,0,0, .10,.05,.16),
-    P(G.box,K,-.175,.03,-.24, 0,0,0, .10,.05,.16),
+    P(Q.cyl,DK, .175,.16,.24, 0,0,0, .046,.32,.046),
+    P(Q.cyl,DK,-.175,.16,.24, 0,0,0, .046,.32,.046),
+    P(Q.cyl,DK, .175,.16,-.20, 0,0,0, .046,.32,.046),
+    P(Q.cyl,DK,-.175,.16,-.20, 0,0,0, .046,.32,.046),
+    P(Q.box,K, .175,.03,.28, 0,0,0, .10,.05,.16),
+    P(Q.box,K,-.175,.03,.28, 0,0,0, .10,.05,.16),
+    P(Q.box,K, .175,.03,-.24, 0,0,0, .10,.05,.16),
+    P(Q.box,K,-.175,.03,-.24, 0,0,0, .10,.05,.16),
     // long low body
-    P(G.sph,GY, 0,.34,.02, 0,0,0, .25,.23,.46),
-    P(G.sph,GY, 0,.36,-.30, 0,0,0, .21,.20,.20),
-    P(G.sph,DK, 0,.30,-.34, 0,0,0, .19,.14,.16),   // dark haunch
+    loftAnimal([[0,.32,-.46],[0,.36,-.32],[0,.38,-.10],[0,.42,.17],[0,.39,.33]],
+      [[.08,.10],[.23,.20],[.265,.23],[.22,.235],[.12,.13]],GY,hero?12:[10,8,7,6][DETAIL]),
     // head
-    P(G.sph,GY, 0,.46,.44, 0,0,0, .17,.16,.17),
+    P(Q.sph,GY, 0,.46,.44, 0,0,0, .17,.16,.17),
     // snout
-    P(G.cone,LT, 0,.40,.58, 1.55,0,0, .085,.26,.075),
-    P(G.sph,K, 0,.395,.70, 0,0,0, .033,.028,.028),
+    P(Q.cone,LT, 0,.40,.58, 1.55,0,0, .085,.26,.075),
+    P(Q.sph,K, 0,.395,.70, 0,0,0, .033,.028,.028),
     // bandit mask
-    P(G.sph,K, .085,.48,.545, 0,-.3,0, .075,.055,.035),
-    P(G.sph,K,-.085,.48,.545, 0, .3,0, .075,.055,.035),
-    P(G.box,K, 0,.50,.55, 0,0,0, .09,.035,.04),
+    P(Q.sph,K, .085,.48,.545, 0,-.3,0, .075,.055,.035),
+    P(Q.sph,K,-.085,.48,.545, 0, .3,0, .075,.055,.035),
+    P(Q.box,K, 0,.50,.55, 0,0,0, .09,.035,.04),
     // eyes
-    P(G.sphLo,'#f7e9c8', .085,.482,.560, 0,0,0, .040,.040,.032),
-    P(G.sphLo,'#f7e9c8',-.085,.482,.560, 0,0,0, .040,.040,.032),
-    P(G.sphLo,K, .090,.482,.585, 0,0,0, .024,.024,.018),
-    P(G.sphLo,K,-.090,.482,.585, 0,0,0, .024,.024,.018),
+    P(Q.sphLo,'#f7e9c8', .085,.482,.560, 0,0,0, .040,.040,.032),
+    P(Q.sphLo,'#f7e9c8',-.085,.482,.560, 0,0,0, .040,.040,.032),
+    P(Q.sphLo,K, .090,.482,.585, 0,0,0, .024,.024,.018),
+    P(Q.sphLo,K,-.090,.482,.585, 0,0,0, .024,.024,.018),
     // ears
-    P(G.cone,GY, .115,.58,.38, .1,0,.18, .072,.13,.05),
-    P(G.cone,GY,-.115,.58,.38, .1,0,-.18,.072,.13,.05),
-    P(G.cone,'#e9c6c9', .115,.585,.395, .1,0,.18, .042,.09,.03),
-    P(G.cone,'#e9c6c9',-.115,.585,.395, .1,0,-.18,.042,.09,.03),
+    P(Q.cone,GY, .115,.58,.38, .1,0,.18, .072,.13,.05),
+    P(Q.cone,GY,-.115,.58,.38, .1,0,-.18,.072,.13,.05),
+    P(Q.cone,'#e9c6c9', .115,.585,.395, .1,0,.18, .042,.09,.03),
+    P(Q.cone,'#e9c6c9',-.115,.585,.395, .1,0,-.18,.042,.09,.03),
   ];
-  // ringed tail, built as stacked segments arcing back and up
-  const flap=[];
-  for(let i=0;i<7;i++){
-    const t=i/6, a=-0.55-t*0.55;
-    const z=-0.46-t*0.52, y=0.34+t*0.30;
-    flap.push(P(G.sph,(i%2?DK:GY), 0,y,z, a,0,0, .105-t*.045,.105-t*.04,.11));
+  // Four diagonal paws step, with the leading paw lifting for a swipe.
+  core.forEach((g,i)=>{
+    if(i<8){const leg=i%4,front=leg<2;animalJoint(g,leg%2?-.175:.175,.32,front?.24:-.20,
+      front?(leg%2?-3:3):(leg%2?1:-1));}
+    else if(i>=9)animalJoint(g,0,.39,.28,2);
+  });
+  const points=[],radii=[],colors=[];
+  // Duplicate ring boundaries give crisp painted bands, not separate beads.
+  for(let i=0;i<7;i++)for(let edge=0;edge<2;edge++){
+    const t=(i+edge)/7;
+    points.push([0,.35+.18*Math.sin(t*1.6),-.42-t*.60]);
+    radii.push([.11*(1-t*.78),.105*(1-t*.78)]);colors.push(i%2?DK:GY);
   }
+  const flap=[loftAnimal(points,radii,colors,hero?10:[9,7,6,5][DETAIL])];
   const s=o.scale||1, gc=mergeAll(core), gf=mergeAll(flap);
-  gc.scale(s,s,s); gf.scale(s,s,s);
-  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.34*s,-.10*s)};
+  scaleAnimal(gc,s); scaleAnimal(gf,s);
+  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.34*s,-.10*s),heroFactory:hero?null:()=>buildCoon(o,true)};
 }
 
 const COON_KITS=[
@@ -1544,7 +1796,13 @@ let arenaGroup=null, ARENA_R=30, NIGHT=false;
 
 function disposeGroup(g){
   if(!g) return;
-  g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); });
+  const owned=new Set();
+  g.traverse(o=>{
+    if(o.geometry) o.geometry.dispose();
+    if(o.material)for(const m of (Array.isArray(o.material)?o.material:[o.material]))
+      if(m!==MAT&&m!==MAT_FLAT&&m!==GRASS_MAT)owned.add(m);
+  });
+  owned.forEach(m=>m.dispose());
   scene.remove(g);
 }
 
@@ -1779,43 +2037,58 @@ function floodStep(dt,on,cx,cz){
   hemi.intensity=(NIGHT?0.21:0.20)+floodLvl*(NIGHT?0.12:0.03);
 }
 
+/* Every squad owns its per-instance geometry attributes. Cached base kits stay
+   immutable. Hero instances replace crowd instances and share the pose contract. */
 class Squad{
-  constructor(kits,max){
-    this.kits=kits; this.max=max;
-    this.core=[]; this.flap=[]; this.n=new Int32Array(kits.length);
+  constructor(kits,max,heroPass=false){
+    this.kits=kits; this.max=max; this.heroPass=heroPass;
+    this.core=[]; this.flap=[]; this.pose=[]; this.n=new Int32Array(kits.length);
+    this.hero=null;
     for(let i=0;i<kits.length;i++){
-      const c=new THREE.InstancedMesh(kits[i].core,MAT,max);
-      const f=new THREE.InstancedMesh(kits[i].flap,MAT,max);
+      const cg=kits[i].core.clone(),fg=kits[i].flap.clone();
+      const pose=new THREE.InstancedBufferAttribute(new Float32Array(max*4),4).setUsage(THREE.DynamicDrawUsage);
+      for(const g of [cg,fg]){
+        if(!g.attributes.animPart)g.setAttribute('animPart',new THREE.BufferAttribute(new Float32Array(g.attributes.position.count*4),4));
+        g.setAttribute('animalPose',pose);
+      }
+      const c=new THREE.InstancedMesh(cg,ANIMAL_MAT,max),f=new THREE.InstancedMesh(fg,ANIMAL_MAT,max);
       c.frustumCulled=false; f.frustumCulled=false;
       c.castShadow=true; f.castShadow=true;
+      c.customDepthMaterial=ANIMAL_DEPTH;f.customDepthMaterial=ANIMAL_DEPTH;
+      c.count=f.count=0;c.visible=f.visible=false;
       c.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       f.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       scene.add(c); scene.add(f);
-      this.core.push(c); this.flap.push(f);
+      this.core.push(c); this.flap.push(f);this.pose.push(pose);
     }
+    if(!heroPass&&kits.every(k=>k.heroFactory))
+      this.hero=new Squad(kits.map(k=>k.heroFactory()),24,true);
   }
-  begin(){ this.n.fill(0); }
-  push(v,mCore,mFlap){
+  begin(){ this.n.fill(0);if(this.hero)this.hero.begin(); }
+  push(v,mCore,mFlap,phase=0,speed=0,attack=0,articulate=0,hero=false){
+    if(hero&&this.hero){this.hero.push(v,mCore,mFlap,phase,speed,attack,articulate);return;}
     const i=this.n[v]++;
     if(i>=this.max) return;
-    this.core[v].setMatrixAt(i,mCore);
-    this.flap[v].setMatrixAt(i,mFlap);
+    this.core[v].setMatrixAt(i,mCore);this.flap[v].setMatrixAt(i,mFlap);
+    this.pose[v].setXYZW(i,phase,speed,attack,articulate);
   }
   end(){
     for(let v=0;v<this.core.length;v++){
-      /* push() refuses to write past the buffer but still counts, so clamp here
-         — a count above capacity makes three.js draw uninitialised matrices */
       const c=Math.min(this.n[v],this.max), on=c>0;
       this.core[v].visible=on; this.flap[v].visible=on;
       this.core[v].count=c; this.flap[v].count=c;
-      this.core[v].instanceMatrix.needsUpdate=true;
-      this.flap[v].instanceMatrix.needsUpdate=true;
+      this.core[v].instanceMatrix.needsUpdate=true;this.flap[v].instanceMatrix.needsUpdate=true;
+      this.pose[v].needsUpdate=true;
     }
+    if(this.hero)this.hero.end();
   }
-  dispose(){   /* geometries are cached and reused — only drop the instance buffers */
+  dispose(){
+    if(this.hero)this.hero.dispose();
     for(let v=0;v<this.core.length;v++){
       scene.remove(this.core[v]); scene.remove(this.flap[v]);
+      this.core[v].geometry.dispose();this.flap[v].geometry.dispose();
       this.core[v].dispose(); this.flap[v].dispose();
+      if(this.heroPass){this.kits[v].core.dispose();this.kits[v].flap.dispose();}
     }
   }
 }
@@ -2215,11 +2488,19 @@ function setGrade(night){
   if(typeof matComp==='undefined'||!matComp) return;
   const u=matComp.uniforms;
   u.uExposure.value = night?0.88:0.95;
-  u.uBloom.value    = night?0.22:0.30;
-  u.uVig.value      = night?0.44:0.40;
+  const film=POST.film;
+  u.uBloom.value    = film?(night?0.22:0.30):(night?0.15:0.18);
+  u.uVig.value      = film?(night?0.44:0.40):(night?0.26:0.18);
+  u.uGrain.value    = film?0.026:0.003;
+  u.uCA.value       = film?1.0:0.0;
   u.uSat.value      = night?0.97:1.10;   // the bulb goes orange fast; pull it back
   u.uContrast.value = night?1.06:1.075;
   if(typeof matBright!=='undefined'&&matBright) matBright.uniforms.uThresh.value = night?1.30:1.10;
+}
+function setFilmLook(enabled){
+  POST.film=!!enabled;
+  document.body.classList.toggle('filmLook',POST.film);
+  setGrade(SKY_U.uNight.value>0.5);
 }
 function setSky(night){
   SKY_U.uNight.value=night?1:0;
@@ -2286,7 +2567,7 @@ void main(){
   gl_FragColor=vec4(col,1.0);
 }`;
 
-const POST={on:true,scale:0.25};
+const POST={on:true,scale:0.25,film:false};
 const fsGeo=new THREE.BufferGeometry();
 fsGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array([-1,-1,0, 3,-1,0, -1,3,0]),3));
 fsGeo.setAttribute('uv',new THREE.BufferAttribute(new Float32Array([0,0, 2,0, 0,2]),2));
@@ -2302,7 +2583,7 @@ const matBlur=new THREE.RawShaderMaterial({vertexShader:'precision highp float;\
 const matComp=new THREE.RawShaderMaterial({vertexShader:'precision highp float;\nattribute vec3 position;\nattribute vec2 uv;\n'+FS_VERT,
   fragmentShader:COMP_FRAG, depthTest:false, depthWrite:false,
   uniforms:{tScene:{value:null},tBloom:{value:null},uBloom:{value:0.30},uExposure:{value:0.95},
-    uVig:{value:0.40},uGrain:{value:0.026},uCA:{value:1.0},uSat:{value:1.10},
+    uVig:{value:0.18},uGrain:{value:0.003},uCA:{value:0.0},uSat:{value:1.10},
     uContrast:{value:1.075},uTime:{value:0}}});
 
 let rtScene=null, rtA=null, rtB=null;
@@ -2341,6 +2622,9 @@ function renderFrame(dt){
   SKY_U.uCam.value.copy(camera.position);
   if(GRASS_MAT.userData.u) GRASS_MAT.userData.u.uTime.value+=dt;
   trackShadow();
+  // Keep presentation preferences out of the fixed simulation and its RNG.
+  const calm=typeof VIEW!=='undefined'&&VIEW.reducedMotion;
+  matComp.uniforms.uGrain.value=calm?0:(POST.film?0.026:0.003);
 
   if(!POST.on||!rtScene){ renderer.setRenderTarget(null); renderer.render(scene,camera); return; }
   postT+=dt;
@@ -2578,13 +2862,10 @@ const DEPLOY=[
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
-function cmdReady(k){ return BATTLE.running && !BATTLE.over && CMD.cd[k]<=0; }
-function canDeploy(d){ return BATTLE.running && !BATTLE.over && CMD.pts>=d.cost; }
-function deploy(d){
+function cmdReady(k){ return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
+function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
+function applyDeploy(d){
   if(!canDeploy(d)) return false;
-  CMD.pts-=d.cost;
-  TALE.spent+=d.cost;
-  TALE.bought[d.k]=(TALE.bought[d.k]||0)+d.n;
   const u=UNITS[UI_[d.k]];
   /* a mid-fight fidelity upgrade only rebuilds what is on the field, so the
      squad for a packet nobody has called in yet may be standing down. Build it
@@ -2593,6 +2874,8 @@ function deploy(d){
      the SR() below, so the fight the seed describes is unchanged. */
   if(!SQUADS[u.i]) buildOneSquad(d.k);
   if(!SQUADS[u.i]) return false;
+  CMD.pts-=d.cost; TALE.spent+=d.cost;
+  TALE.bought[d.k]=(TALE.bought[d.k]||0)+d.n;
   const base=Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
     const a=base+srnd(-0.30,0.30), r=ARENA_R*srnd(0.86,0.95);
@@ -2606,19 +2889,22 @@ function deploy(d){
      rather than one loud one. */
   const vc=u.voice||(u.build==='bird'?'cackle':'growl');
   const voices=Math.min(d.n,4);
-  for(let i=0;i<voices;i++)
-    setTimeout(()=>sfx(vc,TC.ax+srnd(-2,2),TC.az+srnd(-2,2),'cry'),i*srnd(90,240));
+  const generation=REPLAY.generation;
+  for(let i=0;i<voices;i++){
+    const x=TC.ax+rnd(-2,2), z=TC.az+rnd(-2,2);
+    setTimeout(()=>{ if(REPLAY.generation===generation) sfx(vc,x,z,'cry'); },i*rnd(90,240));
+  }
   killFeedRaw('<b>'+(d.n>1?d.n+' ':'')+u.label.toUpperCase()+'</b> joined the line');
   return true;
 }
-function cmdFire(k){
+function applyCommand(k){
   if(!cmdReady(k)) return false;
   const d=CMD_DEF.find(c=>c.k===k);
   if(k==='horn'){ CMD.horn=d.dur; if(!oneShot('horn',0.95)) sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
   if(k==='feed'){
     CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+srnd(-4,4); CMD.feedZ=BATTLE.cz+srnd(-4,4);
-    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+srnd(-1.4,1.4),0.15,CMD.feedZ+srnd(-1.4,1.4),0.22);
+    for(let i=0;i<26;i++) spawnPuff(CMD.feedX+rnd(-1.4,1.4),0.15,CMD.feedZ+rnd(-1.4,1.4),0.22);
     sfx('buk',CMD.feedX,CMD.feedZ);
   }
   CMD.cd[k]=d.cool||1e9;
@@ -2633,7 +2919,7 @@ function cmdStep(dt){
     CMD.ptAcc+=dt*PTS_RATE;
     while(CMD.ptAcc>=1){ CMD.ptAcc-=1; CMD.pts=Math.min(PTS_CAP,CMD.pts+1); }
   }
-  if(CMD.feedT>0 && SR()<dt*8) spawnPuff(CMD.feedX+srnd(-1,1),0.12,CMD.feedZ+srnd(-1,1),0.16);
+  if(CMD.feedT>0 && VR()<dt*8) spawnPuff(CMD.feedX+rnd(-1,1),0.12,CMD.feedZ+rnd(-1,1),0.16);
 }
 function cmdReset(){
   CMD.horn=CMD.light=CMD.feedT=0;
@@ -2668,6 +2954,13 @@ function taleReset(){
   TALE.early=0; TALE.peakPanic=0; TALE.spent=0;
   TALE.bought={}; TALE.boughtKills={};
   TALE.revived=0; TALE.firstBlood=-1; TALE.lastGasp=Infinity;
+}
+// The historical panic counter includes animals that died while fleeing.
+// Read living farm units for player-facing morale facts without changing combat.
+function farmFleeing(){
+  let count=0;
+  for(let i=0;i<N;i++) if(A.team[i]===0&&A.st[i]===1) count++;
+  return count;
 }
 
 /* ============================================================
@@ -2742,6 +3035,7 @@ function refineWatch(dt){
    SPAWNING — roster is a list of {k:'rooster', n:1000}
    ============================================================ */
 function spawnRoster(list,night){
+  validateRoster(list);
   N=0; aliveA=0; aliveB=0; initA=0; initB=0; panicCount=0;
   resetNames();   // the per-round counters restart; the session's name book does not
   taleReset();
@@ -2814,8 +3108,8 @@ function spawnRoster(list,night){
   cmdReset();
 }
 function addAgent(x,z,kindIdx,vr){
+  if(N>=MAXA) return -1;
   const u=UNITS[kindIdx], i=N++;
-  if(i>=MAXA) { N=MAXA; return MAXA-1; }
   A.x[i]=x; A.z[i]=z; A.vx[i]=0; A.vz[i]=0;
   A.hp[i]=A.hpMax[i]=u.hp*srnd(.9,1.12);
   A.cd[i]=srnd(0,.5); A.tgt[i]=-1; A.team[i]=u.team; A.vr[i]=vr; A.kind[i]=kindIdx;
@@ -2831,7 +3125,7 @@ function addAgent(x,z,kindIdx,vr){
    BATTLE STATE
    ============================================================ */
 const BATTLE={
-  running:false, t:0, over:false, winner:'', timeScale:1, slowT:0,
+  running:false, tick:0, t:0, over:false, winner:'', timeScale:1, slowT:0,
   deathsWindow:0, windowT:0, cx:0, cz:0, hsx:0, hsz:0,
   conX:0, conZ:0, conN:0, conAge:9, conSeen:0,
   champ:-1, totalKills:0, routed:0
@@ -3037,7 +3331,7 @@ function stepSim(dt){
   moraleTimer-=dt;
   if(moraleTimer<=0){ moraleTimer=0.45; moraleTick(); }
   centroidUpdate();
-  if(panicCount>TALE.peakPanic) TALE.peakPanic=panicCount;
+  TALE.peakPanic=Math.max(TALE.peakPanic,farmFleeing());
   if(aliveA<TALE.lastGasp) TALE.lastGasp=aliveA;
 }
 
@@ -4501,36 +4795,49 @@ function musicUpdate(dt){
    AGENT RENDER
    ============================================================ */
 const _mL=new THREE.Matrix4(), _mF=new THREE.Matrix4();
-/* Above this many animals still standing you cannot resolve a chicken's legs,
-   so they ride the body. Below it they walk.
-
-   This used to hang off the geometry tier, which was the wrong knob on both
-   counts. Animating the limbs is a CPU cost — one matrix build and one
-   multiply per agent — and it is tiny: measured at 0.19ms a frame for a
-   thousand birds and 0.50ms for five thousand, against a sim step that costs
-   twenty-two. The geometry tier is a GPU cost and answers a different
-   question. Tying them together meant that lowering the polygon thresholds
-   silently switched off the walk cycle at a thousand units to save a fifth of
-   a millisecond, which is a terrible trade — a yard full of running chickens
-   is most of the joke.
-
-   It also reads the LIVE count rather than the one the fight started with, so
-   Max Chaos opens as an indistinguishable mob and the survivors get their
-   gait back as the field thins. That is free: it is a per-frame branch, not a
-   rebuild. */
+/* Crowd hinge motion still follows live count; the articulated legs and neck
+   are a separate shader path enabled within 32 world units of the camera.
+   Thus a close subject keeps its gait even during a 5,000-animal battle.
+   Up to 24 visible headline animals additionally use prebuilt hero geometry. */
 const LIMB_MAX=2600;
+const HERO_MAX=24,HERO_ON=new Uint8Array(5200),HERO_IDS=new Int32Array(HERO_MAX),HERO_D=new Float32Array(HERO_MAX);
+const heroFrustum=new THREE.Frustum(),heroMatrix=new THREE.Matrix4(),heroSphere=new THREE.Sphere();
+/* At most 24 close, visible headline animals get fine geometry. Selection has
+   a small incumbent bias so neighbors do not flicker between LODs. No rebuild. */
+function selectHeroAnimals(){
+  heroMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);
+  heroFrustum.setFromProjectionMatrix(heroMatrix);let used=0;
+  for(let i=0;i<N;i++){
+    if(A.st[i]===2)continue;
+    const u=UNITS[A.kind[i]],sq=SQUADS[A.kind[i]];
+    if((u.k!=='rooster'&&u.k!=='coon')||!sq||!sq.hero)continue;
+    const x=A.x[i]-camera.position.x,y=(A.fy[i]||0)+.55-camera.position.y,z=A.z[i]-camera.position.z;
+    const d=(x*x+y*y+z*z)*(HERO_ON[i]?.88:1);
+    if(d>484)continue;
+    heroSphere.center.set(A.x[i],(A.fy[i]||0)+.55,A.z[i]);heroSphere.radius=u.rad*.7;
+    if(!heroFrustum.intersectsSphere(heroSphere))continue;
+    let at=used;while(at>0&&d<HERO_D[at-1])at--;
+    if(at>=HERO_MAX)continue;
+    for(let j=Math.min(used,HERO_MAX-1);j>at;j--){HERO_D[j]=HERO_D[j-1];HERO_IDS[j]=HERO_IDS[j-1];}
+    HERO_D[at]=d;HERO_IDS[at]=i;used=Math.min(HERO_MAX,used+1);
+  }
+  HERO_ON.fill(0);for(let i=0;i<used;i++)HERO_ON[HERO_IDS[i]]=1;
+}
+
 function renderAgents(){
   if(!SQUADS.length) return;
   for(let q=0;q<SQUADS.length;q++) if(SQUADS[q]) SQUADS[q].begin();
   let sN=0;
   const LIMBS = (aliveA+aliveB) <= LIMB_MAX;
+  selectHeroAnimals();
+  const calmMotion=typeof VIEW!=='undefined'&&VIEW.reducedMotion;
 
   for(let i=0;i<N;i++){
     const ki=A.kind[i], sq=SQUADS[ki];
     if(!sq) continue;
     const u=UNITS[ki], kit=KIT_PIV[ki][A.vr[i]];
     const st=A.st[i], bird=u.build==='bird';
-    let y=A.fy[i]||0, roll=0, pitch=0, amp, fr;
+    let y=A.fy[i]||0, roll=0, pitch=0, amp, fr, motionSpeed=0;
     let ex=0, swYaw=0, lx=0, lz=0;   // strike extension, its yaw arc, its lunge
 
     /* thrown: ignore the gait and the corpse pose entirely and just cartwheel.
@@ -4549,7 +4856,7 @@ function renderAgents(){
               0,s3, c2, pz2-s3*py2-c2*pz2,
               0,0,0,1);
       _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF);
+      sq.push(A.vr[i],_m,_mF,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
       continue;                       // no blob shadow while it's off the ground
     }
 
@@ -4567,7 +4874,7 @@ function renderAgents(){
       }
       amp=0; fr=0;
     }else{
-      const sp=Math.hypot(A.vx[i],A.vz[i]);
+      const sp=motionSpeed=Math.hypot(A.vx[i],A.vz[i]);
       y+=Math.abs(Math.sin(A.ph[i]))*(bird?0.05:0.035)*(0.35+sp*0.2);
       pitch=-clamp(sp*0.045,0,0.26)+Math.sin(A.ph[i]*2)*(bird?0.028:0.02);
 
@@ -4620,9 +4927,13 @@ function renderAgents(){
     _v.set(A.x[i]+lx,y,A.z[i]+lz); _s.set(1,1,1);
     _m.compose(_v,_q,_s);
 
-    /* see LIMB_MAX above — live count, not the spawn tier */
-    if(!LIMBS){
-      sq.push(A.vr[i],_m,_m);
+    const nx=A.x[i]-camera.position.x,nz=A.z[i]-camera.position.z,ny=camera.position.y-y;
+    const near=nx*nx+nz*nz+ny*ny<1024;
+    const articulate=st===2?0:(near?(calmMotion?.55:1):0);
+    const gait=st===2?0:clamp(motionSpeed*.32,0,1);
+    /* Nearby subjects keep their joints even while distant crowds are cheap. */
+    if(!LIMBS&&!near){
+      sq.push(A.vr[i],_m,_m,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
     }else{
       let ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
       /* the hinge stops oscillating and flares. Sign does the work for free:
@@ -4630,13 +4941,14 @@ function renderAgents(){
          quadruped's shoulders while its tail comes up — a strike. Negative,
          which is where the wind-up lives, is the mirror of both: rearing. */
       if(ex!==0){ const ae=ex<0?-ex:ex; ang=ang*(ae<1?1-ae:0)+ex*u.swF; }
+      if(calmMotion)ang*=.55;
       const c=Math.cos(ang), s2=Math.sin(ang), py=kit.y, pz=kit.z;
       _mL.set(1,0,0,0,
               0,c,-s2, py-c*py+s2*pz,
               0,s2, c, pz-s2*py-c*pz,
               0,0,0,1);
       _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF);
+      sq.push(A.vr[i],_m,_mF,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
     }
 
     if(sN<6000){
@@ -4701,6 +5013,18 @@ function director(dt,real,wall){
   const R=ARENA_R;
   const zoom=reel?1.62:1.0;
   let tx,ty,tz,ax,ay,az,fov=46;
+  const tactical=typeof VIEW!=='undefined'&&VIEW.tactical;
+  const reduced=typeof VIEW!=='undefined'&&VIEW.reducedMotion;
+  const frozen=typeof VIEW!=='undefined'&&VIEW.paused;
+  if(tactical || (reduced&&!DIR.manual)){
+    // Fixed compass, no orbit, and enough framing for both deployment zones.
+    const fit=1/Math.min(1,camera.aspect),height=R*2.55*fit;
+    camPos.set(0,height,R*.58);camAim.set(0,0,0);
+    camera.position.copy(camPos);camera.lookAt(camAim);
+    if(camera.fov!==46){camera.fov=46;camera.updateProjectionMatrix();}
+    return;
+  }
+  if(frozen&&!DIR.manual)return;
 
   if(DIR.manual){
     const d=R*2.0*DIR.orbD;
@@ -4748,28 +5072,28 @@ function director(dt,real,wall){
       break;}
     case 'low':{
       const a=DIR.ang+DIR.spin*orbT()*0.048, d=(R*0.34+7)*zoom*pushIn();
-      tx=hx+Math.cos(a)*d; ty=(NIGHT?3.4:1.15)+Math.sin(DIR.t*0.30)*0.12; tz=hz+Math.sin(a)*d;
+      tx=hx+Math.cos(a)*d; ty=Math.max(NIGHT?4.2:3.4,R*.14)+Math.sin(DIR.t*0.30)*0.08; tz=hz+Math.sin(a)*d;
       ax=hx; ay=NIGHT?0.9:0.75; az=hz; fov=52;
       break;}
     case 'clash':{
       /* the tightest setup, so it gets the slowest orbit — this is the one that
          used to swing the whole frame around every couple of seconds */
       const a=DIR.ang+DIR.spin*orbT()*0.075, d=8.6*zoom*pushIn();
-      tx=hx+Math.cos(a)*d; ty=NIGHT?3.6:2.5; tz=hz+Math.sin(a)*d;
+      tx=hx+Math.cos(a)*d; ty=NIGHT?4.6:4.0; tz=hz+Math.sin(a)*d;
       ax=hx; ay=0.85; az=hz; fov=40;
       break;}
     case 'champ':{
       const c=BATTLE.champ>=0?BATTLE.champ:0;
       const yw=A.yaw[c]||0;
       const cd=5.0*zoom*pushIn();
-      tx=A.x[c]-Math.sin(yw)*cd; ty=(NIGHT?3.2:2.1)*(reel?1.25:1); tz=A.z[c]-Math.cos(yw)*cd;
+      tx=A.x[c]-Math.sin(yw)*cd; ty=Math.max(NIGHT?4.2:3.5,UNITS[A.kind[c]].rad*2.1)*(reel?1.25:1); tz=A.z[c]-Math.cos(yw)*cd;
       ax=A.x[c]+Math.sin(yw)*2.5; ay=0.85; az=A.z[c]+Math.cos(yw)*2.5; fov=44;
       break;}
     default:{ // sweep — long dolly across the front
       const p=(DIR.t/DIR.dur)*2-1;
       const a=DIR.ang;
       tx=wx+Math.cos(a)*R*0.95*zoom-Math.sin(a)*p*R*0.78;
-      ty=(NIGHT?3.5:2.0)+Math.sin(DIR.t*0.42)*0.16;
+      ty=Math.max(NIGHT?4.5:3.8,R*.16)+Math.sin(DIR.t*0.42)*0.10;
       tz=wz+Math.sin(a)*R*0.95*zoom+Math.cos(a)*p*R*0.78;
       ax=hx; ay=0.9; az=hz; fov=48;   // dolly past the arena, but look at the fight
     }
@@ -4789,13 +5113,28 @@ function director(dt,real,wall){
     const side =(p-0.5)*R*(isA?1.0:0.62);
     tx=cx-ca*inset-sa*side;
     tz=cz-sa*inset+ca*side;
-    ty=1.30+p*0.80;
+    ty=3.2+p*1.2;
     ax=cx-sa*side*0.30; ay=0.80; az=cz+ca*side*0.30;
     fov=lerp(51,43,p);
   }else if(SEQ.phase!=='battle'&&SEQ.phase!=='result'){
     const a=-1.57+Math.sin(t*0.2)*0.25, d=R*1.15*zoom;
     tx=Math.cos(a)*d; ty=R*0.30; tz=Math.sin(a)*d;
     ax=TC.afx*0.5; ay=0.6; az=TC.afz*0.5; fov=42;
+  }
+
+  /* Lift tight automatic shots above nearby bodies. Test the actual sight
+     corridor, including large animals; a distant crowd cannot trigger this. */
+  if(ty<R*.35){
+    const dx=ax-tx,dz=az-tz,dd=dx*dx+dz*dz;
+    if(dd>1)for(let i=0;i<N;i++){
+      if(A.st[i]===2)continue;
+      const px=A.x[i]-tx,pz=A.z[i]-tz,t=(px*dx+pz*dz)/dd;
+      if(t<0||t>.70)continue;
+      const sideX=px-dx*t,sideZ=pz-dz*t,u=UNITS[A.kind[i]],clearance=u.rad*.7+.3;
+      if(sideX*sideX+sideZ*sideZ>clearance*clearance)continue;
+      const top=(A.fy[i]||0)+u.rad*1.35+.6;
+      ty=Math.max(ty,(top-ay*t)/(1-t));
+    }
   }
 
   /* handheld — slower, smaller, and scaled by how far out we are. A fixed
@@ -4827,6 +5166,7 @@ function director(dt,real,wall){
    SEQUENCER — title card, countdown, battle, verdict
    ============================================================ */
 const SEQ={phase:'idle',t:0};
+const VIEW={tactical:false,paused:false,speed:1,quick:true,reducedMotion:false};
 const INTRO_A=3.8, INTRO_B=3.4;
 const card=$('card');
 function showCard(o){
@@ -4873,36 +5213,138 @@ function newSeed(){ CFG.seed=(Math.random()*4294967296)>>>0; }
 newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
-function encodeFight(){
-  const q=['b='+CFG.birds,'c='+CFG.coons,'k='+CFG.kind,'a='+CFG.arena,'s='+CFG.seed.toString(36)];
-  const f=EXTRA_B.filter(k=>CFG.foes[k]>0).map(k=>k+':'+CFG.foes[k]);
-  if(f.length) q.push('f='+f.join(','));
-  return q.join('&');
+// Version both the transport and simulation. Old engines cannot promise this replay.
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-04.1';
+const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:''};
+function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
+function validateRoster(rows){
+  if(!Array.isArray(rows)||!rows.length||rows.length>UNITS.length) throw Error('Choose at least one animal.');
+  let total=0; const seen=new Set();
+  for(const r of rows){
+    if(!r||typeof r.k!=='string'||!Object.hasOwn(UI_,r.k)||seen.has(r.k)||!Number.isInteger(r.n)||r.n<1)
+      throw Error('Invalid army roster.');
+    seen.add(r.k); total+=r.n;
+  }
+  if(total>MAXA) throw Error('The field holds '+MAXA.toLocaleString()+' animals. Remove '+(total-MAXA).toLocaleString()+' before starting.');
+  return total;
 }
-function fightURL(){
-  return location.origin+location.pathname+'?'+encodeFight();
+function validateFight(f){
+  if(!f||f.v!==REPLAY_VERSION||f.sim!==SIM_VERSION) throw Error('This replay uses a different simulator version.');
+  validateRoster(f.roster);
+  if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
+  if(!Array.isArray(f.actions)||f.actions.length>512) throw Error('Invalid replay commands.');
+  let tick=0;
+  for(const a of f.actions){
+    if(!a||!Number.isInteger(a.tick)||a.tick<1||a.tick<tick||a.tick>7300||
+       !(a.type==='deploy'?DEPLOY.some(d=>d.k===a.k):a.type==='command'&&CMD_DEF.some(d=>d.k===a.k)))
+      throw Error('Invalid replay command.');
+    tick=a.tick;
+  }
+  return f;
+}
+function configFight(){
+  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,roster:rosterList(),actions:[]};
+}
+function encodeFight(){
+  const f=REPLAY.current||configFight();
+  return 'fight='+encodeURIComponent(JSON.stringify(f));
+}
+function fightURL(){ return location.origin+location.pathname+'?'+encodeFight(); }
+function applyFightConfig(f){
+  CFG.seed=f.seed; CFG.arena=f.arena;
+  Object.keys(CFG.foes).forEach(k=>delete CFG.foes[k]);
+  CFG.allies={}; CFG.mix={};
+  CFG.coons=0;
+  for(const r of f.roster){
+    const u=UNITS[UI_[r.k]];
+    if(r.k==='coon') CFG.coons=r.n;
+    else if(u.team===1) CFG.foes[r.k]=r.n;
+    else if(u.build==='bird') CFG.mix[r.k]=r.n;
+    else CFG.allies[r.k]=r.n;
+  }
+  const birds=Object.keys(CFG.mix);
+  CFG.birds=birds.reduce((n,k)=>n+CFG.mix[k],0);
+  CFG.kind=birds.length?birds[0]:'rooster';
+  if(birds.length===1) CFG.mix=null;
+  EXTRA_B.forEach(k=>{ if(!CFG.foes[k]) CFG.foes[k]=0; });
+  CFG.rosterOverride=f.roster.map(r=>({k:r.k,n:r.n}));
 }
 function decodeFight(){
-  CFG.allies={}; CFG.mix=null;       // a link never carries a preset's allies or mix
   const q=new URLSearchParams(location.search);
+  if(q.has('fight')){
+    try{
+      if(q.get('fight').length>60000) throw Error('Replay link is too long.');
+      const f=validateFight(JSON.parse(q.get('fight')));
+      applyFightConfig(f); REPLAY.loaded=copyFight(f); seedHeld=true; return true;
+    }catch(e){ REPLAY.error=e.message||'Could not read replay.'; return false; }
+  }
   if(!q.has('s')&&!q.has('b')) return false;
+  // Legacy links describe setup only; they omitted mixed armies and actions.
+  CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
-  const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,500);
-  const k=q.get('k'); if(k&&UI_[k]!==undefined&&UNITS[UI_[k]].team===0) CFG.kind=k;
+  const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,600);
+  const k=q.get('k'); if(k&&Object.hasOwn(UI_,k)&&UNITS[UI_[k]].team===0) CFG.kind=k;
   const a=q.get('a'); if(a==='coop'||a==='field') CFG.arena=a;
   EXTRA_B.forEach(x=>CFG.foes[x]=0);
   (q.get('f')||'').split(',').forEach(pair=>{
     const [x,n]=pair.split(':');
-    if(EXTRA_B.indexOf(x)>=0) CFG.foes[x]=clamp(parseInt(n,10)||0,0,200);
+    if(EXTRA_B.includes(x)) CFG.foes[x]=clamp(parseInt(n,10)||0,0,200);
   });
   const sd=parseInt(q.get('s')||'',36);
   if(!isNaN(sd)){ CFG.seed=sd>>>0; seedHeld=true; }
+  REPLAY.error='Legacy link loaded as a matchup; old-engine results may differ.';
   return true;
 }
-function pushFightURL(){
-  try{ history.replaceState(null,'','?'+encodeFight()); }catch(e){}
+function pushFightURL(){ try{ history.replaceState(null,'','?'+encodeFight()); }catch(e){} }
+function notifyBattle(message){
+  REPLAY.error=message;
+  const el=$('rosterPreview'); if(el) el.textContent=message;
+  const status=$('battleStatus'); if(status) status.textContent=message;
+  return false;
+}
+function resetReplayRuntime(){
+  REPLAY.generation++; REPLAY.pending=[]; REPLAY.cursor=0;
+  BATTLE.tick=0; VIEW.paused=false;
+}
+function queueBattleAction(type,k){
+  if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback) return false;
+  if(REPLAY.pending.length>=32||REPLAY.current.actions.length+REPLAY.pending.length>=512) return false;
+  if(type==='deploy'){
+    const d=DEPLOY.find(d=>d.k===k); if(!d||!canDeploy(d)) return false;
+  }else if(type!=='command'||!cmdReady(k)) return false;
+  REPLAY.pending.push({tick:BATTLE.tick+1,type,k}); return true;
+}
+function applyBattleActions(tick){
+  let changed=false;
+  const list=REPLAY.playback?REPLAY.current.actions:REPLAY.pending;
+  while(REPLAY.playback?REPLAY.cursor<list.length&&list[REPLAY.cursor].tick<=tick:list.length&&list[0].tick<=tick){
+    const a=REPLAY.playback?list[REPLAY.cursor++]:list.shift();
+    const ok=a.type==='deploy'?applyDeploy(DEPLOY.find(d=>d.k===a.k)):applyCommand(a.k);
+    if(ok&&!REPLAY.playback){ REPLAY.current.actions.push({tick,type:a.type,k:a.k}); changed=true; }
+    if(!ok&&REPLAY.playback){ notifyBattle('Replay command could not be applied at tick '+tick+'.'); setPaused(true); break; }
+  }
+  if(changed) pushFightURL();
+}
+function deploy(d){ return queueBattleAction('deploy',d.k); }
+function cmdFire(k){ return queueBattleAction('command',k); }
+function setPaused(paused){
+  VIEW.paused=!!paused&&BATTLE.running&&!BATTLE.over;
+  if(typeof syncControls==='function') syncControls();
+  return VIEW.paused;
+}
+function setPlaybackSpeed(speed){
+  if([0.5,1,2].includes(Number(speed))) VIEW.speed=Number(speed);
+  if(typeof syncControls==='function') syncControls();
+}
+function teamCount(team){ return rosterList().filter(r=>UNITS[UI_[r.k]].team===team).reduce((n,r)=>n+r.n,0); }
+function teamName(team){
+  const rows=rosterList().filter(r=>UNITS[UI_[r.k]].team===team);
+  const kinds=new Set(rows.map(r=>r.k));
+  if(team===0&&REPLAY.current) Object.keys(TALE.bought).forEach(k=>kinds.add(k));
+  return kinds.size===1?UNITS[UI_[[...kinds][0]]].label:(team===0?'Farm':'Predators');
 }
 function rosterList(){
+  if(CFG.rosterOverride) return CFG.rosterOverride.map(r=>({k:r.k,n:r.n}));
   /* Normally the flock is one bird type on a slider. A preset can instead hand
      over a mix — every kind of bird on the place at once — in which case the
      slider value is ignored and CFG.mix is spawned verbatim. */
@@ -4913,7 +5355,7 @@ function rosterList(){
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
   /* presets can field the whole farm at the whistle, not just the flock */
   for(const k in CFG.allies) if(CFG.allies[k]>0) L.push({k,n:CFG.allies[k]});
-  return L;
+  return L.filter(r=>r.n>0);
 }
 
 /* ============================================================
@@ -4936,7 +5378,7 @@ function callSync(){
   for(const b of $('callBtns').children) b.classList.toggle('on',b.dataset.s===CALL.pick);
   $('callNote').textContent = CALL.locked
     ? (CALL.pick? 'Locked in: '+(CALL.pick==='birds'?'the flock':'the raccoons') : 'No call this round')
-    : 'Locks when the countdown ends';
+    : 'Locks when the battle starts';
 }
 function callPick(side){
   if(CALL.locked) return;
@@ -4966,9 +5408,11 @@ function setPhase(p){
      kinds still on the field and the commander bar's standby squads are not
      paid for. If the viewer hits Run it back inside those two frames,
      spawnRoster has already reset the tier and refineDetail declines. */
-  if(p==='result') requestAnimationFrame(()=>requestAnimationFrame(refineDetail));
+  if(p==='result'){ const generation=REPLAY.generation; requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(generation===REPLAY.generation&&SEQ.phase==='result') refineDetail();
+  })); }
   if(p==='introA'){ musicMode('tension');
-    showCard({thin:true, kick:'The flock', a:flockCount()+' '+flockName(),
+    showCard({thin:true, kick:'The flock', a:teamCount(0)+' '+teamName(0).toUpperCase(),
       sub:flockBlurb()});
   }
   if(p==='introB'){
@@ -4982,7 +5426,7 @@ function setPhase(p){
   }
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
-      a:flockCount()+' '+flockName(), vs:'VS', b:CFG.coons+' RACCOONS',
+      a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:teamCount(1)+' '+teamName(1).toUpperCase(),
       sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field',
       call:true});
   }
@@ -4991,10 +5435,12 @@ function setPhase(p){
     BATTLE.running=true; BATTLE.t=0; clearFeed(); pickShot();
     document.body.classList.add('fighting');
     musicMode('battle'); if(AC) braam(AC.currentTime+0.02,38,1.1,0.45); }
+  if(typeof syncControls==='function') syncControls();
 }
 
 function verdict(who,how){
-  BATTLE.over=true; BATTLE.running=false;
+  BATTLE.over=true; BATTLE.running=false; VIEW.paused=false;
+  REPLAY.last=copyFight(REPLAY.current); pushFightURL();
   document.body.classList.remove('fighting');
   /* and one per fight finished, so outcomes can be read against starts —
      a gap between the two is people leaving mid-battle, which is worth
@@ -5010,10 +5456,10 @@ function verdict(who,how){
     result:true,
     trib:who==='birds',          // the flock only gets its dedication when it earns it
     kick:how,
-    a:who==='birds'?flockName()+' WIN':(who==='coons'?'RACCOONS WIN':'STALEMATE'),
+    a:who==='birds'?teamName(0).toUpperCase()+' WIN':(who==='coons'?teamName(1).toUpperCase()+' WIN':'STALEMATE'),
     vs:'', b:'',
-    sub:survivors+' of '+initA+' birds standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
-        ' raccoons standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
+    sub:survivors+' of '+initA+' '+teamName(0)+' standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
+        ' '+teamName(1)+' standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
   renderTale(who,how);
@@ -5022,7 +5468,7 @@ function verdict(who,how){
      and it saves them describing it. */
   const mail=$('ctaMail');
   if(mail){
-    const sub='Chickens vs Raccoons — '+CFG.birds+' '+LABEL[CFG.kind]+' vs '+CFG.coons+' raccoons';
+    const sub='Chickens vs Raccoons — '+teamCount(0)+' '+teamName(0)+' vs '+teamCount(1)+' '+teamName(1);
     const body='Something I would like to see in the simulator:\n\n\n'+
       '---\nThe fight I just watched: '+fightURL();
     mail.href='mailto:animagix@mac.com?subject='+encodeURIComponent(sub)+
@@ -5032,7 +5478,7 @@ function verdict(who,how){
   sting(who==='birds'?'win':'lose');
   musicFinish(who==='birds');
   setPhase('result');
-  $('go').textContent='Run it back'; $('go').classList.add('rst');
+  $('go').textContent='Rematch'; $('go').classList.add('rst');
   sfx('flap');
 }
 
@@ -5041,7 +5487,7 @@ function stepSeq(dt){
   const reel=document.body.classList.contains('reel');
   if(SEQ.phase==='introA' && SEQ.t>INTRO_A) setPhase('introB');
   else if(SEQ.phase==='introB' && SEQ.t>INTRO_B) setPhase('title');
-  else if(SEQ.phase==='title' && SEQ.t>(reel?2.6:1.6)) setPhase('count');
+  else if(SEQ.phase==='title' && SEQ.t>(VIEW.quick?2.0:(reel?2.6:1.6))) setPhase(VIEW.quick?'battle':'count');
   else if(SEQ.phase==='count'){
     const n=3-Math.floor(SEQ.t);
     if(n>0){
@@ -5061,15 +5507,18 @@ let hudT=0;
 function hud(dt){
   hudT-=dt; if(hudT>0 && !hudDirty) return; hudT=0.08; hudDirty=false;
   if(BATTLE.running) cmdHud();
+  const fleeing=farmFleeing();
   $('ctA').textContent=Math.max(0,aliveA);
   $('ctB').textContent=Math.max(0,aliveB);
-  $('nameA').textContent=LABEL[CFG.kind];
+  $('nameA').textContent=teamName(0);
+  if($('nameB')) $('nameB').textContent=teamName(1);
+  if($('moraleReadout')) $('moraleReadout').textContent=Math.round(aliveA/Math.max(1,initA)*100)+'% / '+Math.round(aliveB/Math.max(1,initB)*100)+'% · '+fleeing+' farm fleeing';
   const tot=Math.max(1,aliveA+aliveB*(initB?initA/Math.max(1,initB)*0.35:1));
   const pa=clamp((aliveA/Math.max(1,initA))/((aliveA/Math.max(1,initA))+(aliveB/Math.max(1,initB))||1),0,1);
   $('barA').style.width=(pa*100).toFixed(1)+'%';
-  $('tmr').textContent=BATTLE.t.toFixed(1)+'s';
+  $('tmr').textContent=(SEQ.phase==='idle'?0:BATTLE.t).toFixed(1)+'s';
   $('phase').textContent = BATTLE.over?'Final':
-    SEQ.phase==='battle'?(panicCount>aliveA*0.45?'Frenzy':'Engaged'):
+    SEQ.phase==='battle'?(VIEW.paused?'Paused':(REPLAY.playback?'Replay · ':'')+(fleeing?fleeing+' fleeing':'Engaged')):
     SEQ.phase==='count'?'Bracing':SEQ.phase==='title'?'Staredown':
     SEQ.phase==='introA'?'The flock':SEQ.phase==='introB'?'The problem':'Standby';
 
@@ -5106,7 +5555,7 @@ function hud(dt){
   } else champEl.classList.remove('on');
 }
 
-const NOGO=['panel','feed','teamA','teamB','clock'];
+const NOGO=['panel','feed','topui','tools','cmdbar'];
 function hudBlocked(l,t,r,b){
   const fr=frame.getBoundingClientRect();
   for(let i=0;i<NOGO.length;i++){
@@ -5141,6 +5590,7 @@ function checkWin(dt){
    ============================================================ */
 let slowCool=0;
 function slowmo(dt){
+  if(VIEW.reducedMotion||VIEW.tactical){ BATTLE.timeScale=1; BATTLE.slowT=0; $('slowmo').classList.remove('on'); return; }
   slowCool-=dt;
   BATTLE.windowT+=dt;
   if(BATTLE.windowT>0.3){
@@ -5165,7 +5615,12 @@ function slowmo(dt){
 /* ============================================================
    START / RESET
    ============================================================ */
-function startBattle(){
+function startBattle(options={}){
+  const saved=options.replay?(REPLAY.last||REPLAY.current):seedHeld?REPLAY.loaded:null;
+  if(options.replay&&!saved) return notifyBattle('Finish a battle to replay it.');
+  if(saved) applyFightConfig(saved);
+  try{ validateRoster(rosterList()); }catch(e){ return notifyBattle(e.message); }
+  resetReplayRuntime();
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
   /* one event per fight started — this is the 'how many battles have been
      simulated' number, and it carries the matchup so the answer to 'what do
@@ -5178,21 +5633,27 @@ function startBattle(){
   if(DIR.manual){ DIR.manual=false; $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; }
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1;
   BATTLE.totalKills=0; BATTLE.timeScale=1; BATTLE.slowT=0; BATTLE.deathsWindow=0; BATTLE.routed=0; recentKills=0; BATTLE.hsx=0; BATTLE.hsz=0;
-  routT=0; slowCool=0; stallT=0; lastKills=-1; simAcc=0;
+  winT=0; routT=0; slowCool=0; stallT=0; lastKills=-1; simAcc=0;
   clearParticles(); clearFeed(); champEl.classList.remove('on');
   /* a linked fight uses the seed it arrived with, exactly once; every run
      after that rolls a fresh one so "run it back" is a genuinely new fight */
-  if(!seedHeld) newSeed(); else seedHeld=false;
-  seedSim(CFG.seed);
+  if(saved) CFG.seed=saved.seed; else if(!seedHeld) newSeed();
+  seedHeld=false; REPLAY.loaded=null; REPLAY.playback=!!saved;
+  REPLAY.current=saved?copyFight(saved):configFight();
+  REPLAY.error=''; seedSim(CFG.seed);
   pushFightURL();
   callReset();
   spawnRoster(rosterList(),CFG.arena==='coop');
   camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
-  setPhase('introA');
+  setPhase(VIEW.quick?'title':'introA');
   $('go').textContent='Reset'; $('go').classList.add('rst');
   audioResume();
+  if(typeof syncControls==='function') syncControls();
+  return true;
 }
 function standby(){
+  resetReplayRuntime(); REPLAY.current=null; REPLAY.playback=false;
+  simAcc=0; winT=0;
   musicMode('menu');
   document.body.classList.remove('fighting');
   document.body.classList.remove('live');   // panel comes back only here
@@ -5201,9 +5662,11 @@ function standby(){
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
   seedSim(CFG.seed);                 // standby is a preview of the fight you'd get
   callReset();
-  spawnRoster(rosterList(),CFG.arena==='coop');
+  try{ validateRoster(rosterList()); spawnRoster(rosterList(),CFG.arena==='coop'); }
+  catch(e){ notifyBattle(e.message); }
   SEQ.phase='idle'; SEQ.t=0;
   $('go').textContent='Fight'; $('go').classList.remove('rst');
+  if(typeof syncControls==='function') syncControls();
 }
 
 /* ============================================================
@@ -5225,7 +5688,7 @@ function buildRoster(el,keys,store,foe){
     row.querySelectorAll('button').forEach(b=>b.addEventListener('click',e=>{
       e.stopPropagation();
       store[k]=stepVal(store[k],+b.dataset.d);
-      syncRoster(); queueStandby();
+      queueStandby(); syncSliders();
     }));
     el.appendChild(row);
     row.dataset.k=k;
@@ -5275,6 +5738,9 @@ function cmdHud(){
     const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0);
     const ready = cmdReady(k);
     b.classList.toggle('ready',ready);
+    b.disabled=!ready||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
+    const left=k==='feed'?CMD.feedT:CMD[k];
+    b.querySelector('.ck').textContent=live?Math.ceil(left)+'s active':ready?'Key '+d.key:Math.ceil(CMD.cd[k])+'s';
     b.classList.toggle('live',live);
     const bar=b.querySelector('i');
     if(ready) bar.style.width='100%';
@@ -5285,6 +5751,8 @@ function cmdHud(){
     if(!b.dataset.k) continue;
     const d=DEPLOY.find(x=>x.k===b.dataset.k);
     b.classList.toggle('ok',canDeploy(d));
+    b.disabled=!canDeploy(d)||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
+    b.querySelector('.dc').textContent=N+d.n>MAXA?'Field full':CMD.pts<d.cost?'Need '+Math.ceil(d.cost-CMD.pts)+' pts':d.cost+' pts';
   }
 }
 
@@ -5297,21 +5765,28 @@ function syncSliders(){
   $('vA').textContent=CFG.birds; $('vB').textContent=CFG.coons;
   sA.style.setProperty('--p',(CFG.birds/sA.max*100)+'%');
   sB.style.setProperty('--p',(CFG.coons/sB.max*100)+'%');
-  document.querySelectorAll('#segBird button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.kind));
+  document.querySelectorAll('#segBird button').forEach(b=>b.classList.toggle('on',!CFG.mix&&b.dataset.v===CFG.kind));
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
+  const preview=$('rosterPreview');
+  if(preview){
+    const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
+    preview.textContent=total.toLocaleString()+' animals · '+rows.map(r=>r.n+' '+UNITS[UI_[r.k]].label).join(', ');
+    if(total>MAXA) preview.textContent+=' · Over capacity: remove '+(total-MAXA);
+    $('go').disabled=total>MAXA; $('go').setAttribute('aria-disabled',String(total>MAXA));
+  }
 }
 let reSpawn=null;
-function queueStandby(){ clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
+function queueStandby(){ CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false; clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
 
-sA.addEventListener('input',()=>{CFG.birds=+sA.value;CFG.mix=null;syncSliders();queueStandby();});
-sB.addEventListener('input',()=>{CFG.coons=+sB.value;syncSliders();queueStandby();});
+sA.addEventListener('input',()=>{CFG.birds=+sA.value;CFG.mix=null;queueStandby();syncSliders();});
+sB.addEventListener('input',()=>{CFG.coons=+sB.value;queueStandby();syncSliders();});
 /* touching the flock controls drops out of a preset's mixed roster — you asked
    for one kind of bird, so that is what you get */
 document.querySelectorAll('#segBird button').forEach(b=>
-  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;CFG.mix=null;syncSliders();queueStandby();}));
+  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;CFG.mix=null;queueStandby();syncSliders();}));
 document.querySelectorAll('#segArena button').forEach(b=>
-  b.addEventListener('click',()=>{CFG.arena=b.dataset.v;syncSliders();queueStandby();}));
+  b.addEventListener('click',()=>{CFG.arena=b.dataset.v;queueStandby();syncSliders();}));
 
 const PRESETS={
   classic :{birds:1000,coons:100,kind:'rooster', arena:'field',foes:{}},
@@ -5342,7 +5817,8 @@ document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',
   CFG.allies=P.allies||{};
   CFG.mix=P.mix||null;
   CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
-  syncSliders(); startBattle();
+  CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false;
+  syncSliders(); standby();
 }));
 
 /* the verdict card is the only screen you can reach with the chrome hidden,
@@ -5424,7 +5900,7 @@ addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.body.classList.con
 $('rulesOpen').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 
 $('go').addEventListener('click',()=>{
-  if(BATTLE.running||SEQ.phase==='title'||SEQ.phase==='count') standby();
+  if(BATTLE.running||['introA','introB','title','count'].includes(SEQ.phase)) standby();
   else startBattle();
 });
 $('btnReel').addEventListener('click',()=>{
@@ -5491,6 +5967,7 @@ function pinchGap(e){
   return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
 }
 function grabCam(){
+  if(VIEW.tactical){ VIEW.tactical=false; if(typeof syncControls==='function') syncControls(); }
   if(DIR.manual) return;
   DIR.manual=true; $('btnCam').classList.remove('on'); $('btnCam').textContent='Free Cam';
 }
@@ -5530,9 +6007,10 @@ function up(e){
 el.addEventListener('mousedown',down); addEventListener('mousemove',move); addEventListener('mouseup',up);
 el.addEventListener('touchstart',down,{passive:true}); el.addEventListener('touchmove',move,{passive:false});
 addEventListener('touchend',up); addEventListener('touchcancel',up);
-el.addEventListener('wheel',e=>{DIR.orbD=clamp(DIR.orbD*(1+Math.sign(e.deltaY)*0.1),0.12,2.4);e.preventDefault();},{passive:false});
+el.addEventListener('wheel',e=>{grabCam();DIR.orbD=clamp(DIR.orbD*(1+Math.sign(e.deltaY)*0.1),0.12,2.4);e.preventDefault();},{passive:false});
 addEventListener('keydown',e=>{
-  if(e.code==='Space'){e.preventDefault();$('go').click();}
+  if(e.target.closest&&e.target.closest('input,textarea,select,button,[contenteditable=true]')) return;
+  if(e.code==='Space'){ e.preventDefault(); if(BATTLE.running) setPaused(!VIEW.paused); else if(SEQ.phase==='idle') startBattle(); }
   if(e.key==='r'||e.key==='R')$('btnReel').click();
   if(e.key==='h'||e.key==='H')document.body.classList.toggle('hideui');
   if(e.key==='b'||e.key==='B')$('btnBlood').click();
@@ -5568,18 +6046,21 @@ function loop(now){
   const wall=Math.min(0.5,raw);    // the title sequence is a wall clock, not a frame counter
 
   if(SEQ.phase!=='idle'&&SEQ.phase!=='battle'&&SEQ.phase!=='result') stepSeq(wall);
-  slowmo(real);
-  const dt=real*BATTLE.timeScale;
+  if(!VIEW.paused) slowmo(real);
+  const dt=VIEW.paused?0:real*BATTLE.timeScale*VIEW.speed;
 
   /* The sim runs on a fixed step so a shared seed lands on the same result
-     everywhere. dt is clamped to 0.05 upstream, so this is at most three
-     steps a frame and never drops one — the number of steps, and therefore
+     everywhere. dt is clamped to 0.05 upstream, so this is at most six
+     steps a frame at 2× speed and never drops one — the number of steps, and therefore
      the fight, does not depend on the machine. Slow-motion changes how much
      sim time a wall second buys, not the sequence of steps themselves. */
-  if(BATTLE.running&&!BATTLE.over){
+  if(BATTLE.running&&!BATTLE.over&&!VIEW.paused){
     simAcc+=dt;
     while(simAcc>=SIM_DT && !BATTLE.over){
-      BATTLE.t+=SIM_DT; stepSim(SIM_DT); checkWin(SIM_DT); simAcc-=SIM_DT;
+      applyBattleActions(BATTLE.tick+1);
+      if(VIEW.paused) break;
+      BATTLE.tick++; BATTLE.t+=SIM_DT;
+      stepSim(SIM_DT); checkWin(SIM_DT); simAcc-=SIM_DT;
     }
   }
   else if(SEQ.phase!=='battle'){ idleSway(dt); }
@@ -5592,10 +6073,10 @@ function loop(now){
   audioUpdate(real);
   worldFxUpdate(real);
 
-  perfWatch(real);
+  perfWatch(raw);
   refineWatch(real);
 
-  fpsAcc+=real; fpsN++;
+  fpsAcc+=raw; fpsN++;
   if(fpsAcc>0.5){ $('fps').textContent=(fpsN/fpsAcc).toFixed(0)+' FPS · '+N+' UNITS'; fpsAcc=0; fpsN=0; }
 
   renderFrame(real);
@@ -5608,7 +6089,7 @@ function idleSway(dt){
     A.ph[i]+=dt*2.2;
     A.yaw[i]+=Math.sin(BATTLE.t*0.7+i)*dt*0.35;
   }
-  BATTLE.t+=dt;
+  if(!BATTLE.over) BATTLE.t+=dt;
   centroidUpdate(); enemyCentroids();
 }
 
@@ -5620,7 +6101,8 @@ buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 const LINKED=decodeFight();
 syncSliders();
 resize();
-standby();          // sets the music mode to 'menu' before anything can play
+standby();
+if(REPLAY.error) notifyBattle(REPLAY.error);          // sets the music mode to 'menu' before anything can play
 audioAutoStart();   // …and starts it right now if the browser will allow it
 if(!LINKED) storyShow();
 camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
@@ -5868,6 +6350,141 @@ function renderTale(who,how){
     t.body.map(l=>'<span>'+l+'</span>').join('')+
     '<i>'+t.kick+'</i>';
 }
+
+
+/* View controls and accessible UI. Simulation state and commands live in 06_ui. */
+function syncControls(){
+  const playing=BATTLE.running&&!BATTLE.over;
+  $('btnPause').disabled=!playing;
+  $('btnPause').textContent=VIEW.paused?'Resume':'Pause';
+  $('btnPause').setAttribute('aria-pressed',String(VIEW.paused));
+  $('btnTactical').classList.toggle('on',VIEW.tactical);
+  $('btnTactical').setAttribute('aria-pressed',String(VIEW.tactical));
+  $('playbackSpeed').value=String(VIEW.speed);
+  $('btnQuick').checked=VIEW.quick;
+  $('btnMotion').checked=VIEW.reducedMotion;
+  document.body.classList.toggle('paused',VIEW.paused);
+  document.body.classList.toggle('reducedMotion',VIEW.reducedMotion);
+  document.body.classList.toggle('finished',BATTLE.over);
+  if(!playing){ document.body.classList.remove('deployOpen'); $('btnDeploy').setAttribute('aria-expanded','false'); }
+  const label=BATTLE.over?'Battle finished. '+$('cardA').textContent:
+    VIEW.paused?'Battle paused.':SEQ.phase==='battle'?(REPLAY.playback?'Replaying recorded battle.':'Battle running.'):
+    SEQ.phase==='idle'?'Choose your matchup.':'Battle starting. Make your prediction.';
+  if(label&&syncControls.lastAnnouncement!==label){
+    $('battleStatus').textContent=label; syncControls.lastAnnouncement=label;
+  }
+}
+
+function saveViewPreferences(){
+  try{ localStorage.setItem('cvr-view',JSON.stringify({quick:VIEW.quick,reducedMotion:VIEW.reducedMotion,film:$('btnFilm').checked})); }catch(e){}
+}
+let savedView=null;
+try{ savedView=JSON.parse(localStorage.getItem('cvr-view')||'null'); }catch(e){}
+VIEW.reducedMotion=savedView&&typeof savedView.reducedMotion==='boolean'
+  ?savedView.reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(savedView&&typeof savedView.quick==='boolean') VIEW.quick=savedView.quick;
+if(savedView&&savedView.film&&typeof setFilmLook==='function'){ $('btnFilm').checked=true; setFilmLook(true); }
+
+$('btnPause').addEventListener('click',()=>{ setPaused(!VIEW.paused); syncControls(); });
+$('playbackSpeed').addEventListener('change',e=>{ setPlaybackSpeed(+e.target.value); syncControls(); });
+$('btnTactical').addEventListener('click',()=>{
+  VIEW.tactical=!VIEW.tactical; DIR.manual=false; DIR.snap=true;
+  $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; syncControls();
+});
+$('btnCam').addEventListener('click',()=>{ VIEW.tactical=false; syncControls(); });
+$('btnQuick').addEventListener('change',e=>{ VIEW.quick=e.target.checked; saveViewPreferences(); });
+$('btnMotion').addEventListener('change',e=>{ VIEW.reducedMotion=e.target.checked; syncControls(); saveViewPreferences(); });
+$('btnFilm').addEventListener('change',e=>{ if(typeof setFilmLook==='function') setFilmLook(e.target.checked); saveViewPreferences(); });
+$('replay').addEventListener('click',e=>{ e.stopPropagation(); startBattle({replay:true}); syncControls(); });
+$('btnDeploy').addEventListener('click',()=>{
+  const opened=document.body.classList.toggle('deployOpen');
+  $('btnDeploy').setAttribute('aria-expanded',String(opened));
+});
+
+/* Roles remain visible on touch screens; title tooltips are supplementary. */
+const DEPLOY_ROLES={goose:'Shoves enemies',turkey:'Heavy birds',cat:'Fast critical hits',
+  capybara:'Calms nearby allies',goat:'Headfirst charger',pig:'Sturdy brawler',
+  llama:'Ranged guardian',donkey:'Sweeping kicks',dog:'Fast guardian',bull:'Breaks crowds'};
+for(const b of $('cmddep').children){
+  if(!b.dataset.k) continue;
+  const role=document.createElement('span'); role.className='dr';
+  role.textContent=DEPLOY_ROLES[b.dataset.k]||'Farm ally';
+  b.appendChild(role);
+}
+for(const row of $('rosterFoe').children){
+  const name=UNITS[UI_[row.dataset.k]].label;
+  row.querySelector('[data-d="-1"]').setAttribute('aria-label','Fewer '+name.toLowerCase());
+  row.querySelector('[data-d="1"]').setAttribute('aria-label','More '+name.toLowerCase());
+}
+function syncToggleSemantics(){
+  document.querySelectorAll('#tools button:not(#btnPause),.seg button,.callb').forEach(b=>
+    b.setAttribute('aria-pressed',String(b.classList.contains('on'))));
+}
+const toggleObserver=new MutationObserver(syncToggleSemantics);
+for(const id of ['tools','segBird','segArena','callBtns'])
+  toggleObserver.observe($(id),{subtree:true,attributes:true,attributeFilter:['class']});
+syncToggleSemantics();
+
+/* Overlays keep focus on their own controls, and hidden UI leaves the tab order. */
+let activeUIDialog=null, dialogReturnFocus=null;
+function syncUIDialog(){
+  const body=document.body.classList;
+  const next=body.contains('about')?$('about'):body.contains('story')?$('story'):
+    body.contains('rules')?$('rules'):$('card').classList.contains('on')&&$('card').classList.contains('result')?$('card'):null;
+  for(const child of frame.children){
+    const hiddenOverlay=['story','rules','about'].includes(child.id)&&child!==next;
+    const hiddenHud=body.contains('hideui')&&['panel','tools','cmdbar','topui','feed','champ'].includes(child.id);
+    child.inert=next?child!==next:hiddenOverlay||hiddenHud||(child.id==='panel'&&(body.contains('live')||body.contains('reel')))||
+      (child.id==='card'&&!child.classList.contains('on'));
+  }
+  for(const id of ['story','rules','about']) $(id).setAttribute('aria-hidden',String($(id)!==next));
+  if(next===$('card')){
+    next.setAttribute('role','dialog');next.setAttribute('aria-modal','true');next.setAttribute('aria-labelledby','cardA');
+  }else{
+    $('card').removeAttribute('role');$('card').removeAttribute('aria-modal');
+  }
+  if(next===activeUIDialog) return;
+  const previous=activeUIDialog;
+  if(!previous&&next) dialogReturnFocus=document.activeElement;
+  activeUIDialog=next;
+  if(next){
+    const first=next.querySelector('button:not(:disabled),a[href]');
+    (first||next).focus({preventScroll:true});
+  }else if(previous){
+    const restore=dialogReturnFocus&&dialogReturnFocus.isConnected&&!dialogReturnFocus.inert&&
+      dialogReturnFocus.closest('#panel')&&!body.contains('live')?dialogReturnFocus:$('go');
+    if(!body.contains('live')) restore.focus({preventScroll:true});
+  }
+}
+const uiDialogObserver=new MutationObserver(syncUIDialog);
+uiDialogObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
+uiDialogObserver.observe($('card'),{attributes:true,attributeFilter:['class']});
+document.addEventListener('keydown',e=>{
+  if($('settings').open&&e.key==='Escape'){
+    $('settings').open=false;$('settings').querySelector('summary').focus();e.preventDefault();e.stopPropagation();return;
+  }
+  const modal=activeUIDialog;
+  if(!modal) return;
+  e.stopPropagation(); // background game shortcuts must not fire from a dialog
+  if(e.key==='Escape'){
+    e.preventDefault();
+    if(modal.id==='about') aboutHide();
+    else if(modal.id==='story') storyHide();
+    else if(modal.id==='rules') rulesHide();
+    else toSetup();
+  }
+  if(e.key==='Tab'){
+    const items=[...modal.querySelectorAll('button:not(:disabled),a[href],input,select,[tabindex="0"]')]
+      .filter(n=>n.getClientRects().length&&getComputedStyle(n).visibility!=='hidden');
+    const first=items[0],last=items[items.length-1];
+    if(!first){ e.preventDefault();modal.focus(); }
+    else if(e.shiftKey&&(document.activeElement===first||!modal.contains(document.activeElement))){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&(document.activeElement===last||!modal.contains(document.activeElement))){e.preventDefault();first.focus();}
+  }
+});
+document.addEventListener('pointerdown',e=>{ if(!$('settings').contains(e.target)) $('settings').open=false; });
+syncControls();
+syncUIDialog();
 
 
 POST_READY=true; postResize();

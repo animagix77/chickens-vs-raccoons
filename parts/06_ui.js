@@ -3,6 +3,7 @@
    SEQUENCER — title card, countdown, battle, verdict
    ============================================================ */
 const SEQ={phase:'idle',t:0};
+const VIEW={tactical:false,paused:false,speed:1,quick:true,reducedMotion:false};
 const INTRO_A=3.8, INTRO_B=3.4;
 const card=$('card');
 function showCard(o){
@@ -49,36 +50,138 @@ function newSeed(){ CFG.seed=(Math.random()*4294967296)>>>0; }
 newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
-function encodeFight(){
-  const q=['b='+CFG.birds,'c='+CFG.coons,'k='+CFG.kind,'a='+CFG.arena,'s='+CFG.seed.toString(36)];
-  const f=EXTRA_B.filter(k=>CFG.foes[k]>0).map(k=>k+':'+CFG.foes[k]);
-  if(f.length) q.push('f='+f.join(','));
-  return q.join('&');
+// Version both the transport and simulation. Old engines cannot promise this replay.
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-04.1';
+const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:''};
+function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
+function validateRoster(rows){
+  if(!Array.isArray(rows)||!rows.length||rows.length>UNITS.length) throw Error('Choose at least one animal.');
+  let total=0; const seen=new Set();
+  for(const r of rows){
+    if(!r||typeof r.k!=='string'||!Object.hasOwn(UI_,r.k)||seen.has(r.k)||!Number.isInteger(r.n)||r.n<1)
+      throw Error('Invalid army roster.');
+    seen.add(r.k); total+=r.n;
+  }
+  if(total>MAXA) throw Error('The field holds '+MAXA.toLocaleString()+' animals. Remove '+(total-MAXA).toLocaleString()+' before starting.');
+  return total;
 }
-function fightURL(){
-  return location.origin+location.pathname+'?'+encodeFight();
+function validateFight(f){
+  if(!f||f.v!==REPLAY_VERSION||f.sim!==SIM_VERSION) throw Error('This replay uses a different simulator version.');
+  validateRoster(f.roster);
+  if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
+  if(!Array.isArray(f.actions)||f.actions.length>512) throw Error('Invalid replay commands.');
+  let tick=0;
+  for(const a of f.actions){
+    if(!a||!Number.isInteger(a.tick)||a.tick<1||a.tick<tick||a.tick>7300||
+       !(a.type==='deploy'?DEPLOY.some(d=>d.k===a.k):a.type==='command'&&CMD_DEF.some(d=>d.k===a.k)))
+      throw Error('Invalid replay command.');
+    tick=a.tick;
+  }
+  return f;
+}
+function configFight(){
+  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,roster:rosterList(),actions:[]};
+}
+function encodeFight(){
+  const f=REPLAY.current||configFight();
+  return 'fight='+encodeURIComponent(JSON.stringify(f));
+}
+function fightURL(){ return location.origin+location.pathname+'?'+encodeFight(); }
+function applyFightConfig(f){
+  CFG.seed=f.seed; CFG.arena=f.arena;
+  Object.keys(CFG.foes).forEach(k=>delete CFG.foes[k]);
+  CFG.allies={}; CFG.mix={};
+  CFG.coons=0;
+  for(const r of f.roster){
+    const u=UNITS[UI_[r.k]];
+    if(r.k==='coon') CFG.coons=r.n;
+    else if(u.team===1) CFG.foes[r.k]=r.n;
+    else if(u.build==='bird') CFG.mix[r.k]=r.n;
+    else CFG.allies[r.k]=r.n;
+  }
+  const birds=Object.keys(CFG.mix);
+  CFG.birds=birds.reduce((n,k)=>n+CFG.mix[k],0);
+  CFG.kind=birds.length?birds[0]:'rooster';
+  if(birds.length===1) CFG.mix=null;
+  EXTRA_B.forEach(k=>{ if(!CFG.foes[k]) CFG.foes[k]=0; });
+  CFG.rosterOverride=f.roster.map(r=>({k:r.k,n:r.n}));
 }
 function decodeFight(){
-  CFG.allies={}; CFG.mix=null;       // a link never carries a preset's allies or mix
   const q=new URLSearchParams(location.search);
+  if(q.has('fight')){
+    try{
+      if(q.get('fight').length>60000) throw Error('Replay link is too long.');
+      const f=validateFight(JSON.parse(q.get('fight')));
+      applyFightConfig(f); REPLAY.loaded=copyFight(f); seedHeld=true; return true;
+    }catch(e){ REPLAY.error=e.message||'Could not read replay.'; return false; }
+  }
   if(!q.has('s')&&!q.has('b')) return false;
+  // Legacy links describe setup only; they omitted mixed armies and actions.
+  CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
-  const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,500);
-  const k=q.get('k'); if(k&&UI_[k]!==undefined&&UNITS[UI_[k]].team===0) CFG.kind=k;
+  const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,600);
+  const k=q.get('k'); if(k&&Object.hasOwn(UI_,k)&&UNITS[UI_[k]].team===0) CFG.kind=k;
   const a=q.get('a'); if(a==='coop'||a==='field') CFG.arena=a;
   EXTRA_B.forEach(x=>CFG.foes[x]=0);
   (q.get('f')||'').split(',').forEach(pair=>{
     const [x,n]=pair.split(':');
-    if(EXTRA_B.indexOf(x)>=0) CFG.foes[x]=clamp(parseInt(n,10)||0,0,200);
+    if(EXTRA_B.includes(x)) CFG.foes[x]=clamp(parseInt(n,10)||0,0,200);
   });
   const sd=parseInt(q.get('s')||'',36);
   if(!isNaN(sd)){ CFG.seed=sd>>>0; seedHeld=true; }
+  REPLAY.error='Legacy link loaded as a matchup; old-engine results may differ.';
   return true;
 }
-function pushFightURL(){
-  try{ history.replaceState(null,'','?'+encodeFight()); }catch(e){}
+function pushFightURL(){ try{ history.replaceState(null,'','?'+encodeFight()); }catch(e){} }
+function notifyBattle(message){
+  REPLAY.error=message;
+  const el=$('rosterPreview'); if(el) el.textContent=message;
+  const status=$('battleStatus'); if(status) status.textContent=message;
+  return false;
+}
+function resetReplayRuntime(){
+  REPLAY.generation++; REPLAY.pending=[]; REPLAY.cursor=0;
+  BATTLE.tick=0; VIEW.paused=false;
+}
+function queueBattleAction(type,k){
+  if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback) return false;
+  if(REPLAY.pending.length>=32||REPLAY.current.actions.length+REPLAY.pending.length>=512) return false;
+  if(type==='deploy'){
+    const d=DEPLOY.find(d=>d.k===k); if(!d||!canDeploy(d)) return false;
+  }else if(type!=='command'||!cmdReady(k)) return false;
+  REPLAY.pending.push({tick:BATTLE.tick+1,type,k}); return true;
+}
+function applyBattleActions(tick){
+  let changed=false;
+  const list=REPLAY.playback?REPLAY.current.actions:REPLAY.pending;
+  while(REPLAY.playback?REPLAY.cursor<list.length&&list[REPLAY.cursor].tick<=tick:list.length&&list[0].tick<=tick){
+    const a=REPLAY.playback?list[REPLAY.cursor++]:list.shift();
+    const ok=a.type==='deploy'?applyDeploy(DEPLOY.find(d=>d.k===a.k)):applyCommand(a.k);
+    if(ok&&!REPLAY.playback){ REPLAY.current.actions.push({tick,type:a.type,k:a.k}); changed=true; }
+    if(!ok&&REPLAY.playback){ notifyBattle('Replay command could not be applied at tick '+tick+'.'); setPaused(true); break; }
+  }
+  if(changed) pushFightURL();
+}
+function deploy(d){ return queueBattleAction('deploy',d.k); }
+function cmdFire(k){ return queueBattleAction('command',k); }
+function setPaused(paused){
+  VIEW.paused=!!paused&&BATTLE.running&&!BATTLE.over;
+  if(typeof syncControls==='function') syncControls();
+  return VIEW.paused;
+}
+function setPlaybackSpeed(speed){
+  if([0.5,1,2].includes(Number(speed))) VIEW.speed=Number(speed);
+  if(typeof syncControls==='function') syncControls();
+}
+function teamCount(team){ return rosterList().filter(r=>UNITS[UI_[r.k]].team===team).reduce((n,r)=>n+r.n,0); }
+function teamName(team){
+  const rows=rosterList().filter(r=>UNITS[UI_[r.k]].team===team);
+  const kinds=new Set(rows.map(r=>r.k));
+  if(team===0&&REPLAY.current) Object.keys(TALE.bought).forEach(k=>kinds.add(k));
+  return kinds.size===1?UNITS[UI_[[...kinds][0]]].label:(team===0?'Farm':'Predators');
 }
 function rosterList(){
+  if(CFG.rosterOverride) return CFG.rosterOverride.map(r=>({k:r.k,n:r.n}));
   /* Normally the flock is one bird type on a slider. A preset can instead hand
      over a mix — every kind of bird on the place at once — in which case the
      slider value is ignored and CFG.mix is spawned verbatim. */
@@ -89,7 +192,7 @@ function rosterList(){
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
   /* presets can field the whole farm at the whistle, not just the flock */
   for(const k in CFG.allies) if(CFG.allies[k]>0) L.push({k,n:CFG.allies[k]});
-  return L;
+  return L.filter(r=>r.n>0);
 }
 
 /* ============================================================
@@ -112,7 +215,7 @@ function callSync(){
   for(const b of $('callBtns').children) b.classList.toggle('on',b.dataset.s===CALL.pick);
   $('callNote').textContent = CALL.locked
     ? (CALL.pick? 'Locked in: '+(CALL.pick==='birds'?'the flock':'the raccoons') : 'No call this round')
-    : 'Locks when the countdown ends';
+    : 'Locks when the battle starts';
 }
 function callPick(side){
   if(CALL.locked) return;
@@ -142,9 +245,11 @@ function setPhase(p){
      kinds still on the field and the commander bar's standby squads are not
      paid for. If the viewer hits Run it back inside those two frames,
      spawnRoster has already reset the tier and refineDetail declines. */
-  if(p==='result') requestAnimationFrame(()=>requestAnimationFrame(refineDetail));
+  if(p==='result'){ const generation=REPLAY.generation; requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    if(generation===REPLAY.generation&&SEQ.phase==='result') refineDetail();
+  })); }
   if(p==='introA'){ musicMode('tension');
-    showCard({thin:true, kick:'The flock', a:flockCount()+' '+flockName(),
+    showCard({thin:true, kick:'The flock', a:teamCount(0)+' '+teamName(0).toUpperCase(),
       sub:flockBlurb()});
   }
   if(p==='introB'){
@@ -158,7 +263,7 @@ function setPhase(p){
   }
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
-      a:flockCount()+' '+flockName(), vs:'VS', b:CFG.coons+' RACCOONS',
+      a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:teamCount(1)+' '+teamName(1).toUpperCase(),
       sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field',
       call:true});
   }
@@ -167,10 +272,12 @@ function setPhase(p){
     BATTLE.running=true; BATTLE.t=0; clearFeed(); pickShot();
     document.body.classList.add('fighting');
     musicMode('battle'); if(AC) braam(AC.currentTime+0.02,38,1.1,0.45); }
+  if(typeof syncControls==='function') syncControls();
 }
 
 function verdict(who,how){
-  BATTLE.over=true; BATTLE.running=false;
+  BATTLE.over=true; BATTLE.running=false; VIEW.paused=false;
+  REPLAY.last=copyFight(REPLAY.current); pushFightURL();
   document.body.classList.remove('fighting');
   /* and one per fight finished, so outcomes can be read against starts —
      a gap between the two is people leaving mid-battle, which is worth
@@ -186,10 +293,10 @@ function verdict(who,how){
     result:true,
     trib:who==='birds',          // the flock only gets its dedication when it earns it
     kick:how,
-    a:who==='birds'?flockName()+' WIN':(who==='coons'?'RACCOONS WIN':'STALEMATE'),
+    a:who==='birds'?teamName(0).toUpperCase()+' WIN':(who==='coons'?teamName(1).toUpperCase()+' WIN':'STALEMATE'),
     vs:'', b:'',
-    sub:survivors+' of '+initA+' birds standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
-        ' raccoons standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
+    sub:survivors+' of '+initA+' '+teamName(0)+' standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
+        ' '+teamName(1)+' standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
   renderTale(who,how);
@@ -198,7 +305,7 @@ function verdict(who,how){
      and it saves them describing it. */
   const mail=$('ctaMail');
   if(mail){
-    const sub='Chickens vs Raccoons — '+CFG.birds+' '+LABEL[CFG.kind]+' vs '+CFG.coons+' raccoons';
+    const sub='Chickens vs Raccoons — '+teamCount(0)+' '+teamName(0)+' vs '+teamCount(1)+' '+teamName(1);
     const body='Something I would like to see in the simulator:\n\n\n'+
       '---\nThe fight I just watched: '+fightURL();
     mail.href='mailto:animagix@mac.com?subject='+encodeURIComponent(sub)+
@@ -208,7 +315,7 @@ function verdict(who,how){
   sting(who==='birds'?'win':'lose');
   musicFinish(who==='birds');
   setPhase('result');
-  $('go').textContent='Run it back'; $('go').classList.add('rst');
+  $('go').textContent='Rematch'; $('go').classList.add('rst');
   sfx('flap');
 }
 
@@ -217,7 +324,7 @@ function stepSeq(dt){
   const reel=document.body.classList.contains('reel');
   if(SEQ.phase==='introA' && SEQ.t>INTRO_A) setPhase('introB');
   else if(SEQ.phase==='introB' && SEQ.t>INTRO_B) setPhase('title');
-  else if(SEQ.phase==='title' && SEQ.t>(reel?2.6:1.6)) setPhase('count');
+  else if(SEQ.phase==='title' && SEQ.t>(VIEW.quick?2.0:(reel?2.6:1.6))) setPhase(VIEW.quick?'battle':'count');
   else if(SEQ.phase==='count'){
     const n=3-Math.floor(SEQ.t);
     if(n>0){
@@ -237,15 +344,18 @@ let hudT=0;
 function hud(dt){
   hudT-=dt; if(hudT>0 && !hudDirty) return; hudT=0.08; hudDirty=false;
   if(BATTLE.running) cmdHud();
+  const fleeing=farmFleeing();
   $('ctA').textContent=Math.max(0,aliveA);
   $('ctB').textContent=Math.max(0,aliveB);
-  $('nameA').textContent=LABEL[CFG.kind];
+  $('nameA').textContent=teamName(0);
+  if($('nameB')) $('nameB').textContent=teamName(1);
+  if($('moraleReadout')) $('moraleReadout').textContent=Math.round(aliveA/Math.max(1,initA)*100)+'% / '+Math.round(aliveB/Math.max(1,initB)*100)+'% · '+fleeing+' farm fleeing';
   const tot=Math.max(1,aliveA+aliveB*(initB?initA/Math.max(1,initB)*0.35:1));
   const pa=clamp((aliveA/Math.max(1,initA))/((aliveA/Math.max(1,initA))+(aliveB/Math.max(1,initB))||1),0,1);
   $('barA').style.width=(pa*100).toFixed(1)+'%';
-  $('tmr').textContent=BATTLE.t.toFixed(1)+'s';
+  $('tmr').textContent=(SEQ.phase==='idle'?0:BATTLE.t).toFixed(1)+'s';
   $('phase').textContent = BATTLE.over?'Final':
-    SEQ.phase==='battle'?(panicCount>aliveA*0.45?'Frenzy':'Engaged'):
+    SEQ.phase==='battle'?(VIEW.paused?'Paused':(REPLAY.playback?'Replay · ':'')+(fleeing?fleeing+' fleeing':'Engaged')):
     SEQ.phase==='count'?'Bracing':SEQ.phase==='title'?'Staredown':
     SEQ.phase==='introA'?'The flock':SEQ.phase==='introB'?'The problem':'Standby';
 
@@ -282,7 +392,7 @@ function hud(dt){
   } else champEl.classList.remove('on');
 }
 
-const NOGO=['panel','feed','teamA','teamB','clock'];
+const NOGO=['panel','feed','topui','tools','cmdbar'];
 function hudBlocked(l,t,r,b){
   const fr=frame.getBoundingClientRect();
   for(let i=0;i<NOGO.length;i++){
@@ -317,6 +427,7 @@ function checkWin(dt){
    ============================================================ */
 let slowCool=0;
 function slowmo(dt){
+  if(VIEW.reducedMotion||VIEW.tactical){ BATTLE.timeScale=1; BATTLE.slowT=0; $('slowmo').classList.remove('on'); return; }
   slowCool-=dt;
   BATTLE.windowT+=dt;
   if(BATTLE.windowT>0.3){
@@ -341,7 +452,12 @@ function slowmo(dt){
 /* ============================================================
    START / RESET
    ============================================================ */
-function startBattle(){
+function startBattle(options={}){
+  const saved=options.replay?(REPLAY.last||REPLAY.current):seedHeld?REPLAY.loaded:null;
+  if(options.replay&&!saved) return notifyBattle('Finish a battle to replay it.');
+  if(saved) applyFightConfig(saved);
+  try{ validateRoster(rosterList()); }catch(e){ return notifyBattle(e.message); }
+  resetReplayRuntime();
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
   /* one event per fight started — this is the 'how many battles have been
      simulated' number, and it carries the matchup so the answer to 'what do
@@ -354,21 +470,27 @@ function startBattle(){
   if(DIR.manual){ DIR.manual=false; $('btnCam').classList.add('on'); $('btnCam').textContent='Auto Cam'; }
   BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.champ=-1;
   BATTLE.totalKills=0; BATTLE.timeScale=1; BATTLE.slowT=0; BATTLE.deathsWindow=0; BATTLE.routed=0; recentKills=0; BATTLE.hsx=0; BATTLE.hsz=0;
-  routT=0; slowCool=0; stallT=0; lastKills=-1; simAcc=0;
+  winT=0; routT=0; slowCool=0; stallT=0; lastKills=-1; simAcc=0;
   clearParticles(); clearFeed(); champEl.classList.remove('on');
   /* a linked fight uses the seed it arrived with, exactly once; every run
      after that rolls a fresh one so "run it back" is a genuinely new fight */
-  if(!seedHeld) newSeed(); else seedHeld=false;
-  seedSim(CFG.seed);
+  if(saved) CFG.seed=saved.seed; else if(!seedHeld) newSeed();
+  seedHeld=false; REPLAY.loaded=null; REPLAY.playback=!!saved;
+  REPLAY.current=saved?copyFight(saved):configFight();
+  REPLAY.error=''; seedSim(CFG.seed);
   pushFightURL();
   callReset();
   spawnRoster(rosterList(),CFG.arena==='coop');
   camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
-  setPhase('introA');
+  setPhase(VIEW.quick?'title':'introA');
   $('go').textContent='Reset'; $('go').classList.add('rst');
   audioResume();
+  if(typeof syncControls==='function') syncControls();
+  return true;
 }
 function standby(){
+  resetReplayRuntime(); REPLAY.current=null; REPLAY.playback=false;
+  simAcc=0; winT=0;
   musicMode('menu');
   document.body.classList.remove('fighting');
   document.body.classList.remove('live');   // panel comes back only here
@@ -377,9 +499,11 @@ function standby(){
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
   seedSim(CFG.seed);                 // standby is a preview of the fight you'd get
   callReset();
-  spawnRoster(rosterList(),CFG.arena==='coop');
+  try{ validateRoster(rosterList()); spawnRoster(rosterList(),CFG.arena==='coop'); }
+  catch(e){ notifyBattle(e.message); }
   SEQ.phase='idle'; SEQ.t=0;
   $('go').textContent='Fight'; $('go').classList.remove('rst');
+  if(typeof syncControls==='function') syncControls();
 }
 
 /* ============================================================
@@ -401,7 +525,7 @@ function buildRoster(el,keys,store,foe){
     row.querySelectorAll('button').forEach(b=>b.addEventListener('click',e=>{
       e.stopPropagation();
       store[k]=stepVal(store[k],+b.dataset.d);
-      syncRoster(); queueStandby();
+      queueStandby(); syncSliders();
     }));
     el.appendChild(row);
     row.dataset.k=k;
@@ -451,6 +575,9 @@ function cmdHud(){
     const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0);
     const ready = cmdReady(k);
     b.classList.toggle('ready',ready);
+    b.disabled=!ready||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
+    const left=k==='feed'?CMD.feedT:CMD[k];
+    b.querySelector('.ck').textContent=live?Math.ceil(left)+'s active':ready?'Key '+d.key:Math.ceil(CMD.cd[k])+'s';
     b.classList.toggle('live',live);
     const bar=b.querySelector('i');
     if(ready) bar.style.width='100%';
@@ -461,6 +588,8 @@ function cmdHud(){
     if(!b.dataset.k) continue;
     const d=DEPLOY.find(x=>x.k===b.dataset.k);
     b.classList.toggle('ok',canDeploy(d));
+    b.disabled=!canDeploy(d)||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
+    b.querySelector('.dc').textContent=N+d.n>MAXA?'Field full':CMD.pts<d.cost?'Need '+Math.ceil(d.cost-CMD.pts)+' pts':d.cost+' pts';
   }
 }
 
@@ -473,21 +602,28 @@ function syncSliders(){
   $('vA').textContent=CFG.birds; $('vB').textContent=CFG.coons;
   sA.style.setProperty('--p',(CFG.birds/sA.max*100)+'%');
   sB.style.setProperty('--p',(CFG.coons/sB.max*100)+'%');
-  document.querySelectorAll('#segBird button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.kind));
+  document.querySelectorAll('#segBird button').forEach(b=>b.classList.toggle('on',!CFG.mix&&b.dataset.v===CFG.kind));
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
+  const preview=$('rosterPreview');
+  if(preview){
+    const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
+    preview.textContent=total.toLocaleString()+' animals · '+rows.map(r=>r.n+' '+UNITS[UI_[r.k]].label).join(', ');
+    if(total>MAXA) preview.textContent+=' · Over capacity: remove '+(total-MAXA);
+    $('go').disabled=total>MAXA; $('go').setAttribute('aria-disabled',String(total>MAXA));
+  }
 }
 let reSpawn=null;
-function queueStandby(){ clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
+function queueStandby(){ CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false; clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
 
-sA.addEventListener('input',()=>{CFG.birds=+sA.value;CFG.mix=null;syncSliders();queueStandby();});
-sB.addEventListener('input',()=>{CFG.coons=+sB.value;syncSliders();queueStandby();});
+sA.addEventListener('input',()=>{CFG.birds=+sA.value;CFG.mix=null;queueStandby();syncSliders();});
+sB.addEventListener('input',()=>{CFG.coons=+sB.value;queueStandby();syncSliders();});
 /* touching the flock controls drops out of a preset's mixed roster — you asked
    for one kind of bird, so that is what you get */
 document.querySelectorAll('#segBird button').forEach(b=>
-  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;CFG.mix=null;syncSliders();queueStandby();}));
+  b.addEventListener('click',()=>{CFG.kind=b.dataset.v;CFG.mix=null;queueStandby();syncSliders();}));
 document.querySelectorAll('#segArena button').forEach(b=>
-  b.addEventListener('click',()=>{CFG.arena=b.dataset.v;syncSliders();queueStandby();}));
+  b.addEventListener('click',()=>{CFG.arena=b.dataset.v;queueStandby();syncSliders();}));
 
 const PRESETS={
   classic :{birds:1000,coons:100,kind:'rooster', arena:'field',foes:{}},
@@ -518,7 +654,8 @@ document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',
   CFG.allies=P.allies||{};
   CFG.mix=P.mix||null;
   CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
-  syncSliders(); startBattle();
+  CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false;
+  syncSliders(); standby();
 }));
 
 /* the verdict card is the only screen you can reach with the chrome hidden,
@@ -600,7 +737,7 @@ addEventListener('keydown',e=>{ if(e.key==='Escape'&&document.body.classList.con
 $('rulesOpen').addEventListener('click',e=>{ e.stopPropagation(); storyHide(); rulesShow(); });
 
 $('go').addEventListener('click',()=>{
-  if(BATTLE.running||SEQ.phase==='title'||SEQ.phase==='count') standby();
+  if(BATTLE.running||['introA','introB','title','count'].includes(SEQ.phase)) standby();
   else startBattle();
 });
 $('btnReel').addEventListener('click',()=>{
@@ -667,6 +804,7 @@ function pinchGap(e){
   return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
 }
 function grabCam(){
+  if(VIEW.tactical){ VIEW.tactical=false; if(typeof syncControls==='function') syncControls(); }
   if(DIR.manual) return;
   DIR.manual=true; $('btnCam').classList.remove('on'); $('btnCam').textContent='Free Cam';
 }
@@ -706,9 +844,10 @@ function up(e){
 el.addEventListener('mousedown',down); addEventListener('mousemove',move); addEventListener('mouseup',up);
 el.addEventListener('touchstart',down,{passive:true}); el.addEventListener('touchmove',move,{passive:false});
 addEventListener('touchend',up); addEventListener('touchcancel',up);
-el.addEventListener('wheel',e=>{DIR.orbD=clamp(DIR.orbD*(1+Math.sign(e.deltaY)*0.1),0.12,2.4);e.preventDefault();},{passive:false});
+el.addEventListener('wheel',e=>{grabCam();DIR.orbD=clamp(DIR.orbD*(1+Math.sign(e.deltaY)*0.1),0.12,2.4);e.preventDefault();},{passive:false});
 addEventListener('keydown',e=>{
-  if(e.code==='Space'){e.preventDefault();$('go').click();}
+  if(e.target.closest&&e.target.closest('input,textarea,select,button,[contenteditable=true]')) return;
+  if(e.code==='Space'){ e.preventDefault(); if(BATTLE.running) setPaused(!VIEW.paused); else if(SEQ.phase==='idle') startBattle(); }
   if(e.key==='r'||e.key==='R')$('btnReel').click();
   if(e.key==='h'||e.key==='H')document.body.classList.toggle('hideui');
   if(e.key==='b'||e.key==='B')$('btnBlood').click();
@@ -744,18 +883,21 @@ function loop(now){
   const wall=Math.min(0.5,raw);    // the title sequence is a wall clock, not a frame counter
 
   if(SEQ.phase!=='idle'&&SEQ.phase!=='battle'&&SEQ.phase!=='result') stepSeq(wall);
-  slowmo(real);
-  const dt=real*BATTLE.timeScale;
+  if(!VIEW.paused) slowmo(real);
+  const dt=VIEW.paused?0:real*BATTLE.timeScale*VIEW.speed;
 
   /* The sim runs on a fixed step so a shared seed lands on the same result
-     everywhere. dt is clamped to 0.05 upstream, so this is at most three
-     steps a frame and never drops one — the number of steps, and therefore
+     everywhere. dt is clamped to 0.05 upstream, so this is at most six
+     steps a frame at 2× speed and never drops one — the number of steps, and therefore
      the fight, does not depend on the machine. Slow-motion changes how much
      sim time a wall second buys, not the sequence of steps themselves. */
-  if(BATTLE.running&&!BATTLE.over){
+  if(BATTLE.running&&!BATTLE.over&&!VIEW.paused){
     simAcc+=dt;
     while(simAcc>=SIM_DT && !BATTLE.over){
-      BATTLE.t+=SIM_DT; stepSim(SIM_DT); checkWin(SIM_DT); simAcc-=SIM_DT;
+      applyBattleActions(BATTLE.tick+1);
+      if(VIEW.paused) break;
+      BATTLE.tick++; BATTLE.t+=SIM_DT;
+      stepSim(SIM_DT); checkWin(SIM_DT); simAcc-=SIM_DT;
     }
   }
   else if(SEQ.phase!=='battle'){ idleSway(dt); }
@@ -768,10 +910,10 @@ function loop(now){
   audioUpdate(real);
   worldFxUpdate(real);
 
-  perfWatch(real);
+  perfWatch(raw);
   refineWatch(real);
 
-  fpsAcc+=real; fpsN++;
+  fpsAcc+=raw; fpsN++;
   if(fpsAcc>0.5){ $('fps').textContent=(fpsN/fpsAcc).toFixed(0)+' FPS · '+N+' UNITS'; fpsAcc=0; fpsN=0; }
 
   renderFrame(real);
@@ -784,7 +926,7 @@ function idleSway(dt){
     A.ph[i]+=dt*2.2;
     A.yaw[i]+=Math.sin(BATTLE.t*0.7+i)*dt*0.35;
   }
-  BATTLE.t+=dt;
+  if(!BATTLE.over) BATTLE.t+=dt;
   centroidUpdate(); enemyCentroids();
 }
 
@@ -796,7 +938,8 @@ buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 const LINKED=decodeFight();
 syncSliders();
 resize();
-standby();          // sets the music mode to 'menu' before anything can play
+standby();
+if(REPLAY.error) notifyBattle(REPLAY.error);          // sets the music mode to 'menu' before anything can play
 audioAutoStart();   // …and starts it right now if the browser will allow it
 if(!LINKED) storyShow();
 camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);

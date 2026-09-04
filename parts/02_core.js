@@ -184,11 +184,14 @@ function P(base,color,px,py,pz,rx,ry,rz,sx,sy,sz){
 function mergeAll(list){
   let total=0; for(const g of list) total+=g.attributes.position.count;
   const pos=new Float32Array(total*3), nor=new Float32Array(total*3), col=new Float32Array(total*3);
+  const animated=list.some(g=>g.attributes.animPart);
+  const part=animated?new Float32Array(total*4):null;
   let o=0;
   for(const g of list){
     pos.set(g.attributes.position.array,o*3);
     nor.set(g.attributes.normal.array,o*3);
     col.set(g.attributes.color.array,o*3);
+    if(part&&g.attributes.animPart) part.set(g.attributes.animPart.array,o*4);
     o+=g.attributes.position.count;
     g.dispose();
   }
@@ -196,12 +199,93 @@ function mergeAll(list){
   out.setAttribute('position',new THREE.BufferAttribute(pos,3));
   out.setAttribute('normal',  new THREE.BufferAttribute(nor,3));
   out.setAttribute('color',   new THREE.BufferAttribute(col,3));
+  if(part) out.setAttribute('animPart',new THREE.BufferAttribute(part,4));
   out.computeBoundingSphere();
   return out;
 }
 
 const MAT = new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.80,metalness:0.0});
 const MAT_FLAT = new THREE.MeshBasicMaterial({vertexColors:true});
+/* Authored profiles keep silhouette detail without adding overlapping solids.
+   A loft is one continuous surface, including the raccoon's painted tail rings. */
+function loftAnimal(points,radii,colors,sides){
+  const pos=[],idx=[],col=[];
+  for(let j=0;j<points.length;j++){
+    const p=points[j], prev=points[Math.max(0,j-1)], next=points[Math.min(points.length-1,j+1)];
+    const dy=next[1]-prev[1], dz=next[2]-prev[2], len=Math.hypot(dy,dz)||1;
+    const c=new THREE.Color(Array.isArray(colors)?colors[Math.min(j,colors.length-1)]:colors).convertSRGBToLinear();
+    for(let k=0;k<sides;k++){
+      const a=k/sides*TAU, cs=Math.cos(a), sn=Math.sin(a), r=radii[j];
+      pos.push(p[0]+cs*r[0],p[1]+sn*r[1]*dz/len,p[2]-sn*r[1]*dy/len);
+      const shade=.82+.18*Math.max(0,sn*dz/len);
+      col.push(c.r*shade,c.g*shade,c.b*shade);
+      if(j<points.length-1 && (Math.abs(points[j+1][1]-p[1])+Math.abs(points[j+1][2]-p[2])>1e-7)){const a0=j*sides+k,b0=j*sides+(k+1)%sides;
+        idx.push(a0,b0,a0+sides,b0,b0+sides,a0+sides);}
+    }
+  }
+  for(let k=1;k<sides-1;k++){idx.push(0,k+1,k); const b=(points.length-1)*sides;idx.push(b,b+k,b+k+1);}
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  g.setIndex(idx);g.computeVertexNormals();
+  const out=g.toNonIndexed();g.dispose();return out;
+}
+function profileAnimal(outline,width,color,x){
+  outline=outline.slice();
+  const points=outline.map(p=>new THREE.Vector2(p[0],p[1]));
+  if(THREE.ShapeUtils.isClockWise(points)){points.reverse();outline.reverse();}
+  const tris=THREE.ShapeUtils.triangulateShape(points,[]),pos=[];
+  const push=(i,side)=>{const p=outline[i];pos.push((x||0)+side*width*.5,p[1],p[0]);};
+  for(const t of tris){for(const i of t)push(i,1);for(const i of t.slice().reverse())push(i,-1);}
+  if(width>0)for(let i=0;i<outline.length;i++){
+    const j=(i+1)%outline.length;push(i,1);push(j,-1);push(j,1);push(i,1);push(i,-1);push(j,-1);
+  }
+  // Mapping the 2D profile into Z/Y reverses handedness. Keep outward faces.
+  for(let i=0;i<pos.length;i+=9)for(let k=0;k<3;k++){const t=pos[i+3+k];pos[i+3+k]=pos[i+6+k];pos[i+6+k]=t;}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.computeVertexNormals();
+  const c=new THREE.Color(color).convertSRGBToLinear(),a=new Float32Array(pos.length);
+  for(let i=0;i<a.length;i+=3){a[i]=c.r;a[i+1]=c.g;a[i+2]=c.b;}
+  g.setAttribute('color',new THREE.BufferAttribute(a,3));return g;
+}
+function animalJoint(g,x,y,z,type){
+  const a=new Float32Array(g.attributes.position.count*4);
+  for(let i=0;i<a.length;i+=4){a[i]=x;a[i+1]=y;a[i+2]=z;a[i+3]=type;}
+  g.setAttribute('animPart',new THREE.BufferAttribute(a,4));return g;
+}
+function scaleAnimal(g,s){
+  g.scale(s,s,s);const a=g.attributes.animPart;
+  if(a)for(let i=0;i<a.count;i++){a.setXYZ(i,a.getX(i)*s,a.getY(i)*s,a.getZ(i)*s);}
+}
+/* One additional vec4 per instance drives leg joints and the neck. The same
+   deformation runs in the shadow pass; no skeleton or per-limb draw call. */
+const ANIMAL_JOINT_GLSL=`
+attribute vec4 animPart;
+attribute vec4 animalPose;
+float animalAngle(){
+  float kind=abs(animPart.w);
+  if(kind<0.5)return 0.0;
+  if(abs(kind-2.0)<0.25)return animalPose.z*animalPose.w*0.78;
+  float stepWave=sin(animalPose.x)*sign(animPart.w);
+  float angle=stepWave*animalPose.y*0.58;
+  if(kind>2.5)angle-=animalPose.z*0.85*step(0.0,animPart.w);
+  return angle*animalPose.w;
+}
+vec3 animalRotate(vec3 v,float a){float c=cos(a),s=sin(a);return vec3(v.x,c*v.y-s*v.z,s*v.y+c*v.z);}
+`;
+function animalShader(shader){
+  shader.vertexShader=ANIMAL_JOINT_GLSL+shader.vertexShader;
+  shader.vertexShader=shader.vertexShader.replace('#include <beginnormal_vertex>',
+    '#include <beginnormal_vertex>\nobjectNormal=animalRotate(objectNormal,animalAngle());');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+    '#include <begin_vertex>\ntransformed=animalRotate(transformed-animPart.xyz,animalAngle())+animPart.xyz;');
+}
+const ANIMAL_HERO_G={box:G.box,sph:new THREE.SphereGeometry(1,12,8),sphLo:new THREE.SphereGeometry(1,8,6),
+  cyl:new THREE.CylinderGeometry(1,1,1,8),cone:new THREE.ConeGeometry(1,1,8)};
+const ANIMAL_MAT=MAT.clone();ANIMAL_MAT.onBeforeCompile=animalShader;
+ANIMAL_MAT.customProgramCacheKey=()=> 'animal-joints-v1';
+const ANIMAL_DEPTH=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking});
+ANIMAL_DEPTH.onBeforeCompile=animalShader;ANIMAL_DEPTH.customProgramCacheKey=()=> 'animal-depth-v1';
+
 /* ground cover gets its own material so it can sway without touching the birds */
 const GRASS_MAT = new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.95,metalness:0.0});
 GRASS_MAT.onBeforeCompile = sh => {
@@ -217,55 +301,58 @@ GRASS_MAT.onBeforeCompile = sh => {
 /* ---------- the birds ---------- */
 /* Attempted-realistic proportions executed entirely in spheres and cones.
    The eyes are deliberately one size too large. This is the whole joke. */
-function buildBird(o){
+function buildBird(o,hero=false){
+  hero=hero===true; // Array.map supplies an index as its second argument.
+  const Q=hero?ANIMAL_HERO_G:G;
   const F=o.feather, W=o.wingC||o.feather, T=o.tail, R=o.red, Y='#e8a423', K='#131118';
   const s=o.scale;
   const core=[
     // legs + feet
-    P(G.cyl,Y, .085,.14,-.01, .1,0,0, .022,.28,.022),
-    P(G.cyl,Y,-.085,.14,-.01, .1,0,0, .022,.28,.022),
-    P(G.box,Y, .085,.015,.05, 0,0,0, .07,.03,.15),
-    P(G.box,Y,-.085,.015,.05, 0,0,0, .07,.03,.15),
+    P(Q.cyl,Y, .085,.14,-.01, .1,0,0, .022,.28,.022),
+    P(Q.cyl,Y,-.085,.14,-.01, .1,0,0, .022,.28,.022),
+    P(Q.box,Y, .085,.015,.05, 0,0,0, .07,.03,.15),
+    P(Q.box,Y,-.085,.015,.05, 0,0,0, .07,.03,.15),
     // plump body
-    P(G.sph,F, 0,.44,-.02, -.12,0,0, .30,.28,.40),
-    P(G.sph,F, 0,.40,-.20, 0,0,0, .24,.22,.20),          // rump
+    P(Q.sph,F, 0,.44,-.02, -.12,0,0, .30,.28,.40),
+    P(Q.sph,F, 0,.40,-.20, 0,0,0, .24,.22,.20),          // rump
     // neck
-    P(G.cyl,F, 0,.65,.13, -.36,0,0, .095,.30,.085),
-    P(G.sph,F, 0,.60,.07, 0,0,0, .13,.13,.13),           // neck base blend
+    P(Q.cyl,F, 0,.65,.13, -.36,0,0, .095,.30,.085),
+    P(Q.sph,F, 0,.60,.07, 0,0,0, .13,.13,.13),           // neck base blend
     // head
-    P(G.sph,F, 0,.83,.26, 0,0,0, .115,.115,.125),
+    P(Q.sph,F, 0,.83,.26, 0,0,0, .115,.115,.125),
     // beak (upper + lower, slightly ajar — permanently mid-scream)
-    P(G.cone,Y, 0,.825,.40, 1.62,0,0, .055,.15,.045),
-    P(G.cone,'#c98a1a', 0,.795,.39, 1.72,0,0, .045,.12,.035),
-    // comb
-    P(G.sphLo,R, 0,.925,.20, 0,0,0, .035*o.comb,.075*o.comb,.045*o.comb),
-    P(G.sphLo,R, 0,.945,.26, 0,0,0, .035*o.comb,.085*o.comb,.045*o.comb),
-    P(G.sphLo,R, 0,.935,.32, 0,0,0, .033*o.comb,.070*o.comb,.042*o.comb),
+    P(Q.cone,Y, 0,.825,.40, 1.62,0,0, .055,.15,.045),
+    P(Q.cone,'#c98a1a', 0,.795,.39, 1.72,0,0, .045,.12,.035),
+    // continuous scalloped comb
+    profileAnimal([[.16,.91],[.17,.95],[.18,1.01],[.22,.975],[.25,1.045],[.28,.985],[.32,1.02],[.355,.945],[.34,.91]].map(p=>[.255+(p[0]-.255)*o.comb,.91+(p[1]-.91)*o.comb]),!hero&&DETAIL>=2?0:.043,R),
     // wattles
-    P(G.sphLo,R, .035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
-    P(G.sphLo,R,-.035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
+    P(Q.sphLo,R, .035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
+    P(Q.sphLo,R,-.035,.745,.345, 0,0,0, .030*o.comb,.055*o.comb,.028*o.comb),
     // EYES — too big, forward-set, wrong for a bird. correct for the internet.
-    P(G.sphLo,'#fdfcf8', .078,.855,.315, 0,0,0, .052,.052,.046),
-    P(G.sphLo,'#fdfcf8',-.078,.855,.315, 0,0,0, .052,.052,.046),
-    P(G.sphLo,K, .086,.855,.348, 0,0,0, .030,.030,.022),
-    P(G.sphLo,K,-.086,.855,.348, 0,0,0, .030,.030,.022),
+    P(Q.sphLo,'#fdfcf8', .078,.855,.315, 0,0,0, .052,.052,.046),
+    P(Q.sphLo,'#fdfcf8',-.078,.855,.315, 0,0,0, .052,.052,.046),
+    P(Q.sphLo,K, .086,.855,.348, 0,0,0, .030,.030,.022),
+    P(Q.sphLo,K,-.086,.855,.348, 0,0,0, .030,.030,.022),
   ];
+  core.forEach((g,i)=>{if(i<4)animalJoint(g,(i%2?-.085:.085),.285,-.01,i%2?-1:1);else if(i>=6)animalJoint(g,0,.59,.10,2);});
   if(o.spur){ // gamecock leg spurs
-    core.push(P(G.cone,'#f2e6c8', .115,.20,-.03, 1.2,0,-.5, .018,.11,.018));
-    core.push(P(G.cone,'#f2e6c8',-.115,.20,-.03, 1.2,0, .5, .018,.11,.018));
+    core.push(P(Q.cone,'#f2e6c8', .115,.20,-.03, 1.2,0,-.5, .018,.11,.018));
+    core.push(P(Q.cone,'#f2e6c8',-.115,.20,-.03, 1.2,0, .5, .018,.11,.018));
   }
   const flap=[
     // wings
-    P(G.sph,W, .215,.46,.02, 0,0,-.2, .055,.17,.27),
-    P(G.sph,W,-.215,.46,.02, 0,0, .2, .055,.17,.27),
-    // sickle tail fan
-    P(G.cone,T, 0,.52,-.30, -.95+o.tailUp,0,0, .20*o.tailW,.52*o.tailL,.055),
-    P(G.cone,T, .07,.50,-.29, -1.15+o.tailUp,0,.22, .12*o.tailW,.44*o.tailL,.05),
-    P(G.cone,T,-.07,.50,-.29, -1.15+o.tailUp,0,-.22,.12*o.tailW,.44*o.tailL,.05),
+    P(Q.sph,W, .215,.46,.02, 0,0,-.2, .055,.17,.27),
+    P(Q.sph,W,-.215,.46,.02, 0,0, .2, .055,.17,.27),
+    // Three curved sickle feathers hold their shape even at crowd LOD.
+    ...[-1,0,1].map((side)=>profileAnimal(
+      [[-.24,.52],[-.38,.73],[-.51,.89],[-.67,.96],[-.78,.88],[-.82,.66],[-.75,.73],[-.65,.79],[-.54,.74],[-.38,.49]]
+        .filter((p,i)=>hero||DETAIL<3||[0,2,3,5,7,9].includes(i))
+        .map(p=>[-.27+(p[0]+.27)*o.tailL,.5+(p[1]-.5)*o.tailW*(1-o.tailUp*.4)]),
+      !hero&&DETAIL>=2?0:.032,T,side*.08)),
   ];
   const gc=mergeAll(core), gf=mergeAll(flap);
-  gc.scale(s,s,s); gf.scale(s,s,s);
-  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s)};
+  scaleAnimal(gc,s); scaleAnimal(gf,s);
+  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s),heroFactory:(!hero&&o.comb>=1&&o.tailW<1.5)?()=>buildBird(o,true):null};
 }
 
 /* A hawk is not a chicken with a small comb. It reads as a raptor because of
@@ -316,58 +403,66 @@ function buildHawk(o){
     P(G.cone,T,-.075,.515,-.235, -1.46,0,-.20,.085,.255,.030)
   ];
   const gc=mergeAll(core), gf=mergeAll(flap);
-  gc.scale(s,s,s); gf.scale(s,s,s);
+  scaleAnimal(gc,s); scaleAnimal(gf,s);
   /* hinge at the shoulders, so the beat pivots the whole wing */
   return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.55*s,.02*s)};
 }
 
 /* ---------- the raccoon ---------- */
-function buildCoon(o){
+function buildCoon(o,hero=false){
+  hero=hero===true;
+  const Q=hero?ANIMAL_HERO_G:G;
   const GY=o.gy, DK=o.dk, LT=o.lt, K='#131118';
   const core=[
     // four legs, planted wide and low
-    P(G.cyl,DK, .175,.16,.24, 0,0,0, .046,.32,.046),
-    P(G.cyl,DK,-.175,.16,.24, 0,0,0, .046,.32,.046),
-    P(G.cyl,DK, .175,.16,-.20, 0,0,0, .046,.32,.046),
-    P(G.cyl,DK,-.175,.16,-.20, 0,0,0, .046,.32,.046),
-    P(G.box,K, .175,.03,.28, 0,0,0, .10,.05,.16),
-    P(G.box,K,-.175,.03,.28, 0,0,0, .10,.05,.16),
-    P(G.box,K, .175,.03,-.24, 0,0,0, .10,.05,.16),
-    P(G.box,K,-.175,.03,-.24, 0,0,0, .10,.05,.16),
+    P(Q.cyl,DK, .175,.16,.24, 0,0,0, .046,.32,.046),
+    P(Q.cyl,DK,-.175,.16,.24, 0,0,0, .046,.32,.046),
+    P(Q.cyl,DK, .175,.16,-.20, 0,0,0, .046,.32,.046),
+    P(Q.cyl,DK,-.175,.16,-.20, 0,0,0, .046,.32,.046),
+    P(Q.box,K, .175,.03,.28, 0,0,0, .10,.05,.16),
+    P(Q.box,K,-.175,.03,.28, 0,0,0, .10,.05,.16),
+    P(Q.box,K, .175,.03,-.24, 0,0,0, .10,.05,.16),
+    P(Q.box,K,-.175,.03,-.24, 0,0,0, .10,.05,.16),
     // long low body
-    P(G.sph,GY, 0,.34,.02, 0,0,0, .25,.23,.46),
-    P(G.sph,GY, 0,.36,-.30, 0,0,0, .21,.20,.20),
-    P(G.sph,DK, 0,.30,-.34, 0,0,0, .19,.14,.16),   // dark haunch
+    loftAnimal([[0,.32,-.46],[0,.36,-.32],[0,.38,-.10],[0,.42,.17],[0,.39,.33]],
+      [[.08,.10],[.23,.20],[.265,.23],[.22,.235],[.12,.13]],GY,hero?12:[10,8,7,6][DETAIL]),
     // head
-    P(G.sph,GY, 0,.46,.44, 0,0,0, .17,.16,.17),
+    P(Q.sph,GY, 0,.46,.44, 0,0,0, .17,.16,.17),
     // snout
-    P(G.cone,LT, 0,.40,.58, 1.55,0,0, .085,.26,.075),
-    P(G.sph,K, 0,.395,.70, 0,0,0, .033,.028,.028),
+    P(Q.cone,LT, 0,.40,.58, 1.55,0,0, .085,.26,.075),
+    P(Q.sph,K, 0,.395,.70, 0,0,0, .033,.028,.028),
     // bandit mask
-    P(G.sph,K, .085,.48,.545, 0,-.3,0, .075,.055,.035),
-    P(G.sph,K,-.085,.48,.545, 0, .3,0, .075,.055,.035),
-    P(G.box,K, 0,.50,.55, 0,0,0, .09,.035,.04),
+    P(Q.sph,K, .085,.48,.545, 0,-.3,0, .075,.055,.035),
+    P(Q.sph,K,-.085,.48,.545, 0, .3,0, .075,.055,.035),
+    P(Q.box,K, 0,.50,.55, 0,0,0, .09,.035,.04),
     // eyes
-    P(G.sphLo,'#f7e9c8', .085,.482,.560, 0,0,0, .040,.040,.032),
-    P(G.sphLo,'#f7e9c8',-.085,.482,.560, 0,0,0, .040,.040,.032),
-    P(G.sphLo,K, .090,.482,.585, 0,0,0, .024,.024,.018),
-    P(G.sphLo,K,-.090,.482,.585, 0,0,0, .024,.024,.018),
+    P(Q.sphLo,'#f7e9c8', .085,.482,.560, 0,0,0, .040,.040,.032),
+    P(Q.sphLo,'#f7e9c8',-.085,.482,.560, 0,0,0, .040,.040,.032),
+    P(Q.sphLo,K, .090,.482,.585, 0,0,0, .024,.024,.018),
+    P(Q.sphLo,K,-.090,.482,.585, 0,0,0, .024,.024,.018),
     // ears
-    P(G.cone,GY, .115,.58,.38, .1,0,.18, .072,.13,.05),
-    P(G.cone,GY,-.115,.58,.38, .1,0,-.18,.072,.13,.05),
-    P(G.cone,'#e9c6c9', .115,.585,.395, .1,0,.18, .042,.09,.03),
-    P(G.cone,'#e9c6c9',-.115,.585,.395, .1,0,-.18,.042,.09,.03),
+    P(Q.cone,GY, .115,.58,.38, .1,0,.18, .072,.13,.05),
+    P(Q.cone,GY,-.115,.58,.38, .1,0,-.18,.072,.13,.05),
+    P(Q.cone,'#e9c6c9', .115,.585,.395, .1,0,.18, .042,.09,.03),
+    P(Q.cone,'#e9c6c9',-.115,.585,.395, .1,0,-.18,.042,.09,.03),
   ];
-  // ringed tail, built as stacked segments arcing back and up
-  const flap=[];
-  for(let i=0;i<7;i++){
-    const t=i/6, a=-0.55-t*0.55;
-    const z=-0.46-t*0.52, y=0.34+t*0.30;
-    flap.push(P(G.sph,(i%2?DK:GY), 0,y,z, a,0,0, .105-t*.045,.105-t*.04,.11));
+  // Four diagonal paws step, with the leading paw lifting for a swipe.
+  core.forEach((g,i)=>{
+    if(i<8){const leg=i%4,front=leg<2;animalJoint(g,leg%2?-.175:.175,.32,front?.24:-.20,
+      front?(leg%2?-3:3):(leg%2?1:-1));}
+    else if(i>=9)animalJoint(g,0,.39,.28,2);
+  });
+  const points=[],radii=[],colors=[];
+  // Duplicate ring boundaries give crisp painted bands, not separate beads.
+  for(let i=0;i<7;i++)for(let edge=0;edge<2;edge++){
+    const t=(i+edge)/7;
+    points.push([0,.35+.18*Math.sin(t*1.6),-.42-t*.60]);
+    radii.push([.11*(1-t*.78),.105*(1-t*.78)]);colors.push(i%2?DK:GY);
   }
+  const flap=[loftAnimal(points,radii,colors,hero?10:[9,7,6,5][DETAIL])];
   const s=o.scale||1, gc=mergeAll(core), gf=mergeAll(flap);
-  gc.scale(s,s,s); gf.scale(s,s,s);
-  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.34*s,-.10*s)};
+  scaleAnimal(gc,s); scaleAnimal(gf,s);
+  return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.34*s,-.10*s),heroFactory:hero?null:()=>buildCoon(o,true)};
 }
 
 const COON_KITS=[
