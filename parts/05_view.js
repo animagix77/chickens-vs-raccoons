@@ -95,16 +95,15 @@ function clearFeed(){ feedEl.innerHTML=''; feedLock=0; }
 
 /* ============================================================
    SOUND
-   Every noise below is built from oscillators and noise at runtime —
-   no samples. Animal calls use a formant model: a buzzy glottal source
-   pushed through 2-4 resonant bandpass filters, which is roughly what a
-   real syrinx does and why it reads as "bird" rather than "synth".
-   Events are positioned: panned by screen position, attenuated and
-   low-passed by distance, and fed to a synthetic room reverb.
+   Sample banks provide chicken calls, raccoon chatter, wing foley and
+   impacts. Softer harmonic voices cover the rest and work offline.
+   All variation is cosmetic randomness, independent of the battle seed.
+   Screen panning, distance EQ and a short outdoor tail place each event.
    ============================================================ */
 let AC=null, master=null, mFilter=null, revSend=null,
-    soundOn=true, noiseBuf=null, sfxTokens=9, murmurT=0, farT=0,
-    voxTokens=6, cryT=0;
+    soundOn=true, noiseBuf=null, sfxTokens=6, murmurT=0, farT=0,
+    voxTokens=3, softTokens=2, cryT=0, voiceWave=null;
+const fxBuses=[], fxLast=Object.create(null);
 const amb={};
 const _ap=new THREE.Vector3(), _ap2=new THREE.Vector3();
 
@@ -137,10 +136,10 @@ function audioInit(){
   const nd=noiseBuf.getChannelData(0);
   for(let i=0;i<nd.length;i++) nd[i]=Math.random()*2-1;
 
-  const conv=AC.createConvolver(); conv.buffer=makeIR(1.25,3.0,0.32);
-  revSend=AC.createGain(); revSend.gain.value=0.10;
-  const wet=AC.createGain(); wet.gain.value=0.85;
-  revSend.connect(conv); conv.connect(wet); wet.connect(mFilter);
+  const conv=AC.createConvolver(); conv.buffer=makeIR(.38,3.8,0.20);
+  revSend=AC.createGain(); revSend.gain.value=0.045;
+  const wet=AC.createGain(); wet.gain.value=0.55;
+  revSend.connect(conv); conv.connect(wet); wet.connect(master);
 
   const loop=(type,freq,q,gain)=>{
     const s=AC.createBufferSource(); s.buffer=noiseBuf; s.loop=true;
@@ -158,7 +157,7 @@ function audioInit(){
   amb.crick=loop('bandpass',4700,17,0.5);
   const cOut=AC.createGain(); cOut.gain.value=0;
   amb.crick.gain.connect(cOut); cOut.connect(master); amb.crickOut=cOut;
-  const tr=AC.createOscillator(); tr.type='square'; tr.frequency.value=10.5;
+  const tr=AC.createOscillator(); tr.type='sine'; tr.frequency.value=10.5;
   const trg=AC.createGain(); trg.gain.value=0.5;
   tr.connect(trg); trg.connect(amb.crick.gain.gain); tr.start();
 
@@ -266,10 +265,20 @@ function audioBadge(){
 }
 
 /* ---------- primitives ---------- */
+function sweepFx(){
+  for(let i=fxBuses.length-1;i>=0;i--){
+    const b=fxBuses[i];
+    if(AC.currentTime>=b.until){ b.nodes.forEach(n=>n.disconnect()); fxBuses.splice(i,1); }
+  }
+}
 function outBus(pan){
-  const g=AC.createGain(); let n=g;
-  if(AC.createStereoPanner){ const p=AC.createStereoPanner(); p.pan.value=pan||0; g.connect(p); n=p; }
+  sweepFx();
+  // Retain only a bounded tail, even during large battles or repeated cues.
+  if(fxBuses.length>=48) fxBuses.shift().nodes.forEach(n=>n.disconnect());
+  const g=AC.createGain(), nodes=[g]; let n=g;
+  if(AC.createStereoPanner){ const p=AC.createStereoPanner(); p.pan.value=pan||0; g.connect(p); n=p; nodes.push(p); }
   n.connect(master); n.connect(revSend);
+  fxBuses.push({nodes,until:AC.currentTime+6});
   return g;
 }
 function env(dest,t,a,d,peak){
@@ -284,12 +293,23 @@ function nz(dest,t,dur,type,freq,q,peak,rate){
   s.playbackRate.value=rate||1;
   const f=AC.createBiquadFilter(); f.type=type; f.frequency.value=freq; if(q)f.Q.value=q;
   const g=env(dest,t,Math.min(.008,dur*.25),dur,peak);
-  s.connect(f); f.connect(g); s.start(t); s.stop(t+dur+.06);
+  s.connect(f); f.connect(g); s.start(t,rnd(0,.5)); s.stop(t+dur+.06);
+  s.onended=()=>{s.disconnect();f.disconnect();g.disconnect();};
   return f;
 }
 /* the formant voice: source -> parallel resonators -> envelope */
 function vox(dest,t,o){
-  const src=AC.createOscillator(); src.type=o.wave||'sawtooth';
+  const src=AC.createOscillator();
+  // A rounded glottal pulse has a steep harmonic rolloff; no buzzy saw/square.
+  if(o.wave==='triangle'||o.wave==='sine') src.type=o.wave;
+  else {
+    if(!voiceWave){
+      const re=new Float32Array(25), im=new Float32Array(25);
+      for(let h=1;h<im.length;h++) im[h]=Math.pow(h,-1.65)*Math.exp(-h/12);
+      voiceWave=AC.createPeriodicWave(re,im);
+    }
+    src.setPeriodicWave(voiceWave);
+  }
   src.frequency.setValueAtTime(o.f0,t);
   (o.pitch||[]).forEach(pm=>src.frequency.exponentialRampToValueAtTime(Math.max(28,o.f0*pm[1]),t+o.dur*pm[0]));
   if(o.vib){
@@ -300,7 +320,7 @@ function vox(dest,t,o){
   const sum=AC.createGain();
   (o.form||[[1100,6,1],[2600,8,.5]]).forEach(fm=>{
     const bp=AC.createBiquadFilter(); bp.type='bandpass';
-    bp.frequency.setValueAtTime(fm[0],t); bp.Q.value=fm[1];
+    bp.frequency.setValueAtTime(fm[0],t); bp.Q.value=Math.min(4,fm[1]*.62);
     if(o.glide) bp.frequency.exponentialRampToValueAtTime(fm[0]*o.glide,t+o.dur);
     const ag=AC.createGain(); ag.gain.value=fm[2];
     src.connect(bp); bp.connect(ag); ag.connect(sum);
@@ -313,13 +333,13 @@ function vox(dest,t,o){
   }
   let tail=sum;
   if(o.am){                                   // rapid tremolo = chitter / growl rasp
-    const lo=AC.createOscillator(); lo.type='square'; lo.frequency.value=o.am;
-    const lg=AC.createGain(); lg.gain.value=.5;
-    const amG=AC.createGain(); amG.gain.value=.5;
+    const lo=AC.createOscillator(); lo.type='sine'; lo.frequency.value=o.am*rnd(.92,1.08);
+    const lg=AC.createGain(); lg.gain.value=.28;
+    const amG=AC.createGain(); amG.gain.value=.72;
     lo.connect(lg); lg.connect(amG.gain); sum.connect(amG);
     lo.start(t); lo.stop(t+o.dur+.06); tail=amG;
   }
-  tail.connect(env(dest,t,o.atk||.012,o.dur,o.vol));
+  tail.connect(env(dest,t,o.atk||.018,o.dur,o.vol*.85));
   src.start(t); src.stop(t+o.dur+.07);
 }
 
@@ -333,18 +353,11 @@ const VOX={
     nz(d,t,.06,'lowpass',rnd(300,520),0,.15*v,1);
   },
   peck(d,v){ const t=AC.currentTime;
-    nz(d,t,.032,'bandpass',rnd(1700,3300),3.6,.30*v,rnd(.85,1.35));
-    const o=AC.createOscillator(); o.type='triangle'; o.frequency.value=rnd(560,1000);
-    o.connect(env(d,t,.003,.028,.10*v)); o.start(t); o.stop(t+.06);
-    if(Math.random()<.10) VOX.buk(d,v*.75);
+    if(!sampleSfx('peck',d,v)) nz(d,t,.055,'bandpass',rnd(900,1700),.8,.22*v,rnd(.85,1.2));
   },
   slash(d,v){ const t=AC.currentTime;
-    const f=nz(d,t,.13,'bandpass',2700,1.4,.24*v,rnd(.8,1.2));
-    f.frequency.setValueAtTime(rnd(2400,3200),t);
-    f.frequency.exponentialRampToValueAtTime(rnd(600,900),t+.12);
-    VOX.thud(d,v*.9,t+.02);
-    const r=Math.random();
-    if(r<.10) VOX.chitter(d,v*.7); else if(r<.16) VOX.growl(d,v*.7);
+    nz(d,t,.11,'bandpass',rnd(700,1400),.7,.15*v,rnd(.8,1.2));
+    VOX.thud(d,v*.8,t+.025);
   },
   flap(d,v){ const t=AC.currentTime;
     for(let i=0;i<3;i++) nz(d,t+i*rnd(.05,.085),.05,'lowpass',rnd(480,900),0,.15*v,rnd(.6,1));
@@ -370,7 +383,7 @@ const VOX={
   },
 
   /* ---------- the barnyard proper ----------
-     Each of these is the same trick: a buzzy source at the animal's pitch,
+     Each of these uses a rounded harmonic source at the animal's pitch,
      pushed through parallel bandpass resonators standing in for a throat.
      What separates a goat from a donkey is mostly the vibrato rate and where
      those resonances sit, so the numbers below are the whole characterisation. */
@@ -444,6 +457,7 @@ const VOX={
       src.playbackRate.value=rnd(.93,1.08);            // so repeats don't tell
       const g=AC.createGain(); g.gain.value=v*1.5;
       src.connect(g); g.connect(d); src.start(t);
+      src.onended=()=>{src.disconnect();g.disconnect();};
       return;
     }
     vox(d,t,{f0:rnd(68,104),dur:rnd(1.0,1.45),vol:.38*v, glide:.68,
@@ -525,13 +539,9 @@ const VOX={
     VOX.thud(d,v,t+.02);
     if(Math.random()<.4) VOX.hiss(d,v*.6);
   },
-  spur(d,v){ const t=AC.currentTime;
-    const o=AC.createOscillator(); o.type='triangle';
-    o.frequency.setValueAtTime(rnd(1900,2500),t);
-    o.frequency.exponentialRampToValueAtTime(680,t+.12);
-    o.connect(env(d,t,.002,.14,.19*v)); o.start(t); o.stop(t+.2);
-    nz(d,t,.05,'highpass',5200,0,.13*v,1);
-    VOX.squawk(d,v*.95);
+  spur(d,v){
+    VOX.bonecrack(d,v*.8);
+    nz(d,AC.currentTime,.07,'bandpass',1800,.8,.10*v,1);
   },
   crow(d,v){ const t=AC.currentTime, f=rnd(325,405);   // er-er-er-ERRRRR
     vox(d,t,    {f0:f*1.15,dur:.20,vol:.26*v,pitch:[[.3,1.10],[1,.90]],noise:.07,
@@ -558,37 +568,71 @@ const VOX={
   }
 };
 
+/* Small, locally hosted banks: no request or decode occurs during a fight. */
+const SFX_BANKS={
+  buk:['cluck1','cluck2','cluck3'], bawk:['bawk','cackle'],
+  cackle:['cackle','bawk'], squawk:['bawk'], birddeath:['bawk'],
+  chitter:['chitter1','chitter2','chitter3'], coondeath:['chitter3','chitter1'],
+  flap:['wing1','wing2'], wingbeat:['wing1','wing2'],
+  thud:['impact1','impact2','impact3'], peck:['impact1','impact2'],
+  bonecrack:['impact2','impact3']
+};
+const SFX_GAIN={buk:.28,bawk:.38,cackle:.30,squawk:.38,birddeath:.42,
+  chitter:.36,coondeath:.40,flap:.32,wingbeat:.40,thud:.42,peck:.19,bonecrack:.52};
+const sampleLast=Object.create(null);
+function sampleSfx(kind,d,v,at){
+  if(!AC||!soundOn) return false;
+  const bank=(SFX_BANKS[kind]||[]).filter(k=>BUF['fx_'+k]);
+  if(!bank.length) return false;
+  let pick=(Math.random()*bank.length)|0;
+  if(bank.length>1&&bank[pick]===sampleLast[kind]) pick=(pick+1)%bank.length;
+  const k=bank[pick]; sampleLast[kind]=k;
+  const src=AC.createBufferSource(); src.buffer=BUF['fx_'+k];
+  src.playbackRate.value=rnd(.94,1.06)*(kind==='peck'?1.25:1);
+  const g=AC.createGain(); g.gain.value=v*(SFX_GAIN[kind]||.35)*rnd(.88,1);
+  src.connect(g);g.connect(d);src.start(at==null?AC.currentTime:at);
+  src.onended=()=>{src.disconnect();g.disconnect();};
+  return true;
+}
+Object.keys(SFX_BANKS).filter(k=>k!=='peck').forEach(k=>{
+  const fallback=VOX[k];
+  VOX[k]=(d,v,t)=>{if(!sampleSfx(k,d,v,t)) fallback(d,v,t);};
+});
+
 /* ---------- positional dispatch ---------- */
 /* mode: undefined = an ordinary blow, thinned out with distance
-        'soft'  = background murmur, quiet, unlimited
+        'soft'  = background murmur, quiet, separate bounded budget
         'cry'   = a creature using its voice — own budget, never thinned
         'key'   = something that must be heard (a death), never thinned */
 function sfx(kind,x,z,mode){
   if(mode===true) mode='soft';
   if(!soundOn||!AC||!VOX[kind]) return;
   const always=(mode==='soft'||mode==='cry'||mode==='key');
-  let v=1, pan=0, bright=15000;
+  let v=1, pan=0, bright=11000;
   if(x!==undefined){
     _ap.set(x,0.55,z);
-    const dist=_ap.distanceTo(camera.position);
-    const near=clamp(1-dist/62,0,1);
+    // A high overview camera still listens from above the field's centre.
+    const overview=typeof VIEW!=='undefined'&&(VIEW.tactical||(VIEW.reducedMotion&&!DIR.manual));
+    const dist=overview?Math.hypot(x,z,12)*Math.min(1,30/ARENA_R):_ap.distanceTo(camera.position);
+    const near=clamp(1-dist/80,0,1);
     if(near<=0.03) return;
     _ap2.copy(_ap).project(camera);
-    if(_ap2.z>1) return;                       // behind the lens
-    // the close fight is the one you hear; distant scuffles thin out
-    if(!always && Math.random()>near*0.9+0.05) return;
-    /* An always-play sound still costs a token, so a death 60 metres away
-       would spend budget on something inaudible and starve the one happening
-       in front of the lens. Cries and deaths have to clear a hearing floor. */
-    if(mode!=='soft' && always && near<0.24) return;
-    v=near*near; pan=clamp(_ap2.x*0.9,-1,1); bright=lerp(850,15000,near);
+    if(_ap2.z>1) return;
+    if(!always && Math.random()>near*.85+.10) return;
+    if(mode!=='soft' && always && near<.18) return;
+    v=near*near; pan=clamp(_ap2.x*.8,-.85,.85); bright=lerp(1200,11000,near);
   }
-  if(mode==='soft') v*=0.42;
-  else if(mode==='cry'){ if(voxTokens<1) return; voxTokens--; }
-  else { if(sfxTokens<1) return; sfxTokens--; }
+  const now=AC.currentTime;
+  const voice=mode==='cry'||mode==='soft'||['bawk','crow','chitter','birddeath','coondeath','squawk','cackle'].includes(kind);
+  const gap=kind==='roar'?2.5:kind==='crow'?1.8:voice?.24:.045;
+  if(now-(fxLast[kind]??-Infinity)<gap) return;
+  if(mode==='soft'){if(softTokens<1) return;softTokens--;v*=.28;}
+  else if(mode==='cry'){if(voxTokens<1) return;voxTokens--;}
+  else {if(sfxTokens<1) return;sfxTokens--;}
+  fxLast[kind]=now;
   const bus=outBus(pan);
   const tn=AC.createBiquadFilter(); tn.type='lowpass'; tn.frequency.value=bright;
-  tn.connect(bus);
+  tn.connect(bus);fxBuses[fxBuses.length-1].nodes.push(tn);
   VOX[kind](tn,v);
 }
 
@@ -596,52 +640,27 @@ function sfx(kind,x,z,mode){
 function sting(kind){
   if(!soundOn||!AC) return;
   const t=AC.currentTime, d=outBus(0);
-  const note=(freq,at,dur,type,vol)=>{
-    const o=AC.createOscillator(); o.type=type||'triangle';
-    o.frequency.setValueAtTime(freq,t+at);
-    o.connect(env(d,t+at,.02,dur,vol||.22)); o.start(t+at); o.stop(t+at+dur+.06);
-  };
-  if(kind==='beep') note(660,0,.14,'triangle',.18);
+  // Tactile cues leave the melodic fanfare to the recorded score.
+  if(kind==='beep') nz(d,t,.055,'bandpass',1100,.6,.16,1);
   if(kind==='go'){
-    [104,156,208].forEach((f,i)=>{
-      const o=AC.createOscillator(); o.type='sawtooth'; o.frequency.value=f*(1+i*.002);
-      const fl=AC.createBiquadFilter(); fl.type='lowpass';
-      fl.frequency.setValueAtTime(300,t); fl.frequency.linearRampToValueAtTime(2600,t+.25);
-      const g=AC.createGain();
-      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.14,t+.04);
-      g.gain.setValueAtTime(.14,t+.45); g.gain.exponentialRampToValueAtTime(.0001,t+.9);
-      o.connect(fl); fl.connect(g); g.connect(d); o.start(t); o.stop(t+.95);
-    });
-    setTimeout(()=>{ const b=outBus(rnd(-.4,.4)); VOX.crow(b,1.0); },260);
+    if(!oneShot('horn',.32)){
+      VOX.thud(d,.8,t);VOX.thud(d,.55,t+.18);
+      nz(d,t,.45,'lowpass',700,0,.12,.8);
+    }
   }
-  if(kind==='win'){
-    [523,659,784,1046].forEach((f,i)=>note(f,i*.11,.5,'triangle',.19));
-    setTimeout(()=>{ VOX.crow(outBus(-.3),1.0); },140);
-    setTimeout(()=>{ VOX.crow(outBus(.42),.75); },720);
-  }
-  if(kind==='lose'){
-    [415,392,311,261].forEach((f,i)=>note(f,i*.15,.6,'sawtooth',.13));
-    for(let i=0;i<5;i++) setTimeout(()=>VOX.chitter(outBus(rnd(-.8,.8)),rnd(.5,.95)),i*160+90);
-    setTimeout(()=>VOX.growl(outBus(0),1.0),380);
-  }
-  if(kind==='slow'){
-    const s=AC.createBufferSource(); s.buffer=noiseBuf;
-    s.playbackRate.setValueAtTime(1.6,t); s.playbackRate.exponentialRampToValueAtTime(.25,t+.7);
-    const f=AC.createBiquadFilter(); f.type='bandpass'; f.Q.value=2.5;
-    f.frequency.setValueAtTime(2200,t); f.frequency.exponentialRampToValueAtTime(160,t+.7);
-    s.connect(f); f.connect(env(d,t,.06,.75,.24)); s.start(t); s.stop(t+.85);
-  }
+  if(kind==='win'){VOX.flap(d,.4);nz(d,t,.35,'bandpass',1800,.5,.07,.8);}
+  if(kind==='lose'){VOX.thud(d,.65,t);nz(d,t,.4,'lowpass',350,0,.12,.7);}
+  if(kind==='slow') nz(d,t,.6,'lowpass',600,0,.16,.65);
 }
 
 
 /* ============================================================
    SAMPLED AUDIO
 
-   The synthesized voices and the procedural score still do all the work by
-   default — that is what keeps the game playable from a single file with no
-   network. These samples layer on top when they are reachable. If a fetch
-   fails, or the page is opened straight off disk where relative fetches don't
-   resolve, nothing breaks: SAMPLED stays false and the synth carries on.
+   Local samples supply the primary effects and recorded score. Each missing
+   effect falls back independently to synthesis; each missing music mode
+   uses its procedural arrangement. Opening the HTML directly off disk
+   therefore still works, even when relative sample fetches cannot resolve.
    ============================================================ */
 const ASSET_BASE='assets/';
 const ASSET_LIST=[
@@ -652,7 +671,8 @@ const ASSET_LIST=[
   ['victory', 'audio/victory.mp3'],
   ['defeat',  'audio/defeat.mp3'],
   ['roar',    'audio/roar.mp3'],
-  ['horn',    'audio/horn.mp3']
+  ['horn',    'audio/horn.mp3'],
+  ...[...new Set(Object.values(SFX_BANKS).flat())].map(k=>['fx_'+k,'audio/sfx/'+k+'.mp3'])
 ];
 const RAW={}, BUF={};
 let SAMPLED=false, assetsFetched=false, decoding=false;
@@ -696,25 +716,17 @@ async function loadAssets(){
   }
   /* Weight the bar by the real sizes so it doesn't stall on the big beds.
      Unknown lengths fall back to counting files. */
-  let total=0, done=0, files=0;
-  try{
-    const bufs=await Promise.all(ASSET_LIST.map(async ([k,rel])=>{
-      const b=await fetchOne(ASSET_BASE+rel,(n,len)=>{
-        if(!total) total=0;
-        total=Math.max(total,0); done+=n;
-        assetProgress(done/Math.max(done+1,ASSET_TOTAL_GUESS));
+  let done=0;
+  // One missing optional effect must never discard the soundtrack.
+  await Promise.all(ASSET_LIST.map(async ([k,rel])=>{
+    try{
+      RAW[k]=await fetchOne(ASSET_BASE+rel,(n)=>{
+        done+=n;assetProgress(done/Math.max(done+1,ASSET_TOTAL_GUESS));
       });
-      files++;
-      return [k,b];
-    }));
-    bufs.forEach(([k,b])=>RAW[k]=b);
-    assetsFetched=true;
-    assetProgress(1,'Ready');
-  }catch(e){
-    /* offline, file://, or the assets simply aren't deployed — carry on */
-    assetsFetched=false;
-    assetProgress(1,'Ready');
-  }
+    }catch(e){ /* The voice's procedural fallback remains available. */ }
+  }));
+  assetsFetched=true;
+  assetProgress(1,'Ready');
   /* If the first tap landed while these were still downloading, decodeAssets()
      bailed on !assetsFetched and nothing ever called it again — the visit ran
      on synthesized music with the beds sitting decoded-never in memory. */
@@ -739,9 +751,9 @@ async function decodeAssets(){
   decoding=true;
   try{
     await Promise.all(Object.keys(RAW).map(k=>
-      AC.decodeAudioData(RAW[k].slice(0)).then(b=>{ BUF[k]=b; }).catch(()=>{})
+      AC.decodeAudioData(RAW[k].slice(0)).then(b=>{ BUF[k]=b; delete RAW[k]; }).catch(()=>{})
     ));
-    SAMPLED=!!(BUF.menu||BUF.battle);
+    SAMPLED=!!(BUF.menu||BUF.battle||BUF.tension);
     if(SAMPLED) trackSync();
   }catch(e){}
   decoding=false;
@@ -757,6 +769,7 @@ function oneShot(name,vol){
   src.playbackRate.value=rnd(.985,1.015);
   const g=AC.createGain(); g.gain.value=vol==null?0.9:vol;
   src.connect(g); g.connect(master); src.start(0);
+  src.onended=()=>{src.disconnect();g.disconnect();};
   return true;
 }
 
@@ -772,8 +785,8 @@ function trackStart(name,vol,loop){
   const g=AC.createGain(); g.gain.value=0.0001;
   src.connect(g); g.connect(trackBus()); src.start(0);
   g.gain.setTargetAtTime(vol,AC.currentTime,.6);
-  TRK.on[name]={src,g};
-  if(!src.loop) src.onended=()=>{ delete TRK.on[name]; };
+  const track={src,g}; TRK.on[name]=track;
+  src.onended=()=>{if(TRK.on[name]===track) delete TRK.on[name];src.disconnect();g.disconnect();};
 }
 function trackStop(name,fade){
   const t=TRK.on[name]; if(!t) return;
@@ -803,9 +816,11 @@ function audioUpdate(dt){
   if(!AC) return;
   musicUpdate(dt);
   recentKills*=Math.exp(-dt*1.6);
-  sfxTokens=Math.min(9,sfxTokens+dt*20);
-  voxTokens=Math.min(9,voxTokens+dt*12);
-  master.gain.setTargetAtTime(soundOn?0.85:0.0001, AC.currentTime, 0.25);
+  sweepFx();
+  sfxTokens=Math.min(6,sfxTokens+dt*14);
+  voxTokens=Math.min(3,voxTokens+dt*3);
+  softTokens=Math.min(2,softTokens+dt*2);
+  master.gain.setTargetAtTime(soundOn?0.85:0, AC.currentTime, soundOn?.25:.025);
   if(!soundOn) return;
 
   const heat=clamp(recentKills/22,0,1);
@@ -813,19 +828,18 @@ function audioUpdate(dt){
   amb.crickOut.gain.setTargetAtTime(NIGHT?0.05*(1-heat*0.7):0, AC.currentTime, 0.6);
   amb.wind.filter.frequency.setTargetAtTime(NIGHT?260:430, AC.currentTime, 0.6);
   mFilter.frequency.setTargetAtTime(BATTLE.slowT>0?620:18000, AC.currentTime, 0.08);
-  revSend.gain.setTargetAtTime(NIGHT?0.30:0.09, AC.currentTime, 0.8);
+  revSend.gain.setTargetAtTime(NIGHT?0.075:0.045, AC.currentTime, 0.8);
+
+  if(typeof VIEW!=='undefined'&&VIEW.paused) return;
 
   /* a crowd only sounds like a crowd if individuals keep piping up */
   murmurT-=dt;
   if(murmurT<=0 && N>0){
-    murmurT=rnd(.10,.55)/(0.35+heat*2.6);
+    murmurT=rnd(.45,.9)/(0.7+heat*.4);
     const i=(Math.random()*N)|0;
     if(A.st[i]!==2){
-      const bird=A.team[i]===0;
-      const r=Math.random();
-      const k=bird ? (A.st[i]===1 ? (r<.34?'cackle':r<.62?'squawk':r<.82?'bawk':'wingbeat')
-                                  : (r<.55?'buk':r<.74?'squawk':r<.88?'warble':'scuffle'))
-                   : (r<.42?'chitter':r<.62?'growl':r<.78?'hiss':r<.9?'yelp':'scuffle');
+      const u=UNITS[A.kind[i]], r=Math.random();
+      const k=r<.45?'scuffle':u.k==='hen'||u.k==='rooster'||u.k==='gamecock'?'buk':u.voice||'scuffle';
       sfx(k,A.x[i],A.z[i],true);
     }
   }
@@ -835,7 +849,7 @@ function audioUpdate(dt){
      because there are fewer of them to notice. */
   cryT-=dt;
   if(cryT<=0 && N>0 && BATTLE.running && !BATTLE.over){
-    cryT=rnd(.22,.55);
+    cryT=rnd(.65,1.15);
     for(let a=0;a<4;a++){
       const i=(Math.random()*N)|0;
       if(A.st[i]===2) continue;
@@ -968,7 +982,7 @@ function padChord(t,mids,dur,v){
     const sum=AC.createGain();
     [[720,7,1],[1150,9,.55],[2650,11,.28]].forEach(fm=>{
       const bp=AC.createBiquadFilter(); bp.type='bandpass';
-      bp.frequency.value=fm[0]; bp.Q.value=fm[1];
+      bp.frequency.value=fm[0]; bp.Q.value=Math.min(4,fm[1]*.62);
       const ag=AC.createGain(); ag.gain.value=fm[2];
       o.connect(bp); bp.connect(ag); ag.connect(sum);
     });
@@ -1036,7 +1050,7 @@ function riser(t,dur){
 function schedStep(s,t){
   /* the recorded beds replace the procedural score outright — two of them at
      once would fight each other, and neither would win */
-  if(SAMPLED) return;
+  if(BUF[MUS.mode]) return;
   const st=s%16, chord=CHORDS[(s/32|0)%4], I=MUS.intensity;
 
   /* The setup screen used to be silent, which made the game feel like it
@@ -1121,7 +1135,7 @@ function musicFinish(won){
   if(!AC) return;
   const t=AC.currentTime+.05, beat=60/MUS.bpm;
   musicMode('idle');
-  if(SAMPLED){
+  if(BUF[won?'victory':'defeat']){
     trackStopAll(.45);
     TRK.want=null;
     trackStart(won?'victory':'defeat',.9,false);

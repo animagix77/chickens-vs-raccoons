@@ -1,3 +1,13 @@
+# Sound effects upgrade — September 4, 2026
+
+- Added 13 locally hosted samples for chicken calls, raccoon chatter, wings and impacts (about 96 KB total). Samples vary gently in level/pitch and avoid immediate repeats where alternatives exist.
+- Replaced saw/square vocal excitation with a soft harmonic pulse; smoothed chatter modulation, lowered throat resonances and replaced arcade cue melodies with tactile cues.
+- Shortened reverb, separated crowd/voice/impact event budgets, added repetition cooldowns and bounded transient audio buses.
+- Fixed muted reverb leakage, Tactical/reduced-motion hearing distance, species-specific background voices and missing-file music fallback. Preserved the existing soundtrack, gameplay and replay version.
+- Included creator attribution and licenses in `sound-credits.html`, linked from the story panel.
+
+Validation: `node tests/audio.cjs` covers scheduling for all 41 procedural effects, sample selection/fallback/cleanup, routing, partial downloads, independent budgets, overview hearing and transient resource limits. Native Web Audio decoded all 13 MP3 files and rendered 82 sampled/fallback voice cases with finite, audible output and no individual clipping (maximum observed peak 0.219 at test gain 0.8). Browser battle ran in Auto and Tactical without reported errors. Replay/command/capacity regression checks passed. Timbre remains a listening judgment; waveform and graph checks do not certify subjective realism.
+
 # Battle readability and character upgrade — September 4, 2026
 
 Release prepared for [chickensvraccoons.com](https://chickensvraccoons.com/).

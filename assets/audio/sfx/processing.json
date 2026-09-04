@@ -1,0 +1,106 @@
+[
+  {
+    "file": "cluck1.mp3",
+    "source": "Chicken Sound Effect.mp3",
+    "start": 0,
+    "duration": 0.14,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=2.0819998741303247,afade=t=in:d=0.004,afade=t=out:st=0.11500000000000002:d=0.025",
+    "bytes": 2602
+  },
+  {
+    "file": "cluck2.mp3",
+    "source": "Chicken Sound Effect.mp3",
+    "start": 0.43,
+    "duration": 0.14,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=2.927080123885822,afade=t=in:d=0.004,afade=t=out:st=0.11500000000000002:d=0.025",
+    "bytes": 2602
+  },
+  {
+    "file": "cluck3.mp3",
+    "source": "Chicken Sound Effect.mp3",
+    "start": 1.08,
+    "duration": 0.17,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=1.7071218971879272,afade=t=in:d=0.004,afade=t=out:st=0.14500000000000002:d=0.025",
+    "bytes": 2916
+  },
+  {
+    "file": "bawk.mp3",
+    "source": "Chicken Sound Effect.mp3",
+    "start": 1.53,
+    "duration": 1.13,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=0.3969911375991065,afade=t=in:d=0.004,afade=t=out:st=1.105:d=0.025",
+    "bytes": 14514
+  },
+  {
+    "file": "cackle.mp3",
+    "source": "Chicken Sound Effect.mp3",
+    "start": 0.01,
+    "duration": 1.44,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=1.6365023908521252,afade=t=in:d=0.004,afade=t=out:st=1.415:d=0.025",
+    "bytes": 18276
+  },
+  {
+    "file": "chitter1.mp3",
+    "source": "raccoon.mp3",
+    "start": 1.07,
+    "duration": 0.49,
+    "filters": "highpass=f=380,lowpass=f=6200,afftdn=nf=-30,volume=0.7258725204305275,afade=t=in:d=0.004,afade=t=out:st=0.46499999999999997:d=0.025",
+    "bytes": 6627
+  },
+  {
+    "file": "chitter2.mp3",
+    "source": "raccoon.mp3",
+    "start": 2.12,
+    "duration": 0.39,
+    "filters": "highpass=f=380,lowpass=f=6200,afftdn=nf=-30,volume=2.446023644838434,afade=t=in:d=0.004,afade=t=out:st=0.365:d=0.025",
+    "bytes": 5374
+  },
+  {
+    "file": "chitter3.mp3",
+    "source": "raccoon.mp3",
+    "start": 3.22,
+    "duration": 0.6,
+    "filters": "highpass=f=380,lowpass=f=6200,afftdn=nf=-30,volume=9.938050661779275,afade=t=in:d=0.004,afade=t=out:st=0.575:d=0.025",
+    "bytes": 7881
+  },
+  {
+    "file": "wing1.mp3",
+    "source": "wings_flap_large.flac",
+    "start": 0,
+    "duration": 0.51,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=1.6321821631878557,afade=t=in:d=0.004,afade=t=out:st=0.485:d=0.025",
+    "bytes": 6941
+  },
+  {
+    "file": "wing2.mp3",
+    "source": "wings_flap_large.flac",
+    "start": 1.03,
+    "duration": 0.53,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=1.6321821631878557,afade=t=in:d=0.004,afade=t=out:st=0.505:d=0.025",
+    "bytes": 7254
+  },
+  {
+    "file": "impact1.mp3",
+    "source": "qubodupPunch/qubodupPunch01.flac",
+    "start": 0,
+    "duration": 0.5,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=0.6873129345636019,afade=t=in:d=0.004,afade=t=out:st=0.475:d=0.025",
+    "bytes": 6941
+  },
+  {
+    "file": "impact2.mp3",
+    "source": "qubodupPunch/qubodupPunch02.flac",
+    "start": 0,
+    "duration": 0.5,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=0.8875123237773521,afade=t=in:d=0.004,afade=t=out:st=0.475:d=0.025",
+    "bytes": 6941
+  },
+  {
+    "file": "impact3.mp3",
+    "source": "qubodupPunch/qubodupPunch03.flac",
+    "start": 0,
+    "duration": 0.5,
+    "filters": "highpass=f=100,lowpass=f=9000,volume=0.792167136823987,afade=t=in:d=0.004,afade=t=out:st=0.475:d=0.025",
+    "bytes": 6941
+  }
+]

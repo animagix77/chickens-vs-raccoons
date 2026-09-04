@@ -4,3 +4,8 @@ See https://github.com/mrdoob/three.js for the original source.
 
 The bundled copy lives at src/three.min.js and is inlined into index.html
 by build.py so the simulator runs as a single self-contained file.
+
+Additional sound effects (September 4, 2026):
+See sound-credits.html for authors, source links, licenses, and modifications.
+Chicken samples are CC BY 3.0 (IMadeIt). Raccoon, wing and impact samples are CC0.
+These third-party sound effects retain their own licenses.
