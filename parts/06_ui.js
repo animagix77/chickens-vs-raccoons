@@ -141,6 +141,7 @@ function notifyBattle(message){
   return false;
 }
 function resetReplayRuntime(){
+  if(typeof resetFinale==='function')resetFinale();
   REPLAY.generation++; REPLAY.pending=[]; REPLAY.cursor=0;
   BATTLE.tick=0; VIEW.paused=false; REPLAY.seeking=false; REPLAY.seekTo=0;
 }
@@ -277,6 +278,11 @@ function setPhase(p){
 }
 
 function verdict(who,how){
+  if(FINALE.active)return;
+  if(beginFinale(who,how))return;
+  showVerdict(who,how);
+}
+function showVerdict(who,how){
   BATTLE.over=true; BATTLE.running=false; VIEW.paused=false;
   REPLAY.last=copyFight(REPLAY.current); pushFightURL();
   document.body.classList.remove('fighting');
@@ -434,6 +440,7 @@ function checkWin(dt){
    ============================================================ */
 let slowCool=0;
 function slowmo(dt){
+  if(FINALE.active){BATTLE.timeScale=VIEW.reducedMotion?1:.18;BATTLE.slowT=VIEW.reducedMotion?0:1;$('slowmo').classList.toggle('on',!VIEW.reducedMotion);return;}
   if(VIEW.reducedMotion||VIEW.tactical){ BATTLE.timeScale=1; BATTLE.slowT=0; $('slowmo').classList.remove('on'); return; }
   slowCool-=dt;
   BATTLE.windowT+=dt;
@@ -934,9 +941,10 @@ function loop(now){
   const real=Math.min(0.05,raw);   // physics/camera: clamped so a hitch can't explode the sim
   const wall=Math.min(0.5,raw);    // the title sequence is a wall clock, not a frame counter
 
-  if(SEQ.phase!=='idle'&&SEQ.phase!=='battle'&&SEQ.phase!=='result') stepSeq(wall);
+  if(FINALE.active)stepFinale(wall);
+  else if(SEQ.phase!=='idle'&&SEQ.phase!=='battle'&&SEQ.phase!=='result') stepSeq(wall);
   if(!VIEW.paused) slowmo(real);
-  const dt=VIEW.paused?0:real*BATTLE.timeScale*VIEW.speed;
+  const dt=VIEW.paused?0:real*BATTLE.timeScale*(FINALE.active?1:VIEW.speed);
 
   /* The sim runs on a fixed step so a shared seed lands on the same result
      everywhere. dt is clamped to 0.05 upstream, so this is at most six
@@ -953,7 +961,7 @@ function loop(now){
       stepSim(SIM_DT); if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);simAcc-=SIM_DT;
     }
   }
-  else if(SEQ.phase!=='battle'){ idleSway(dt); }
+  else if(SEQ.phase!=='battle'&&!FINALE.active){ idleSway(dt); }
 
   stepParticles(dt);
   stepGore(dt);
@@ -987,6 +995,7 @@ function idleSway(dt){
    BOOT
    ============================================================ */
 if(typeof initHighlightsUI==='function')initHighlightsUI();
+initFinaleUI();
 buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 /* a link that carries a fight skips the preamble and goes straight to it */
 const LINKED=decodeFight();

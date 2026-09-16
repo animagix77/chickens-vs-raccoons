@@ -16,7 +16,7 @@ function syncControls(){
   document.body.classList.toggle('reducedMotion',VIEW.reducedMotion);
   document.body.classList.toggle('finished',BATTLE.over);
   if(!playing){ document.body.classList.remove('deployOpen'); $('btnDeploy').setAttribute('aria-expanded','false'); }
-  const label=BATTLE.over?'Battle finished. '+$('cardA').textContent:
+  const label=FINALE.active?'Final moment. Show results to skip.':BATTLE.over?'Battle finished. '+$('cardA').textContent:
     VIEW.paused?'Battle paused.':SEQ.phase==='battle'?(REPLAY.playback?'Replaying recorded battle.':'Battle running.'):
     SEQ.phase==='idle'?'Choose your matchup.':'Battle starting. Make your prediction.';
   if(label&&syncControls.lastAnnouncement!==label){
@@ -82,7 +82,7 @@ function syncUIDialog(){
     body.contains('rules')?$('rules'):$('card').classList.contains('on')&&$('card').classList.contains('result')?$('card'):null;
   for(const child of frame.children){
     const hiddenOverlay=['story','rules','about'].includes(child.id)&&child!==next;
-    const hiddenHud=body.contains('hideui')&&['panel','tools','cmdbar','topui','feed','champ'].includes(child.id);
+    const hiddenHud=(body.contains('hideui')||body.contains('finishing'))&&['panel','tools','cmdbar','topui','feed','champ'].includes(child.id);
     child.inert=next?child!==next:hiddenOverlay||hiddenHud||(child.id==='panel'&&(body.contains('live')||body.contains('reel')))||
       (child.id==='card'&&!child.classList.contains('on'));
   }

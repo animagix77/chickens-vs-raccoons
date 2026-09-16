@@ -1,3 +1,12 @@
+# Final-moment cinematic — September 16, 2026
+
+- A true elimination now plays a 3.6-second camera push-in and slow-motion fall before the results card appears. Open Battle follows the losing army’s final unit; Coop Defense follows the last predator or protected hen.
+- The camera favors a clear angle through the crowd, keeps its final framing behind the result card, and fits phone screens. The UI clears during the shot, with an accessible Show results button to skip it.
+- Reduced Motion keeps the camera steady and uses a short 0.8-second hold. Timed, stalled, and uncontested outcomes do not invent a death sequence; replay seeking bypasses the presentation while reconstructing earlier ticks.
+- The winner, casualties, clock, and action recording stop at the original winning tick. Only the visual death pose, camera, and particles continue; gameplay statistics, random draws, and simulation version are unchanged.
+
+Validation: `node tests/finale.cjs` covers actual death hooks, final-unit/hen targeting, fake-dead possums, frozen state/clock/RNG, camera framing, single completion, skip/reset, reduced motion, and seeking. Defense, replay/capacity, highlight, and audio checks passed. Browser review covered the predator close-up, delayed results, and phone-sized final-hen presentation.
+
 # Instructions readability — September 16, 2026
 
 - Increased the How this works heading, instruction text, label sizes, contrast, line spacing, and section spacing. Phone layouts stack labels above paragraphs for a comfortable reading width.

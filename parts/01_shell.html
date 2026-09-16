@@ -717,6 +717,11 @@ if(GA_ID){
   body.defense.narrow.short #cmdact .cmd{grid-column:auto}
   body.defense.narrow .cmd{min-width:0;padding:8px 3px}body.defense.narrow .cmd .cn{font-size:9px}
   body.short #coopObjective{padding:5px 9px;margin-top:4px}
+  body.finishing #topui,body.finishing #feed,body.finishing #champ,body.finishing #replayMoment{visibility:hidden}
+  #finaleBanner{position:absolute;z-index:25;left:50%;bottom:34px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:12px;max-width:calc(100% - 32px);text-align:center}
+  #finaleLabel{padding:9px 16px;border-radius:9px;background:#100d16cc;color:#fff2d8;font-size:clamp(16px,2.2vw,22px);font-weight:750;letter-spacing:.03em;white-space:nowrap}
+  #finaleSkip{min-height:44px;padding:10px 18px;border:1px solid #ffffff50;border-radius:9px;background:#17121fee;color:#f7efdf;font:600 12px system-ui;cursor:pointer}
+  #finaleSkip:hover{background:#302638}body.narrow #finaleBanner{bottom:24px}
 </style>
 </head>
 <body>
@@ -835,6 +840,8 @@ if(GA_ID){
     </div>
     <button id="rulesGo">Got it</button>
   </div>
+
+  <div id="finaleBanner" hidden><div id="finaleLabel" role="status">Final moment</div><button id="finaleSkip">Show results</button></div>
 
   <div id="story" role="dialog" aria-modal="true" aria-label="Why this battle exists" tabindex="-1">
     <img id="storyArt" alt="Eenie and Moe">

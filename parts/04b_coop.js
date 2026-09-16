@@ -51,7 +51,7 @@ function coopStrike(i,target,hen){
     (CMD.light>0?(1-.45*floodPower()):1);
   target.hp=Math.max(0,target.hp-damage);target.hit=.25;
   if(hen){
-    if(target.hp<=0){coopEvent('hen-lost','A protected hen was lost',target.x,target.z);sfx('bawk',target.x,target.z,'key');}
+    if(target.hp<=0){if(typeof rememberFinalHen==='function')rememberFinalHen(COOP.hens.indexOf(target));coopEvent('hen-lost','A protected hen was lost',target.x,target.z);sfx('bawk',target.x,target.z,'key');}
   }else{
     const k=COOP.sections.indexOf(target),a=(k+.5)*TAU/8;
     if(!COOP.firstHit){COOP.firstHit=true;coopEvent('fence-hit','Predators reached the run',Math.cos(a)*COOP.radius,Math.sin(a)*COOP.radius);}

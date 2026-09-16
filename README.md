@@ -12,7 +12,7 @@ The game runs from one HTML file with Three.js inlined and models generated from
 
 **Coop Defense** puts two hens inside a central coop and roofed run. Predators damage eight fence sections and enter through breaches. Use reinforcements, horn, feed, floodlight, **Repair fence (4)**, and **Rally to coop (5)** to protect them. Individual hen health bars show the urgency; Rally draws nearby defenders to the run or intruders for eight seconds, with a 22-second cooldown. A breach leaves time to rescue the hens: stop all predators to win. The raid ends in defeat only when both hens are lost, with no automatic victory timer. Open Battle is still available.
 
-The results screen offers clickable replay highlights for fence attacks, breaches, casualties, commands, and turning points. Dedicated hen, goose, and turkey models join the articulated roosters and raccoons. Sampled effects supplement the procedural audio. See [release notes](RELEASE-NOTES.md) for validation and compatibility details. Historical balance measurements below describe Open Battle.
+The final casualty gets a brief zoomed slow-motion finish before the results, with a skip button and a steady-camera Reduced Motion option. The results screen offers clickable replay highlights for fence attacks, breaches, casualties, commands, and turning points. Dedicated hen, goose, and turkey models join the articulated roosters and raccoons. Sampled effects supplement the procedural audio. See [release notes](RELEASE-NOTES.md) for validation and compatibility details. Historical balance measurements below describe Open Battle.
 
 ## What it does
 
@@ -137,6 +137,7 @@ That writes identical `index.html` and `chickens-vs-raccoons.html` entry points.
 | `parts/07_sky.js` | Sky shader, environment bake, post-processing chain |
 | `parts/09_highlights.js` | Ranked battle moments and replay timeline |
 | `parts/10_coop_view.js` | Coop, roofed run, hens, and visible fence damage |
+| `parts/11_finale.js` | Final casualty camera, slow visual clock, and result transition |
 
 Run `node tests/coop.cjs`, `node tests/highlights.cjs`, and `node tests/audio.cjs` for objective, event, and audio checks. Run `node tests/regression.cjs --checks-only` for replay/capacity checks or `node tests/regression.cjs` for seeded battle regressions. Serve the project over HTTP to load the recorded audio assets.
 

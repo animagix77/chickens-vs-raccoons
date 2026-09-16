@@ -189,9 +189,12 @@ function updateCoopView(dt){
   for(const hen of state.hens){
     const data=COOP.hens[hen.index];if(!data)continue;
     const alive=data.hp>0,health=clamp(data.hp/Math.max(1,data.maxHp),0,1);
-    hen.group.position.x=data.x;hen.group.position.z=data.z;hen.mesh.visible=alive;
+    const finalHen=typeof finaleSubject==='function'&&finaleSubject('hen',hen.index);
+    hen.group.position.x=data.x;hen.group.position.z=data.z;hen.mesh.visible=alive||finalHen;
     hen.mesh.position.y=alive?.012*Math.sin(state.time*2.4+hen.index*2):0;
     hen.mesh.rotation.y=hen.angle+.035*Math.sin(state.time*.65+hen.index);
+    hen.mesh.rotation.z=finalHen?Math.min(1,finaleDeathTime()/.32)*1.5:0;
+    if(finalHen)hen.mesh.position.y=-.08*Math.min(1,finaleDeathTime()/.32);
     hen.material.color.set(health<.35?'#c9b19d':'#ffffff').convertSRGBToLinear();
     hen.nestMaterial.color.set(alive?'#d5bb7c':'#786e60').convertSRGBToLinear();
     hen.nest.scale.setScalar(alive?1:.85);

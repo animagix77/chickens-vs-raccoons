@@ -986,6 +986,7 @@ function hurt(j,dmg,by,crit){
   if(A.team[by]===0){ const bk=UNITS[A.kind[by]].k;
     if(TALE.bought[bk]) TALE.boughtKills[bk]=(TALE.boughtKills[bk]||0)+1; }
   if(A.team[j]===0) aliveA--; else aliveB--;
+  if(typeof rememberFinalDeath==='function')rememberFinalDeath(j);
   A.kills[by]++; BATTLE.totalKills++; BATTLE.deathsWindow++; recentKills+=1;
   const hy=0.5+(A.fy[j]||0);
   spawnFeathers(A.x[j],hy,A.z[j],u.build==='bird'?4:2,1.3);

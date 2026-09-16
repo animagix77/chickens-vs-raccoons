@@ -835,7 +835,7 @@ function audioUpdate(dt){
   mFilter.frequency.setTargetAtTime(BATTLE.slowT>0?620:18000, AC.currentTime, 0.08);
   revSend.gain.setTargetAtTime(NIGHT?0.075:0.045, AC.currentTime, 0.8);
 
-  if(typeof VIEW!=='undefined'&&VIEW.paused) return;
+  if((typeof FINALE!=='undefined'&&FINALE.active)||(typeof VIEW!=='undefined'&&VIEW.paused)) return;
 
   /* a crowd only sounds like a crowd if individuals keep piping up */
   murmurT-=dt;
@@ -1239,12 +1239,13 @@ function renderAgents(){
     if(!sq) continue;
     const u=UNITS[ki], kit=KIT_PIV[ki][A.vr[i]];
     const st=A.st[i], bird=u.build==='bird';
+    const finalVictim=typeof finaleSubject==='function'&&finaleSubject('unit',i);
     let y=A.fy[i]||0, roll=0, pitch=0, amp, fr, motionSpeed=0;
     let ex=0, swYaw=0, lx=0, lz=0;   // strike extension, its yaw arc, its lunge
 
     /* thrown: ignore the gait and the corpse pose entirely and just cartwheel.
        A dead bird keeps its arc — dying mid-flight shouldn't stop it. */
-    if(!u.fly && A.fy[i]>0.02){
+    if(!finalVictim && !u.fly && A.fy[i]>0.02){
       pitch=A.tum[i]; roll=A.tum[i]*0.63;
       amp=bird?0.95:0.35; fr=15;
       const yaw2=A.yaw[i]+A.tum[i]*0.25;
@@ -1263,14 +1264,15 @@ function renderAgents(){
     }
 
     if(st===2){
-      const d=A.dead[i];
+      const d=finalVictim?finaleDeathTime():A.dead[i];
+      if(finalVictim)y=FINALE.target.y*(1-Math.min(1,d/.32));
       if(d>30) continue;
       if(A.rev[i]===2){                       // playing dead: flat on its side, no sinking
         roll=1.5; y=-0.05;
       }else{
         roll=Math.min(1,d/0.32)*1.5;
         y+=-clamp((d-26)/3.5,0,1)*1.4;
-        if(u.fly) y=Math.max(0,(u.fly)*(1-Math.min(1,d/0.6)));
+        if(u.fly&&!finalVictim) y=Math.max(0,(u.fly)*(1-Math.min(1,d/0.6)));
         if(y<-1.3) continue;
         y+=Math.min(1,d/0.32)*(bird?-0.06:-0.03);
       }
@@ -1411,6 +1413,7 @@ function pickShot(){
 }
 
 function director(dt,real,wall){
+  if(typeof finaleCamera==='function'&&finaleCamera())return;
   const reel=document.body.classList.contains('reel');
   const R=ARENA_R;
   const zoom=reel?1.62:1.0;
