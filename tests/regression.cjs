@@ -24,41 +24,46 @@ function runtime(dir){
     const detailFor=()=>2,setDetail=()=>false;
     function buildArena(r,n){ARENA_R=r;NIGHT=n;}
   `+core.slice(core.indexOf('function mulberry('),core.indexOf('const spick'))+core.slice(core.indexOf('const spick'),core.indexOf('\n',core.indexOf('const spick')))+
-  read('02c_units.js')+read('04_sim.js')+ui.slice(0,ui.indexOf('const CALL='))+
+  read('02c_units.js')+read('04_sim.js')+(fs.existsSync(path.join(dir,'parts','04b_coop.js'))?read('04b_coop.js'):'')+ui.slice(0,ui.indexOf('const CALL='))+
   ui.slice(ui.indexOf('const PRESETS='),ui.indexOf("document.querySelectorAll('.mini button')"))+
   ui.slice(ui.indexOf('let winT='),ui.indexOf('let slowCool=')),c);
   vm.runInContext(`
     function buildSquads(need){SQUAD_NEED=need;SQUADS=UNITS.map(()=>({}));KIT_PIV=UNITS.map(()=>[{y:0,z:0},{y:0,z:0}]);}
-    function verdict(winner){BATTLE.over=true; BATTLE.running=false; BATTLE.winner=winner;}
-    function bootTest(rows,seed,actions=[]){
-      seedSim(seed); BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.tick=0; BATTLE.winner='';
+    function verdict(winner,reason){BATTLE.over=true; BATTLE.running=false; BATTLE.winner=winner;BATTLE.reason=reason||'';}
+    function bootTest(rows,seed,actions=[],mode='battle'){
+      CFG.mode=mode;
+      seedSim(seed); BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.tick=0; BATTLE.winner='';BATTLE.reason='';
       winT=0;routT=0;stallT=0;lastKills=-1;
       if(typeof REPLAY!=='undefined'){
-        resetReplayRuntime(); REPLAY.current={v:2,sim:SIM_VERSION,seed,arena:'field',roster:rows,actions};
+        resetReplayRuntime(); REPLAY.current={v:2,sim:SIM_VERSION,seed,arena:'field',mode,roster:rows,actions};
         REPLAY.playback=actions.length>0;
       }
       spawnRoster(rows,false); BATTLE.running=true;
     }
     function tickTest(){
-      if(BATTLE.over) return;
+      if(BATTLE.over||(typeof VIEW!=='undefined'&&VIEW.paused)) return;
       if(typeof applyBattleActions==='function') applyBattleActions(BATTLE.tick+1);
+      if(typeof VIEW!=='undefined'&&VIEW.paused)return;
       BATTLE.tick++;BATTLE.t+=1/60;stepSim(1/60);checkWin(1/60);
     }
-    function snapshot(){return {aliveA,aliveB,kills:BATTLE.totalKills,panic:panicCount,tick:BATTLE.tick,winner:BATTLE.winner,
+    function snapshot(){return {aliveA,aliveB,kills:BATTLE.totalKills,panic:panicCount,tick:BATTLE.tick,winner:BATTLE.winner,reason:BATTLE.reason,
+      ...(typeof COOP!=='undefined'&&COOP.active?{coop:{sections:COOP.sections,hens:COOP.hens,breaches:COOP.breaches,entered:COOP.entered,firstHit:COOP.firstHit,intruders:COOP.intruders,insideX:COOP.insideX,insideZ:COOP.insideZ,reason:COOP.reason,pressure:Array.from(COOP.pressure)}}:{}),
       cx:BATTLE.cx,cz:BATTLE.cz,arrays:['x','z','vx','vz','hp','st','cd','tgt','panicT','fy','rev','vy','kills'].map(k=>Buffer.from(A[k].buffer,0,N*A[k].BYTES_PER_ELEMENT))};}
   `,c);
   return {c,eval:code=>vm.runInContext(code,c),flushTimers:()=>timers.splice(0).forEach(fn=>fn()),audioCalls:()=>audioCalls};
 }
-function checksum(r){const s=r.eval('snapshot()');const h=crypto.createHash('sha256');s.arrays.forEach(a=>h.update(a));delete s.arrays;return {...s,hash:h.digest('hex')};}
-function presetRows(r,p){return JSON.parse(r.eval(`Object.assign(CFG,PRESETS.${p});CFG.rosterOverride=null;CFG.mix=PRESETS.${p}.mix||null;CFG.allies=PRESETS.${p}.allies||{};CFG.foes=PRESETS.${p}.foes||{};JSON.stringify(rosterList())`));}
+function checksum(r){const s=r.eval('snapshot()');const h=crypto.createHash('sha256');s.arrays.forEach(a=>h.update(a));delete s.arrays;return JSON.parse(JSON.stringify({...s,hash:h.digest('hex')}));}
+function presetRows(r,p){return JSON.parse(r.eval(`Object.assign(CFG,PRESETS.${p});CFG.mode=PRESETS.${p}.mode||'battle';CFG.rosterOverride=null;CFG.mix=PRESETS.${p}.mix||null;CFG.allies=PRESETS.${p}.allies||{};CFG.foes=PRESETS.${p}.foes||{};JSON.stringify(rosterList())`));}
+function main(){
 const r=runtime(source);
 if(r.eval("typeof REPLAY!=='undefined'")){
-  for(const p of ['classic','massacre','even','silly']){
+  for(const p of ['defense','classic','massacre','even','silly'].filter(p=>r.eval(`Object.hasOwn(PRESETS,'${p}')`))){
     const rows=presetRows(r,p);
     r.eval(`CFG.seed=123456; REPLAY.current=null; location.search='?'+encodeFight(); decodeFight();`);
     assert.deepEqual(JSON.parse(r.eval('JSON.stringify(rosterList())')),rows,`${p} roster roundtrip`);
     assert.equal(r.eval('CFG.seed'),123456);
     assert.equal(r.eval('REPLAY.loaded.actions.length'),0);
+    assert.equal(r.eval('REPLAY.loaded.mode'),r.eval(`PRESETS.${p}.mode||'battle'`),`${p} objective roundtrip`);
   }
   const beforeStore=r.eval('CFG.foes');
   r.eval('applyFightConfig(configFight())'); assert.equal(r.eval('CFG.foes'),beforeStore,'codec retains roster picker store identity');
@@ -88,7 +93,7 @@ if(r.eval("typeof REPLAY!=='undefined'")){
   assert.equal(r.eval("cmdFire('horn')"),true);assert.equal(r.eval('CMD.horn'),0,'queued input does not mutate sim');
   r.eval('tickTest()');assert.equal(r.eval('REPLAY.current.actions[0].tick'),1);assert.ok(r.eval('CMD.horn')>0);
   r.eval('REPLAY.playback=true');assert.equal(r.eval("cmdFire('feed')"),false,'replay blocks live commands');
-  console.log('PASS codecs: four presets, version rejection, validation; capacity: rejection/atomic packet; tick queue and audio RNG');
+  console.log('PASS codecs: all presets, version rejection, validation; capacity: rejection/atomic packet; tick queue and audio RNG');
   const actions=[{tick:1,type:'command',k:'horn'},{tick:65,type:'command',k:'feed'},{tick:121,type:'deploy',k:'goose'},{tick:361,type:'command',k:'light'}];
   const recorder=runtime(source);recorder.eval('bootTest([{k: "rooster",n:200},{k:"coon",n:20}],83)');
   for(let tick=1;tick<=900;tick++){
@@ -105,7 +110,7 @@ if(r.eval("typeof REPLAY!=='undefined'")){
   assert.deepEqual(states[1],states[0]);assert.deepEqual(states[2],states[0]);assert.deepEqual(checksum(recorder),states[0],'live command recording matches playback');
   console.log('PASS replay: same action log across 1/2/4 simulation steps per presentation frame');
 }
-if(args.includes('--checks-only'))process.exit(0);
+if(args.includes('--checks-only'))return;
 const seeds=args.includes('--full')?Array.from({length:12},(_,i)=>i+1):[1,7];
 const results=[];
 for(const p of ['classic','massacre','even']) for(const seed of seeds){
@@ -125,3 +130,7 @@ for(const p of ['classic','massacre','even']) for(const seed of seeds){
 }
 if(arg('--output'))fs.writeFileSync(arg('--output'),JSON.stringify(results,null,2)+'\n');
 console.log(`PASS ${results.length} complete seeded battles + same-context resets${baseline?' + baseline state comparisons':''}. Rendering/audio/GPU excluded.`);
+
+}
+module.exports={runtime,checksum,presetRows};
+if(require.main===module)main();

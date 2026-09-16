@@ -6,11 +6,13 @@ So this is a simulator built to answer the question that comes after it: how man
 
 **[▶ Play it](https://chickensvraccoons.com/)**
 
-The whole thing is one HTML file. No build step required to play it, no dependencies to install, no network access needed — Three.js is inlined, every sound is synthesized in the browser, every model is generated from primitives at load time. Open `index.html` and it runs.
+The game runs from one HTML file with Three.js inlined and models generated from primitives. Serve the folder to load the recorded soundtrack and sound effects; synthesized audio provides an offline fallback. No dependencies need to be installed to play.
 
 ## September 2026 update
 
-Tactical view, pause and playback speed, accessible mobile controls, articulated rooster/raccoon models with bounded close-up detail, and full-roster replays with recorded commands. See [release notes](RELEASE-NOTES.md) for implementation and validation details. Earlier measurements below describe the original release.
+**Coop Defense** puts two hens inside a central coop and roofed run. Predators damage eight fence sections and enter through breaches. Use reinforcements, horn, feed, floodlight, and **Repair fence (4)** to protect them. Stop all predators or keep at least one hen alive for 90 seconds to win. Open Battle is still available.
+
+The results screen offers clickable replay highlights for fence attacks, breaches, casualties, commands, and turning points. Dedicated hen, goose, and turkey models join the articulated roosters and raccoons. Sampled effects supplement the procedural audio. See [release notes](RELEASE-NOTES.md) for validation and compatibility details. Historical balance measurements below describe Open Battle.
 
 ## What it does
 
@@ -129,11 +131,14 @@ That writes identical `index.html` and `chickens-vs-raccoons.html` entry points.
 | `parts/02c_units.js` | The 20-unit roster table, its stats, and how they were derived |
 | `parts/03_world.js` | Arena, terrain, props, particles, blood and gore |
 | `parts/04_sim.js` | Combat, steering, morale, the commander and deploy system |
+| `parts/04b_coop.js` | Deterministic coop objective, fencing, routes, repairs, and victory rules |
 | `parts/05_view.js` | Sound engine and its iOS unlock, music engine, kill feed, camera director |
 | `parts/06_ui.js` | Sequencer, seeds and links, calling the winner, controls, main loop |
 | `parts/07_sky.js` | Sky shader, environment bake, post-processing chain |
+| `parts/09_highlights.js` | Ranked battle moments and replay timeline |
+| `parts/10_coop_view.js` | Coop, roofed run, hens, and visible fence damage |
 
-Run `node tests/regression.cjs --checks-only` for replay/capacity checks or `node tests/regression.cjs` for seeded battle regressions. Serve the project over HTTP to load the recorded audio assets.
+Run `node tests/coop.cjs`, `node tests/highlights.cjs`, and `node tests/audio.cjs` for objective, event, and audio checks. Run `node tests/regression.cjs --checks-only` for replay/capacity checks or `node tests/regression.cjs` for seeded battle regressions. Serve the project over HTTP to load the recorded audio assets.
 
 ## Support
 

@@ -32,7 +32,7 @@ function flockBlurb(){ return CFG.mix?'Hens, roosters and warrior fowls. Everyth
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
+let CFG={mode:'defense',birds:260,coons:24,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
 
 /* ============================================================
@@ -51,8 +51,8 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-09-04.1';
-const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:''};
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.1';
+const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function validateRoster(rows){
   if(!Array.isArray(rows)||!rows.length||rows.length>UNITS.length) throw Error('Choose at least one animal.');
@@ -68,6 +68,7 @@ function validateRoster(rows){
 function validateFight(f){
   if(!f||f.v!==REPLAY_VERSION||f.sim!==SIM_VERSION) throw Error('This replay uses a different simulator version.');
   validateRoster(f.roster);
+  if(!['defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
   if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
   if(!Array.isArray(f.actions)||f.actions.length>512) throw Error('Invalid replay commands.');
   let tick=0;
@@ -80,7 +81,7 @@ function validateFight(f){
   return f;
 }
 function configFight(){
-  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,roster:rosterList(),actions:[]};
+  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,mode:CFG.mode,roster:rosterList(),actions:[]};
 }
 function encodeFight(){
   const f=REPLAY.current||configFight();
@@ -88,7 +89,7 @@ function encodeFight(){
 }
 function fightURL(){ return location.origin+location.pathname+'?'+encodeFight(); }
 function applyFightConfig(f){
-  CFG.seed=f.seed; CFG.arena=f.arena;
+  CFG.seed=f.seed; CFG.arena=f.arena; CFG.mode=f.mode||'battle';
   Object.keys(CFG.foes).forEach(k=>delete CFG.foes[k]);
   CFG.allies={}; CFG.mix={};
   CFG.coons=0;
@@ -117,7 +118,7 @@ function decodeFight(){
   }
   if(!q.has('s')&&!q.has('b')) return false;
   // Legacy links describe setup only; they omitted mixed armies and actions.
-  CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
+  CFG.mode='battle'; CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
   const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,600);
   const k=q.get('k'); if(k&&Object.hasOwn(UI_,k)&&UNITS[UI_[k]].team===0) CFG.kind=k;
@@ -141,7 +142,7 @@ function notifyBattle(message){
 }
 function resetReplayRuntime(){
   REPLAY.generation++; REPLAY.pending=[]; REPLAY.cursor=0;
-  BATTLE.tick=0; VIEW.paused=false;
+  BATTLE.tick=0; VIEW.paused=false; REPLAY.seeking=false; REPLAY.seekTo=0;
 }
 function queueBattleAction(type,k){
   if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback) return false;
@@ -264,7 +265,7 @@ function setPhase(p){
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
       a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:teamCount(1)+' '+teamName(1).toUpperCase(),
-      sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field',
+      sub:CFG.mode==='defense'?'Protect two hens · stop the predators or hold for 90 seconds':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
       call:true});
   }
   if(p==='count'){ musicCountIn(3.4); showCard({count:'3',call:true}); }
@@ -293,13 +294,17 @@ function verdict(who,how){
     result:true,
     trib:who==='birds',          // the flock only gets its dedication when it earns it
     kick:how,
-    a:who==='birds'?teamName(0).toUpperCase()+' WIN':(who==='coons'?teamName(1).toUpperCase()+' WIN':'STALEMATE'),
+    a:COOP.active?(who==='birds'?(coopHensAlive()===2?'HENS PROTECTED':'ONE HEN SURVIVED'):'THE COOP FELL'):who==='birds'?teamName(0).toUpperCase()+' WIN':(who==='coons'?teamName(1).toUpperCase()+' WIN':'STALEMATE'),
     vs:'', b:'',
     sub:survivors+' of '+initA+' '+teamName(0)+' standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
         ' '+teamName(1)+' standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
   renderTale(who,how);
+  if(COOP.active){
+    $('cardTale').textContent=coopHensAlive()+' of 2 hens survived. '+COOP.breaches+' fence section'+(COOP.breaches===1?' was':'s were')+' open when the raid ended.';
+  }
+  if(typeof highlightFinish==='function')highlightFinish(who,how);
   /* Build the mail link at verdict time so the subject carries the fight the
      person just watched — a suggestion is far more useful with that context,
      and it saves them describing it. */
@@ -344,6 +349,7 @@ let hudT=0;
 function hud(dt){
   hudT-=dt; if(hudT>0 && !hudDirty) return; hudT=0.08; hudDirty=false;
   if(BATTLE.running) cmdHud();
+  if(typeof coopHud==='function')coopHud();
   const fleeing=farmFleeing();
   $('ctA').textContent=Math.max(0,aliveA);
   $('ctB').textContent=Math.max(0,aliveB);
@@ -411,6 +417,7 @@ function hudBlocked(l,t,r,b){
 let winT=0, routT=0, stallT=0, lastKills=-1;
 function checkWin(dt){
   if(!BATTLE.running||BATTLE.over) return;
+  if(typeof coopCheckWin==='function'&&coopCheckWin())return;
   winT-=dt; if(winT>0) return; winT=0.4;
   if(initA===0||initB===0){ verdict(initA?'birds':'coons','Uncontested'); return; }
   if(initB>0&&aliveB<=0){ verdict('birds','The flock holds the field'); return; }
@@ -458,6 +465,7 @@ function startBattle(options={}){
   if(saved) applyFightConfig(saved);
   try{ validateRoster(rosterList()); }catch(e){ return notifyBattle(e.message); }
   resetReplayRuntime();
+  if($('replaySeek'))$('replaySeek').hidden=true;
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
   /* one event per fight started — this is the 'how many battles have been
      simulated' number, and it carries the matchup so the answer to 'what do
@@ -481,6 +489,7 @@ function startBattle(options={}){
   pushFightURL();
   callReset();
   spawnRoster(rosterList(),CFG.arena==='coop');
+  if(typeof highlightReset==='function')highlightReset();
   camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
   setPhase(VIEW.quick?'title':'introA');
   $('go').textContent='Reset'; $('go').classList.add('rst');
@@ -501,6 +510,7 @@ function standby(){
   callReset();
   try{ validateRoster(rosterList()); spawnRoster(rosterList(),CFG.arena==='coop'); }
   catch(e){ notifyBattle(e.message); }
+  if(typeof highlightReset==='function')highlightReset();
   SEQ.phase='idle'; SEQ.t=0;
   $('go').textContent='Fight'; $('go').classList.remove('rst');
   if(typeof syncControls==='function') syncControls();
@@ -572,12 +582,13 @@ DEPLOY.slice().sort((a,b)=>a.cost-b.cost).forEach(d=>{
 function cmdHud(){
   for(const b of cmdAct.children){
     const k=b.dataset.k, d=CMD_DEF.find(c=>c.k===k);
+    b.hidden=k==='repair'&&!COOP.active;
     const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0);
     const ready = cmdReady(k);
     b.classList.toggle('ready',ready);
     b.disabled=!ready||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
     const left=k==='feed'?CMD.feedT:CMD[k];
-    b.querySelector('.ck').textContent=live?Math.ceil(left)+'s active':ready?'Key '+d.key:Math.ceil(CMD.cd[k])+'s';
+    b.querySelector('.ck').textContent=live?Math.ceil(left)+'s active':ready?'Key '+d.key:k==='repair'&&CMD.cd[k]<=0?'Intact':Math.ceil(CMD.cd[k])+'s';
     b.classList.toggle('live',live);
     const bar=b.querySelector('i');
     if(ready) bar.style.width='100%';
@@ -605,6 +616,8 @@ function syncSliders(){
   document.querySelectorAll('#segBird button').forEach(b=>b.classList.toggle('on',!CFG.mix&&b.dataset.v===CFG.kind));
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
+  document.querySelectorAll('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.mode));
+  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Two hens. Eight fence sections. Stop every predator or keep a hen alive for 90 seconds. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
   const preview=$('rosterPreview');
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
@@ -625,7 +638,12 @@ document.querySelectorAll('#segBird button').forEach(b=>
 document.querySelectorAll('#segArena button').forEach(b=>
   b.addEventListener('click',()=>{CFG.arena=b.dataset.v;queueStandby();syncSliders();}));
 
+document.querySelectorAll('#segMode button').forEach(b=>b.addEventListener('click',()=>{
+  CFG.mode=b.dataset.v;queueStandby();syncSliders();
+}));
+
 const PRESETS={
+  defense:{birds:260,coons:24,kind:'rooster',arena:'field',mode:'defense',foes:{}},
   classic :{birds:1000,coons:100,kind:'rooster', arena:'field',foes:{}},
   massacre:{birds:1200,coons:60, kind:'hen',     arena:'coop', foes:{possum:20}},
   even    :{birds:485, coons:100,kind:'gamecock',arena:'field',foes:{fox:8,coyote:4}},
@@ -653,7 +671,7 @@ document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',
   EXTRA_B.forEach(k=>CFG.foes[k]=P.foes[k]||0);
   CFG.allies=P.allies||{};
   CFG.mix=P.mix||null;
-  CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
+  CFG.mode=P.mode||'battle';CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
   CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false;
   syncSliders(); standby();
 }));
@@ -870,6 +888,32 @@ function poke(){
 ['pointermove','pointerdown','keydown','wheel'].forEach(e=>addEventListener(e,poke,{passive:true}));
 poke();
 
+function seekReplayHighlight(tick){
+  if(!Number.isInteger(tick)||tick<0||!REPLAY.last)return false;
+  const target=Math.max(0,tick-180);
+  if(!startBattle({replay:true}))return false;
+  setPhase('battle');REPLAY.seeking=target>0;REPLAY.seekTo=target;VIEW.tactical=true;
+  BATTLE.timeScale=1;BATTLE.slowT=0;simAcc=0;
+  $('replaySeek').hidden=!REPLAY.seeking;
+  if(REPLAY.seeking&&AC)master.gain.setTargetAtTime(0,AC.currentTime,.02);
+  if(!target)syncControls();
+  return true;
+}
+function advanceReplaySeek(){
+  const start=performance.now();
+  // Sound and visual particles are suppressed only while reconstructing earlier ticks.
+  while(BATTLE.tick<REPLAY.seekTo&&!BATTLE.over&&performance.now()-start<12){
+    applyBattleActions(BATTLE.tick+1);if(VIEW.paused){REPLAY.seeking=false;break;}
+    BATTLE.tick++;BATTLE.t+=SIM_DT;stepSim(SIM_DT);
+    if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);
+  }
+  $('replaySeek').textContent='Finding highlight · '+Math.min(100,Math.round(BATTLE.tick/Math.max(1,REPLAY.seekTo)*100))+'%';
+  if(BATTLE.tick>=REPLAY.seekTo||BATTLE.over||!REPLAY.seeking){
+    REPLAY.seeking=false;REPLAY.generation++;clearParticles();clearFeed();simAcc=0;
+    $('replaySeek').hidden=true;syncControls();
+  }
+}
+
 /* ============================================================
    MAIN LOOP
    ============================================================ */
@@ -891,13 +935,14 @@ function loop(now){
      steps a frame at 2× speed and never drops one — the number of steps, and therefore
      the fight, does not depend on the machine. Slow-motion changes how much
      sim time a wall second buys, not the sequence of steps themselves. */
-  if(BATTLE.running&&!BATTLE.over&&!VIEW.paused){
+  if(REPLAY.seeking)advanceReplaySeek();
+  if(BATTLE.running&&!BATTLE.over&&!VIEW.paused&&!REPLAY.seeking){
     simAcc+=dt;
     while(simAcc>=SIM_DT && !BATTLE.over){
       applyBattleActions(BATTLE.tick+1);
       if(VIEW.paused) break;
       BATTLE.tick++; BATTLE.t+=SIM_DT;
-      stepSim(SIM_DT); checkWin(SIM_DT); simAcc-=SIM_DT;
+      stepSim(SIM_DT); if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);simAcc-=SIM_DT;
     }
   }
   else if(SEQ.phase!=='battle'){ idleSway(dt); }
@@ -905,13 +950,13 @@ function loop(now){
   stepParticles(dt);
   stepGore(dt);
   renderAgents();
+  if(typeof updateCoopView==='function')updateCoopView(dt);
   director(dt,real,wall);
   hud(real);
-  audioUpdate(real);
+  if(!REPLAY.seeking)audioUpdate(real);
   worldFxUpdate(real);
 
-  perfWatch(raw);
-  refineWatch(real);
+  if(!REPLAY.seeking){perfWatch(raw);refineWatch(real);}
 
   fpsAcc+=raw; fpsN++;
   if(fpsAcc>0.5){ $('fps').textContent=(fpsN/fpsAcc).toFixed(0)+' FPS · '+N+' UNITS'; fpsAcc=0; fpsN=0; }
@@ -933,6 +978,7 @@ function idleSway(dt){
 /* ============================================================
    BOOT
    ============================================================ */
+if(typeof initHighlightsUI==='function')initHighlightsUI();
 buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 /* a link that carries a fight skips the preamble and goes straight to it */
 const LINKED=decodeFight();

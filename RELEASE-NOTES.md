@@ -1,3 +1,16 @@
+# Coop defense, replay highlights, and bird models — September 16, 2026
+
+- Added Coop Defense as the default mode: two hens shelter inside a central wooden coop and roofed run. Eight fence sections show damage, collapse into breaches, and block ground, flying, and launched animals while intact.
+- Predators attack the run and enter through breaches; defenders can reach intruders through openings. Repair fence (key 4) restores half a section every 20 seconds. Stop all predators or keep at least one hen alive for 90 seconds to win; losing both hens ends the raid immediately.
+- Added a compact hen/fence/time HUD, coop-focused camera, and mobile controls. Open Battle remains available; its unit stats and seeded battle outcomes are unchanged.
+- Results now include up to 12 meaningful replay moments. Select a moment to resume three seconds before it, with recorded commands and reinforcements reproduced. Seeking suppresses transient audio and particles and yields between batches to keep the interface responsive.
+- Added distinct hen, goose, and turkey models across all crowd detail tiers, with recognizable silhouettes, animated joints, and existing variant counts.
+- Replay version 2 records the selected mode and simulation version. Historical engines are not bundled; unsupported recorded replay versions are rejected with a visible explanation, while legacy seed links load as Open Battle setups.
+
+Validation: objective tests cover swept fence collision, flying and launched units, fake-dead possum revival, sheltered targets, defender breach routing, repair cooldowns, hen/timer verdicts, reset state, and exact command replay at 1/2/4 simulation ticks per frame. Three complete default seeded raids and an assisted raid passed; six complete classic battles matched the prior release at intermediate and final checkpoints. Highlight, audio, and replay/capacity tests passed. Desktop and 390×844 browser checks covered the central run, commands, reinforcements, results, and interactive highlight seeking with no reported browser errors. Balance was sampled, not exhaustively tuned across every roster or device.
+
+Run `node tests/coop.cjs`, `node tests/highlights.cjs`, `node tests/audio.cjs`, and `node tests/regression.cjs --checks-only`. Build with `python3 build.py`.
+
 # Sound effects upgrade — September 4, 2026
 
 - Added 13 locally hosted samples for chicken calls, raccoon chatter, wings and impacts (about 96 KB total). Samples vary gently in level/pitch and avoid immediate repeats where alternatives exist.
@@ -10,7 +23,7 @@ Validation: `node tests/audio.cjs` covers scheduling for all 41 procedural effec
 
 # Battle readability and character upgrade — September 4, 2026
 
-Release prepared for [chickensvraccoons.com](https://chickensvraccoons.com/).
+Published to https://chickensvraccoons.com/ on September 4, 2026. The live HTML was verified byte-for-byte against the tested local build.
 
 ## What changed
 
@@ -28,7 +41,7 @@ Release prepared for [chickensvraccoons.com](https://chickensvraccoons.com/).
 ## Validation
 
 - `node tests/regression.cjs --checks-only`: four-preset codec round trips; malformed/future replay rejection; atomic capacity and spending; command recording; stale audio callbacks; cosmetic RNG isolation; living morale counts; matching replays with 1/2/4 simulation ticks per presentation frame.
-- Six complete seeded fights across Classic, Massacre and Fair Fight, plus same-context repeats, matched the original build's combat-state checksums and outcomes at intermediate checkpoints and the end.
+- Six complete seeded fights across Classic, Massacre and Fair Fight, plus same-context repeats, matched the original build's combat-state checksums and outcomes at intermediate checkpoints and the end. Results are in `.review-backups/validation-results.json`.
 - The unit-stat source is byte-identical to the backup, including rooster damage 4.3.
 - Browser inspection covered 1280×720, 390×844 and 844×390; setup, Max Chaos preview, pause/resume, deployment, Horn, 2× playback, tactical view, and verdict/replay. A recorded browser battle with capybaras and Horn reproduced 300 farm survivors, zero raccoons, 803 casualties and 23.8 seconds in replay. The inspected browser reported no WebGL/JavaScript warnings or errors.
 - The 3D agent checked finite geometry across 368 species/tier meshes, surface winding, main/shadow shader deformation, hero replacement/count limits and resource disposal.
@@ -49,3 +62,5 @@ Run the full local suite with `node tests/regression.cjs`. Add `--full` for 36 s
 ## Follow-on work
 
 Placement zones, a battle-event timeline, dedicated goose/turkey silhouettes, general spatial LOD, and device-specific graphics presets remain follow-on enhancements. The first release uses a bounded close-up promotion pool rather than rebuilding the entire crowd renderer. Legacy engine versions are not bundled for historical replay compatibility.
+
+Original files are preserved in `.review-backups/before-enhancements-20260904.tar.gz`.

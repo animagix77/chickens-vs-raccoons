@@ -181,6 +181,7 @@ function buildArena(R,night){
   const tm=new THREE.Mesh(mergeAll(trees),MAT); tm.castShadow=!night; g.add(tm);
   const pmn=new THREE.Mesh(mergeAll(props),MAT); pmn.castShadow=true; pmn.receiveShadow=true; g.add(pmn);
 
+  if(typeof COOP!=='undefined'&&COOP.active&&typeof buildCoopView==='function')buildCoopView(g);
   scene.add(g); arenaGroup=g;
 }
 
@@ -342,6 +343,7 @@ const PU={x:new Float32Array(PUFF_MAX),y:new Float32Array(PUFF_MAX),z:new Float3
 let pHead=0;
 
 function spawnFeathers(x,y,z,n,force){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   for(let i=0;i<n;i++){
     const k=fHead++%FEATHER_MAX;
     F.x[k]=x; F.y[k]=y+rnd(-.1,.3); F.z[k]=z;
@@ -354,6 +356,7 @@ function spawnFeathers(x,y,z,n,force){
   }
 }
 function spawnPuff(x,y,z,r){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   const k=pHead++%PUFF_MAX;
   PU.x[k]=x; PU.y[k]=y; PU.z[k]=z; PU.r[k]=r; PU.life[k]=rnd(.5,.9);
 }
@@ -437,6 +440,7 @@ for(let v=0;v<3;v++){
    silently stopping, so the ground never freezes mid-battle */
 let stainN=[0,0,0], stainW=[0,0,0], stainHead=0;
 function addStain(x,z,scale){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   if(!GORE) return;
   const v=stainHead%3, i=stainW[v]%STAIN_MAX;
   _v.set(x,0.014+v*0.0012,z); _e.set(0,Math.random()*TAU,0); _q.setFromEuler(_e);
@@ -462,6 +466,7 @@ let dHead=0;
 
 /* dx,dz = direction of the blow, so spray throws the right way */
 function spawnBlood(x,y,z,n,force,dx,dz){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   /* blood off — a kick of dust stands in, so a hit still reads as a hit */
   if(!GORE){ if(n>6) spawnPuff(x,Math.max(0.1,y*0.5),z,0.20+n*0.006); return; }
   for(let i=0;i<n;i++){
@@ -484,6 +489,7 @@ const MI={x:new Float32Array(MIST_MAX),y:new Float32Array(MIST_MAX),z:new Float3
   r:new Float32Array(MIST_MAX),life:new Float32Array(MIST_MAX)};
 let miHead=0;
 function spawnMist(x,y,z,r){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   if(!GORE) return;
   const k=miHead++%MIST_MAX;
   MI.x[k]=x; MI.y[k]=y; MI.z[k]=z; MI.r[k]=r; MI.life[k]=rnd(.3,.55);

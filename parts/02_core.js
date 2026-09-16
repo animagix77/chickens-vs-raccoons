@@ -355,6 +355,110 @@ function buildBird(o,hero=false){
   return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s),heroFactory:(!hero&&o.comb>=1&&o.tailW<1.5)?()=>buildBird(o,true):null};
 }
 
+/* Species silhouettes are authored rather than recolored rooster kits. They
+   retain the same two instanced chunks and existing leg/head shader joints. */
+function groundBirdLegs(color,x,height,webbed=false){
+  const parts=[];
+  for(const side of [1,-1]){
+    parts.push(animalJoint(P(G.cyl,color,side*x,height*.5,0,0,0,0,.024,height,.024),side*x,height,0,side));
+    let foot;
+    if(webbed){
+      foot=profileAnimal([[-.025,-.035],[.16,-.095],[.145,-.03],[.18,0],[.145,.03],[.16,.095],[-.025,.035]],.025,color);
+      foot.rotateZ(-Math.PI/2).translate(side*x,.023,.025);
+    }else foot=P(G.box,color,side*x,.018,.05,0,0,0,.067,.032,.14);
+    parts.push(animalJoint(foot,side*x,height,0,side));
+  }
+  return parts;
+}
+function groundBirdEyes(color,x,y,z,r){
+  return [P(G.sphLo,color,x,y,z,0,0,0,r,r,r*.8),P(G.sphLo,color,-x,y,z,0,0,0,r,r,r*.8),
+    P(G.sphLo,'#131118',x*1.04,y,z+r*.56,0,0,0,r*.58,r*.60,r*.38),
+    P(G.sphLo,'#131118',-x*1.04,y,z+r*.56,0,0,0,r*.58,r*.60,r*.38)];
+}
+function finishGroundBird(core,flap,scale,pivot){
+  const gc=mergeAll(core),gf=mergeAll(flap);scaleAnimal(gc,scale);scaleAnimal(gf,scale);
+  return {core:gc,flap:gf,pivot:new THREE.Vector3(0,pivot[0]*scale,pivot[1]*scale)};
+}
+function buildHen(o){
+  const F=o.feather,W=o.wingC||F,T=o.tail,R=o.red,Y='#e4a52a';
+  const core=groundBirdLegs(Y,.085,.26);
+  // A compact breast and short neck make the hens read smaller and rounder.
+  core.push(loftAnimal([[0,.41,-.37],[0,.44,-.24],[0,.46,-.04],[0,.47,.17],[0,.44,.27]],
+    [[.09,.10],[.255,.20],[.30,.235],[.24,.215],[.075,.09]],F,[10,8,6,5][DETAIL]));
+  const head=[P(G.cyl,F,0,.585,.19,-.3,0,0,.083,.22,.078),
+    P(G.sph,F,0,.725,.27,0,0,0,.11,.105,.12),
+    profileAnimal([[.35,.74],[.475,.705],[.36,.678]],.075,Y),
+    profileAnimal([[.215,.808],[.23,.842],[.25,.825],[.27,.851],[.295,.827],[.31,.802]],DETAIL>=2?0:.03,R),
+    P(G.sphLo,R,0,.65,.345,0,0,0,.025,.037,.022),
+    ...groundBirdEyes('#fff9ed',.075,.748,.323,.045)];
+  for(const g of head)core.push(animalJoint(g,0,.56,.15,2));
+  const flap=[];
+  for(const side of [1,-1])flap.push(profileAnimal([[.14,.50],[.055,.60],[-.15,.57],[-.29,.43],[-.18,.34],[.015,.35]],
+    DETAIL>=2?0:.035,W,side*.265));
+  // Short upright feather tips replace a rooster's long sweeping sickles.
+  for(const side of [-1,0,1])flap.push(profileAnimal([[-.23,.48],[-.37,.65],[-.48,.72],[-.53,.66],[-.40,.47]],
+    DETAIL>=2?0:.026,T,side*.055));
+  return finishGroundBird(core,flap,o.scale,[.43,-.09]);
+}
+function buildGoose(o){
+  const F=o.feather,W=o.wingC||F,T=o.tail,B=o.beak||'#e7a12c';
+  const core=groundBirdLegs(B,.115,.30,true);
+  core.push(loftAnimal([[0,.43,-.49],[0,.47,-.28],[0,.48,-.02],[0,.50,.22],[0,.50,.33]],
+    [[.08,.075],[.26,.17],[.28,.20],[.21,.21],[.065,.085]],F,[10,8,6,5][DETAIL]));
+  // One continuous S neck: rising from the breast, bending back, then forward.
+  const neck=loftAnimal([[0,.56,.22],[0,.72,.33],[0,.92,.29],[0,1.105,.30],[0,1.235,.405]],
+    [[.10,.10],[.074,.074],[.062,.062],[.063,.064],[.085,.085]],F,[9,7,6,5][DETAIL]);
+  const head=[neck,P(G.sph,F,0,1.25,.43,0,0,0,.105,.097,.15),
+    // A broad wedge bill and dark mouth seam; no chicken comb or wattles.
+    profileAnimal([[.525,1.27],[.725,1.235],[.73,1.198],[.545,1.188]],.12,B),
+    profileAnimal([[.546,1.19],[.735,1.205],[.724,1.18],[.55,1.167]],.10,'#67462a'),
+    ...groundBirdEyes('#fbf7e9',.084,1.275,.493,.038)];
+  for(const g of head)core.push(animalJoint(g,0,.58,.235,2));
+  const flap=[];
+  for(const side of [1,-1])flap.push(profileAnimal([[.15,.57],[-.10,.64],[-.36,.52],[-.43,.40],[-.18,.33],[.08,.36]],
+    DETAIL>=2?0:.035,W,side*.245));
+  for(const side of [-1,1])flap.push(profileAnimal([[-.34,.44],[-.62,.47],[-.55,.56],[-.33,.52]],
+    DETAIL>=2?0:.025,T,side*.055));
+  return finishGroundBird(core,flap,o.scale,[.48,-.12]);
+}
+function turkeyFan(o){
+  const parts=[],n=[9,9,7,5][DETAIL],radius=.76,root=.10;
+  for(let i=0;i<n;i++){
+    const angle=-1.27+i/(n-1)*2.54,dx=Math.sin(angle),dy=Math.cos(angle),wx=Math.cos(angle),wy=-Math.sin(angle);
+    const point=(r,w)=>[dx*r+wx*w,.50+dy*r+wy*w];
+    const outline=[point(root,-.04),point(radius*.88,-.085),point(radius,0),point(radius*.88,.085),point(root,.04)];
+    const feather=profileAnimal(outline,DETAIL>=2?0:.028,o.tail);
+    // A pale outer edge and dark inner band are baked into the fan's vertices.
+    const colors=feather.attributes.color,p=feather.attributes.position;
+    const edge=new THREE.Color(o.fanEdge||'#d2b78e').convertSRGBToLinear();
+    for(let j=0;j<p.count;j++)if(Math.hypot(p.getZ(j),p.getY(j)-.5)>radius*.83)colors.setXYZ(j,edge.r,edge.g,edge.b);
+    feather.rotateY(Math.PI/2).translate(0,0,-.40);parts.push(feather);
+    if(DETAIL<3){
+      const band=profileAnimal([point(.59,-.086),point(.64,-.086),point(.64,.086),point(.59,.086)],0,'#30271f');
+      band.rotateY(Math.PI/2).translate(0,0,-.381);parts.push(band);
+    }
+  }
+  return parts;
+}
+function buildTurkey(o){
+  const F=o.feather,W=o.wingC||F,R=o.red,Y='#b58b52';
+  const core=groundBirdLegs(Y,.11,.32);
+  core.push(loftAnimal([[0,.49,-.38],[0,.54,-.22],[0,.56,.02],[0,.53,.24],[0,.52,.34]],
+    [[.13,.13],[.31,.25],[.355,.28],[.26,.23],[.10,.105]],F,[10,8,6,5][DETAIL]));
+  const head=[loftAnimal([[0,.62,.235],[0,.735,.27],[0,.84,.32]],[[.073,.074],[.06,.065],[.055,.06]],R,[8,6,5,4][DETAIL]),
+    P(G.sph,o.headC||'#91a4b8',0,.895,.33,0,0,0,.082,.10,.10),
+    profileAnimal([[.40,.92],[.53,.876],[.41,.853]],.067,'#c8a75d'),
+    // Bare blue head, red throat wattle, and hanging snood distinguish a turkey.
+    profileAnimal([[.285,.82],[.34,.81],[.36,.66],[.31,.625],[.285,.72]],DETAIL>=2?0:.035,R),
+    P(G.sphLo,R,0,.881,.421,-.12,0,0,.025,.065,.028),
+    ...groundBirdEyes('#f7deb0',.060,.923,.383,.035)];
+  for(const g of head)core.push(animalJoint(g,0,.605,.235,2));
+  const flap=turkeyFan(o);
+  for(const side of [1,-1])flap.push(profileAnimal([[.19,.58],[.015,.73],[-.21,.65],[-.31,.45],[-.16,.36],[.10,.37]],
+    DETAIL>=2?0:.045,W,side*.31));
+  return finishGroundBird(core,flap,o.scale,[.51,-.16]);
+}
+
 /* A hawk is not a chicken with a small comb. It reads as a raptor because of
    proportion, not detail: one long straight wing line, a body that tapers to
    a fanned tail, a head that sits forward instead of upright, and no comb or

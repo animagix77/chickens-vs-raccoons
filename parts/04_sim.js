@@ -172,12 +172,13 @@ function refineDetail(){
    ============================================================ */
 const CMD={
   horn:0, light:0, feedT:0, feedX:0, feedZ:0,
-  cd:{horn:0,light:0,feed:0}, pts:0, ptAcc:0
+  cd:{horn:0,light:0,feed:0,repair:0}, pts:0, ptAcc:0
 };
 const CMD_DEF=[
   {k:'horn', name:'Sound the horn', key:'1', cool:16, dur:6.0, hint:'Every animal you own moves and swings faster'},
   {k:'feed', name:'Scatter feed',   key:'2', cool:14, dur:7.0, hint:'Birds converge on the pile and hold their nerve'},
-  {k:'light',name:'Floodlight',     key:'3', cool:18, dur:5.5, hint:'Predators flinch, hit softer and swing slower'}
+  {k:'light',name:'Floodlight',     key:'3', cool:18, dur:5.5, hint:'Predators flinch, hit softer and swing slower'},
+  {k:'repair',name:'Repair fence',key:'4',cool:20,dur:0,hint:'Restore half of the weakest fence section; can close a breach'}
 ];
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
@@ -214,7 +215,7 @@ const DEPLOY=[
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
-function cmdReady(k){ return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
+function cmdReady(k){ if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
 function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
 function applyDeploy(d){
   if(!canDeploy(d)) return false;
@@ -246,6 +247,7 @@ function applyDeploy(d){
     const x=TC.ax+rnd(-2,2), z=TC.az+rnd(-2,2);
     setTimeout(()=>{ if(REPLAY.generation===generation) sfx(vc,x,z,'cry'); },i*rnd(90,240));
   }
+  if(typeof highlightEvent==='function')highlightEvent('deploy',d.n+' '+u.label+' reinforced the defense',TC.ax,TC.az,BATTLE.tick+1);
   killFeedRaw('<b>'+(d.n>1?d.n+' ':'')+u.label.toUpperCase()+'</b> joined the line');
   return true;
 }
@@ -254,11 +256,21 @@ function applyCommand(k){
   const d=CMD_DEF.find(c=>c.k===k);
   if(k==='horn'){ CMD.horn=d.dur; if(!oneShot('horn',0.95)) sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
+  if(k==='repair'&&typeof COOP!=='undefined'&&COOP.active){
+    const damaged=COOP.sections.filter(s=>s.hp<s.maxHp);if(!damaged.length)return false;
+    const s=damaged.reduce((a,b)=>a.hp/a.maxHp<b.hp/b.maxHp?a:b);
+    if(s.hp<=0)COOP.breaches--;s.hp=Math.min(s.maxHp,s.hp+240);
+    if(typeof highlightEvent==='function')highlightEvent('repair','Weakest fence repaired',0,0,BATTLE.tick+1);
+    for(let i=0;i<N;i++)if(A.st[i]!==2&&Math.hypot(A.x[i],A.z[i])<COOP.radius+.1&&Math.hypot(A.x[i],A.z[i])>COOP.radius-1){
+      const a=Math.atan2(A.z[i],A.x[i]);if(COOP.sections[coopSector(A.x[i],A.z[i])]===s){A.x[i]=Math.cos(a)*(COOP.radius+1);A.z[i]=Math.sin(a)*(COOP.radius+1);}
+    }
+  }
   if(k==='feed'){
     CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+srnd(-4,4); CMD.feedZ=BATTLE.cz+srnd(-4,4);
     for(let i=0;i<26;i++) spawnPuff(CMD.feedX+rnd(-1.4,1.4),0.15,CMD.feedZ+rnd(-1.4,1.4),0.22);
     sfx('buk',CMD.feedX,CMD.feedZ);
   }
+  if(k!=='repair'&&typeof highlightEvent==='function')highlightEvent('command',d.name,BATTLE.cx,BATTLE.cz,BATTLE.tick+1);
   CMD.cd[k]=d.cool||1e9;
   return true;
 }
@@ -401,6 +413,7 @@ function spawnRoster(list,night){
      holding them have been replaced. */
   const stale = setDetail(detailFor(total)) ? dropKitCache() : null;
 
+  if(typeof coopReset==='function')coopReset();
   const R=clamp(Math.sqrt(total*3.4/Math.PI)+10, 20, 78);
   buildArena(R,night); gridInit();
 
@@ -440,6 +453,10 @@ function spawnRoster(list,night){
       let a,r;
       if(u.team===0){ a=lerp(-2.30,-0.86,t)+srnd(-.14,.14); r=lerp(R*0.28,R*0.88,Math.sqrt(SR())); }
       else          { a=srnd(0.52,2.10);                      r=lerp(R*0.40,R*0.86,Math.sqrt(SR())); }
+      if(typeof COOP!=='undefined'&&COOP.active){
+        a=t*TAU+srnd(-.12,.12);
+        r=u.team===0?lerp(COOP.radius+2,Math.max(COOP.radius+3,R*.60),Math.sqrt(SR())):lerp(R*.78,R*.94,SR());
+      }
       addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*kits.length)|0);
       if(u.team===0){ aliveA++; initA++; } else { aliveB++; initB++; }
     }
@@ -525,6 +542,7 @@ function enemyCentroids(){
    ============================================================ */
 function stepSim(dt){
   gridBuild(); enemyCentroids(); cmdStep(dt);
+  if(typeof coopTick==='function')coopTick(dt);
   const cells=[-1,0,1];
   /* the densest point is almost always deep inside the bird mass, which is not
      where the fight is. Track the centroid of everyone actually in contact with
@@ -532,7 +550,8 @@ function stepSim(dt){
   let conX=0, conZ=0, conN=0;
 
   for(let i=0;i<N;i++){
-    if(airborne(i,dt)) continue;      // nothing steers or swings mid-flight
+    const oldX=A.x[i],oldZ=A.z[i];
+    if(airborne(i,dt)){if(typeof coopConstrain==='function')coopConstrain(i,oldX,oldZ);continue;}      // nothing steers or swings mid-flight
     if(A.st[i]===2){ A.dead[i]+=dt; if(A.rev[i]===2) reviveCheck(i,dt); continue; }
 
     const mine=UNITS[A.kind[i]];
@@ -577,6 +596,7 @@ function stepSim(dt){
       }
       tg=best;
     }
+    if(tg>=0&&typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[tg],A.z[tg]))tg=-1;
     A.tgt[i]=tg;
 
     /* ---------- desired heading ---------- */
@@ -590,6 +610,12 @@ function stepSim(dt){
       if(fd<16 && fd>1.6 && (tg<0 || fd<7)){ desX=fx/fd; desZ=fz/fd; fed=true; }
     }
 
+    const objective=typeof coopHeading==='function'?coopHeading(i,tg):null;
+    if(objective){
+      const ol=Math.hypot(objective.x,objective.z)||1;
+      desX=objective.x/ol;desZ=objective.z/ol;spd*=objective.stop?.02:1;fed=true;
+      if(objective.stop)A.yaw[i]=Math.atan2(objective.x,objective.z);
+    }
     if(!fed && tg>=0){
       const dx2=A.x[tg]-A.x[i], dz2=A.z[tg]-A.z[i];
       const dist=Math.hypot(dx2,dz2)||1e-4;
@@ -648,6 +674,7 @@ function stepSim(dt){
     A.vx[i]+=clamp(desX-A.vx[i],-ac,ac);
     A.vz[i]+=clamp(desZ-A.vz[i],-ac,ac);
     A.x[i]+=A.vx[i]*dt; A.z[i]+=A.vz[i]*dt;
+    if(typeof coopConstrain==='function')coopConstrain(i,oldX,oldZ);
 
     const rr=Math.hypot(A.x[i],A.z[i]), lim=ARENA_R-0.9;
     if(rr>lim){ const k=lim/rr; A.x[i]*=k; A.z[i]*=k; A.vx[i]*=0.3; A.vz[i]*=0.3; }
@@ -739,6 +766,7 @@ function moraleTick(){
    VIOLENCE
    ============================================================ */
 function attack(i,tg,mine,dist){
+  if(typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[tg],A.z[tg]))return;
   const wild=A.st[i]===1?1.28:1;
   /* a floodlight blinds a raccoon at midnight and barely troubles one at
      noon, so the strength follows the arena rather than being flat */
@@ -782,6 +810,7 @@ function attack(i,tg,mine,dist){
         const j=cItems[k];
         if(j===tg||A.st[j]===2||A.team[j]===A.team[i]) continue;
         if(outOfReach(j,mine)) continue;
+        if(typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[j],A.z[j]))continue;
         const ddx=A.x[j]-A.x[i], ddz=A.z[j]-A.z[i];
         if(ddx*ddx+ddz*ddz<cr2){
           hurt(j,dmg*(sw?0.72:0.62),i,false);
@@ -898,6 +927,7 @@ function shove(j,dx,dz,f){
 let BITING=0;   /* re-entrancy guard for retaliation — see the bite block below */
 function hurt(j,dmg,by,crit){
   if(A.st[j]===2) return;
+  if(by>=0&&typeof coopBlocks==='function'&&coopBlocks(A.x[by],A.z[by],A.x[j],A.z[j]))return;
   A.hp[j]-=dmg; A.hit[j]=0.18;
   /* remember who did it, so the flinch can be a recoil in the right direction
      instead of a wobble. Guarded: airborne() reads lby at the landing to

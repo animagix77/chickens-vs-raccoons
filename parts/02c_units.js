@@ -164,15 +164,15 @@ UNITS.forEach(u=>{
 
 /* ---------------- geometry kits ---------------- */
 const KITS={
-  hen:      ()=>BIRD_KITS.hen.map(buildBird),
+  hen:      ()=>BIRD_KITS.hen.map(buildHen),
   rooster:  ()=>BIRD_KITS.rooster.map(buildBird),
   gamecock: ()=>BIRD_KITS.gamecock.map(buildBird),
   guinea:   ()=>[{feather:'#4a4d58',wingC:'#5a5e6a',tail:'#33363f',red:'#c95a3a',comb:.35,tailUp:.7,tailW:.6,tailL:.45,scale:.82,spur:0},
                  {feather:'#5c5f6b',wingC:'#6b6f7c',tail:'#3d404a',red:'#d0623f',comb:.35,tailUp:.7,tailW:.6,tailL:.45,scale:.80,spur:0}].map(buildBird),
-  goose:    ()=>[{feather:'#eae6dc',wingC:'#d8d3c6',tail:'#c8c2b3',red:'#e88a12',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.55,spur:0},
-                 {feather:'#5a5f52',wingC:'#6a6f60',tail:'#3f4438',red:'#1a1a1a',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.52,spur:0}].map(buildBird),
+  goose:    ()=>[{feather:'#eae6dc',wingC:'#d8d3c6',tail:'#c8c2b3',red:'#e88a12',beak:'#e7a12c',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.55,spur:0},
+                 {feather:'#5a5f52',wingC:'#6a6f60',tail:'#3f4438',red:'#1a1a1a',beak:'#cf9231',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.52,spur:0}].map(buildGoose),
   turkey:   ()=>[{feather:'#3a2f26',wingC:'#4a3c30',tail:'#5a4a38',red:'#d0403a',comb:1.7,tailUp:.05,tailW:2.0,tailL:1.5,scale:1.45,spur:0},
-                 {feather:'#2b241d',wingC:'#3a3128',tail:'#4a3e30',red:'#c8382f',comb:1.8,tailUp:.05,tailW:2.1,tailL:1.55,scale:1.48,spur:0}].map(buildBird),
+                 {feather:'#2b241d',wingC:'#3a3128',tail:'#4a3e30',red:'#c8382f',comb:1.8,tailUp:.05,tailW:2.1,tailL:1.55,scale:1.48,spur:0}].map(buildTurkey),
   /* red-tailed and a darker morph */
   hawk:     ()=>[{feather:'#6b533a',wingC:'#7d6244',tail:'#a8482a',hood:'#5a4632',beak:'#e8b022',scale:1.15},
                  {feather:'#4a3d30',wingC:'#5c4d3c',tail:'#7a4030',hood:'#3a3126',beak:'#e0a820',scale:1.10}].map(buildHawk),

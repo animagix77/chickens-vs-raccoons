@@ -70,6 +70,7 @@ const KILL_VERBS_COON=['unhinged','disassembled','turned into confetti','yeeted'
 const feedEl=$('feed');
 let feedLock=0;
 function killFeed(by,victim,crit){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(!BATTLE.running) return;
   feedLock--;
   if(feedLock>0) return;
@@ -87,6 +88,7 @@ function killFeed(by,victim,crit){
   while(feedEl.children.length>5) feedEl.removeChild(feedEl.firstChild);
 }
 function killFeedRaw(html){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   const d=document.createElement('div'); d.className='kf big'; d.innerHTML=html;
   feedEl.appendChild(d);
   while(feedEl.children.length>5) feedEl.removeChild(feedEl.firstChild);
@@ -605,6 +607,7 @@ Object.keys(SFX_BANKS).filter(k=>k!=='peck').forEach(k=>{
         'cry'   = a creature using its voice — own budget, never thinned
         'key'   = something that must be heard (a death), never thinned */
 function sfx(kind,x,z,mode){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(mode===true) mode='soft';
   if(!soundOn||!AC||!VOX[kind]) return;
   const always=(mode==='soft'||mode==='cry'||mode==='key');
@@ -638,6 +641,7 @@ function sfx(kind,x,z,mode){
 
 /* ---------- non-positional stings ---------- */
 function sting(kind){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(!soundOn||!AC) return;
   const t=AC.currentTime, d=outBus(0);
   // Tactile cues leave the melodic fanfare to the recorded score.
@@ -764,6 +768,7 @@ async function decodeAssets(){
    things happening at a place on the field. Returns false when the sample
    isn't there, so every caller can fall back to its synthesized version. */
 function oneShot(name,vol){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(!AC||!BUF[name]||!soundOn) return false;
   const src=AC.createBufferSource(); src.buffer=BUF[name];
   src.playbackRate.value=rnd(.985,1.015);
@@ -1253,7 +1258,7 @@ function renderAgents(){
               0,s3, c2, pz2-s3*py2-c2*pz2,
               0,0,0,1);
       _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
+      sq.push(A.vr[i],_m,_mF,A.ph[i],0,0,0,!!HERO_ON[i]);
       continue;                       // no blob shadow while it's off the ground
     }
 
@@ -1432,6 +1437,17 @@ function director(dt,real,wall){
     camPos.lerp(_v.set(tx,ty,tz),1-Math.pow(0.001,real));
     camAim.lerp(_v.set(ax,ay,az),1-Math.pow(0.004,real));
     camera.position.copy(camPos); camera.lookAt(camAim);
+    if(camera.fov!==46){camera.fov=46;camera.updateProjectionMatrix();}
+    return;
+  }
+
+  if(typeof COOP!=='undefined'&&COOP.active){
+    // Keep the actual objective visible throughout a raid; manual and Tactical remain available.
+    const fit=1/Math.sqrt(Math.min(1,camera.aspect)),angle=1.12+Math.sin(BATTLE.t*.035)*.22;
+    const d=Math.max(24,R*1.10)*fit;
+    _v.set(Math.cos(angle)*d,Math.max(18,R*.85)*fit,Math.sin(angle)*d);
+    if(DIR.snap){camPos.copy(_v);DIR.snap=false;}else camPos.lerp(_v,1-Math.pow(.02,real));
+    camAim.set(0,.6,0);camera.position.copy(camPos);camera.lookAt(camAim);
     if(camera.fov!==46){camera.fov=46;camera.updateProjectionMatrix();}
     return;
   }

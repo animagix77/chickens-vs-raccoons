@@ -5,7 +5,7 @@ D = os.path.dirname(os.path.abspath(__file__))
 P = os.path.join(D, 'parts')
 
 ORDER = ['02_core.js','02b_quad.js','02c_units.js','03_world.js','07_sky.js',
-         '04_sim.js','05_view.js','06_ui.js','06b_tale.js','08_controls.js']
+         '04_sim.js','04b_coop.js','05_view.js','09_highlights.js','10_coop_view.js','06_ui.js','06b_tale.js','08_controls.js']
 
 shell = open(os.path.join(P,'01_shell.html'), encoding='utf-8').read()
 

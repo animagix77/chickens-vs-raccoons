@@ -10,6 +10,9 @@ function syncControls(){
   $('btnQuick').checked=VIEW.quick;
   $('btnMotion').checked=VIEW.reducedMotion;
   document.body.classList.toggle('paused',VIEW.paused);
+  document.body.classList.toggle('defense',COOP.active);
+  if(!REPLAY.seeking)$('replaySeek').hidden=true;
+  coopHud();
   document.body.classList.toggle('reducedMotion',VIEW.reducedMotion);
   document.body.classList.toggle('finished',BATTLE.over);
   if(!playing){ document.body.classList.remove('deployOpen'); $('btnDeploy').setAttribute('aria-expanded','false'); }
@@ -67,7 +70,7 @@ function syncToggleSemantics(){
     b.setAttribute('aria-pressed',String(b.classList.contains('on'))));
 }
 const toggleObserver=new MutationObserver(syncToggleSemantics);
-for(const id of ['tools','segBird','segArena','callBtns'])
+for(const id of ['tools','segBird','segArena','segMode','callBtns'])
   toggleObserver.observe($(id),{subtree:true,attributes:true,attributeFilter:['class']});
 syncToggleSemantics();
 

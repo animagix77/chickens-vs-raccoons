@@ -686,6 +686,19 @@ if(GA_ID){
   body.short #btnDeploy span{display:inline-block;margin-left:8px}
   body.short.deployOpen #btnDeploy span{transform:rotate(180deg)}
   body.short #card.result{padding-top:25px}
+
+  [hidden]{display:none!important}
+  #coopObjective{display:flex;justify-content:center;gap:14px;margin:7px auto 0;width:max-content;max-width:95%;padding:8px 14px;
+    border:1px solid #98c5a350;background:#18251ee8;border-radius:10px;color:#d9efdc;font:11px/1.3 system-ui;font-variant-numeric:tabular-nums}
+  #coopObjective strong{color:#f2d592}#coopObjective.danger{background:#3d231fee;border-color:#f09d7666}
+  #objectiveHint{margin:7px 0 12px;color:#d7c9b4;font-size:11px;line-height:1.55}
+  #replaySeek{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);background:#191721ed;border:1px solid #edc78566;border-radius:12px;padding:18px 28px;z-index:22;color:#f5e7cb;font:14px system-ui}
+  #replayMoment{top:144px!important}
+  body.narrow #coopObjective{font-size:10px;gap:8px;padding:7px 9px;margin-top:6px}
+  body.narrow #replayMoment{top:182px!important}
+  body.defense #cmdact{grid-template-columns:repeat(4,minmax(0,1fr))}
+  body.defense.narrow .cmd{min-width:0;padding:8px 3px}body.defense.narrow .cmd .cn{font-size:8px}
+  body.short #coopObjective{padding:5px 9px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -700,7 +713,9 @@ if(GA_ID){
   </div>
   <div id="bar"><div id="barA" style="width:50%"></div><div id="barB"></div></div>
   <div id="battleReadout"><span>Army remaining</span><span id="moraleReadout">Ready to deploy</span></div>
+  <div id="coopObjective" hidden><strong id="coopHens">2 / 2 hens safe</strong><span id="coopFence">Fence intact</span><span id="coopTime">90s to hold</span></div>
   </div>
+  <div id="replaySeek" role="status" aria-live="polite" hidden>Finding highlight…</div>
 
   <div class="hud" id="feed"></div>
 
@@ -760,6 +775,9 @@ if(GA_ID){
     <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList">
+      <div class="rl hot"><div class="kx">Protect</div><div class="tx">In <b>Defend the coop</b>, two hens shelter inside a roofed run. Predators must break a fence section to enter. Stop all predators or keep at least one hen alive for 90 seconds.</div></div>
+      <div class="rl hot"><div class="kx">4 &nbsp;Repair</div><div class="tx">Repair half of the weakest fence section, even after a breach. It recharges in <b>20 seconds</b>. The status above the field shows the weakest fence and how many hens remain.</div></div>
+      <div class="rl"><div class="kx">Replay</div><div class="tx">After the battle, choose a timestamp under <b>Moments to replay</b> to watch from three seconds before that event.</div></div>
       <div class="rl hot"><div class="kx">War chest</div><div class="tx">
         Points build the whole fight. Spend them on the chips along the bottom to
         call animals in <b>mid-battle</b> — guinea fowl are cheap noise, a bull costs
@@ -879,13 +897,17 @@ if(GA_ID){
 
   <div id="panel">
     <h1>Chickens vs Raccoons <span id="fps">v1.0</span></h1>
+    <div class="row"><label>Objective</label><div class="seg" id="segMode">
+      <button data-v="defense" class="on">Defend the coop</button><button data-v="battle">Open battle</button>
+    </div></div>
+    <p id="objectiveHint">Protect the hens inside the run.</p>
     <div class="row">
-      <label for="sA">Birds <b id="vA">1000</b></label>
-      <input type="range" id="sA" min="0" max="4000" step="1" value="1000">
+      <label for="sA">Birds <b id="vA">260</b></label>
+      <input type="range" id="sA" min="0" max="4000" step="1" value="260">
     </div>
     <div class="row">
-      <label for="sB">Raccoons <b id="vB">100</b></label>
-      <input type="range" id="sB" min="0" max="600" step="1" value="100">
+      <label for="sB">Raccoons <b id="vB">24</b></label>
+      <input type="range" id="sB" min="0" max="600" step="1" value="24">
     </div>
     <div class="row">
       <label>Bird type</label>
@@ -899,7 +921,7 @@ if(GA_ID){
       <label>Battlefield</label>
       <div class="seg" id="segArena">
         <button data-v="field" class="on">Open Field</button>
-        <button data-v="coop">Night Coop</button>
+        <button data-v="coop">Night raid</button>
       </div>
     </div>
     <details class="row rost" id="foeOptions">
@@ -910,6 +932,7 @@ if(GA_ID){
       while the birds hold the line.</div>
     <div id="rosterPreview" aria-live="polite">1,000 roosters · 100 raccoons</div>
     <div class="mini">
+      <button data-preset="defense">Coop raid</button>
       <button data-preset="classic">1000 v 100</button>
       <button data-preset="massacre">Massacre</button>
       <button data-preset="even">Fair Fight</button>
@@ -1291,6 +1314,110 @@ function buildBird(o,hero=false){
   const gc=mergeAll(core), gf=mergeAll(flap);
   scaleAnimal(gc,s); scaleAnimal(gf,s);
   return {core:gc, flap:gf, pivot:new THREE.Vector3(0,.44*s,-.08*s),heroFactory:(!hero&&o.comb>=1&&o.tailW<1.5)?()=>buildBird(o,true):null};
+}
+
+/* Species silhouettes are authored rather than recolored rooster kits. They
+   retain the same two instanced chunks and existing leg/head shader joints. */
+function groundBirdLegs(color,x,height,webbed=false){
+  const parts=[];
+  for(const side of [1,-1]){
+    parts.push(animalJoint(P(G.cyl,color,side*x,height*.5,0,0,0,0,.024,height,.024),side*x,height,0,side));
+    let foot;
+    if(webbed){
+      foot=profileAnimal([[-.025,-.035],[.16,-.095],[.145,-.03],[.18,0],[.145,.03],[.16,.095],[-.025,.035]],.025,color);
+      foot.rotateZ(-Math.PI/2).translate(side*x,.023,.025);
+    }else foot=P(G.box,color,side*x,.018,.05,0,0,0,.067,.032,.14);
+    parts.push(animalJoint(foot,side*x,height,0,side));
+  }
+  return parts;
+}
+function groundBirdEyes(color,x,y,z,r){
+  return [P(G.sphLo,color,x,y,z,0,0,0,r,r,r*.8),P(G.sphLo,color,-x,y,z,0,0,0,r,r,r*.8),
+    P(G.sphLo,'#131118',x*1.04,y,z+r*.56,0,0,0,r*.58,r*.60,r*.38),
+    P(G.sphLo,'#131118',-x*1.04,y,z+r*.56,0,0,0,r*.58,r*.60,r*.38)];
+}
+function finishGroundBird(core,flap,scale,pivot){
+  const gc=mergeAll(core),gf=mergeAll(flap);scaleAnimal(gc,scale);scaleAnimal(gf,scale);
+  return {core:gc,flap:gf,pivot:new THREE.Vector3(0,pivot[0]*scale,pivot[1]*scale)};
+}
+function buildHen(o){
+  const F=o.feather,W=o.wingC||F,T=o.tail,R=o.red,Y='#e4a52a';
+  const core=groundBirdLegs(Y,.085,.26);
+  // A compact breast and short neck make the hens read smaller and rounder.
+  core.push(loftAnimal([[0,.41,-.37],[0,.44,-.24],[0,.46,-.04],[0,.47,.17],[0,.44,.27]],
+    [[.09,.10],[.255,.20],[.30,.235],[.24,.215],[.075,.09]],F,[10,8,6,5][DETAIL]));
+  const head=[P(G.cyl,F,0,.585,.19,-.3,0,0,.083,.22,.078),
+    P(G.sph,F,0,.725,.27,0,0,0,.11,.105,.12),
+    profileAnimal([[.35,.74],[.475,.705],[.36,.678]],.075,Y),
+    profileAnimal([[.215,.808],[.23,.842],[.25,.825],[.27,.851],[.295,.827],[.31,.802]],DETAIL>=2?0:.03,R),
+    P(G.sphLo,R,0,.65,.345,0,0,0,.025,.037,.022),
+    ...groundBirdEyes('#fff9ed',.075,.748,.323,.045)];
+  for(const g of head)core.push(animalJoint(g,0,.56,.15,2));
+  const flap=[];
+  for(const side of [1,-1])flap.push(profileAnimal([[.14,.50],[.055,.60],[-.15,.57],[-.29,.43],[-.18,.34],[.015,.35]],
+    DETAIL>=2?0:.035,W,side*.265));
+  // Short upright feather tips replace a rooster's long sweeping sickles.
+  for(const side of [-1,0,1])flap.push(profileAnimal([[-.23,.48],[-.37,.65],[-.48,.72],[-.53,.66],[-.40,.47]],
+    DETAIL>=2?0:.026,T,side*.055));
+  return finishGroundBird(core,flap,o.scale,[.43,-.09]);
+}
+function buildGoose(o){
+  const F=o.feather,W=o.wingC||F,T=o.tail,B=o.beak||'#e7a12c';
+  const core=groundBirdLegs(B,.115,.30,true);
+  core.push(loftAnimal([[0,.43,-.49],[0,.47,-.28],[0,.48,-.02],[0,.50,.22],[0,.50,.33]],
+    [[.08,.075],[.26,.17],[.28,.20],[.21,.21],[.065,.085]],F,[10,8,6,5][DETAIL]));
+  // One continuous S neck: rising from the breast, bending back, then forward.
+  const neck=loftAnimal([[0,.56,.22],[0,.72,.33],[0,.92,.29],[0,1.105,.30],[0,1.235,.405]],
+    [[.10,.10],[.074,.074],[.062,.062],[.063,.064],[.085,.085]],F,[9,7,6,5][DETAIL]);
+  const head=[neck,P(G.sph,F,0,1.25,.43,0,0,0,.105,.097,.15),
+    // A broad wedge bill and dark mouth seam; no chicken comb or wattles.
+    profileAnimal([[.525,1.27],[.725,1.235],[.73,1.198],[.545,1.188]],.12,B),
+    profileAnimal([[.546,1.19],[.735,1.205],[.724,1.18],[.55,1.167]],.10,'#67462a'),
+    ...groundBirdEyes('#fbf7e9',.084,1.275,.493,.038)];
+  for(const g of head)core.push(animalJoint(g,0,.58,.235,2));
+  const flap=[];
+  for(const side of [1,-1])flap.push(profileAnimal([[.15,.57],[-.10,.64],[-.36,.52],[-.43,.40],[-.18,.33],[.08,.36]],
+    DETAIL>=2?0:.035,W,side*.245));
+  for(const side of [-1,1])flap.push(profileAnimal([[-.34,.44],[-.62,.47],[-.55,.56],[-.33,.52]],
+    DETAIL>=2?0:.025,T,side*.055));
+  return finishGroundBird(core,flap,o.scale,[.48,-.12]);
+}
+function turkeyFan(o){
+  const parts=[],n=[9,9,7,5][DETAIL],radius=.76,root=.10;
+  for(let i=0;i<n;i++){
+    const angle=-1.27+i/(n-1)*2.54,dx=Math.sin(angle),dy=Math.cos(angle),wx=Math.cos(angle),wy=-Math.sin(angle);
+    const point=(r,w)=>[dx*r+wx*w,.50+dy*r+wy*w];
+    const outline=[point(root,-.04),point(radius*.88,-.085),point(radius,0),point(radius*.88,.085),point(root,.04)];
+    const feather=profileAnimal(outline,DETAIL>=2?0:.028,o.tail);
+    // A pale outer edge and dark inner band are baked into the fan's vertices.
+    const colors=feather.attributes.color,p=feather.attributes.position;
+    const edge=new THREE.Color(o.fanEdge||'#d2b78e').convertSRGBToLinear();
+    for(let j=0;j<p.count;j++)if(Math.hypot(p.getZ(j),p.getY(j)-.5)>radius*.83)colors.setXYZ(j,edge.r,edge.g,edge.b);
+    feather.rotateY(Math.PI/2).translate(0,0,-.40);parts.push(feather);
+    if(DETAIL<3){
+      const band=profileAnimal([point(.59,-.086),point(.64,-.086),point(.64,.086),point(.59,.086)],0,'#30271f');
+      band.rotateY(Math.PI/2).translate(0,0,-.381);parts.push(band);
+    }
+  }
+  return parts;
+}
+function buildTurkey(o){
+  const F=o.feather,W=o.wingC||F,R=o.red,Y='#b58b52';
+  const core=groundBirdLegs(Y,.11,.32);
+  core.push(loftAnimal([[0,.49,-.38],[0,.54,-.22],[0,.56,.02],[0,.53,.24],[0,.52,.34]],
+    [[.13,.13],[.31,.25],[.355,.28],[.26,.23],[.10,.105]],F,[10,8,6,5][DETAIL]));
+  const head=[loftAnimal([[0,.62,.235],[0,.735,.27],[0,.84,.32]],[[.073,.074],[.06,.065],[.055,.06]],R,[8,6,5,4][DETAIL]),
+    P(G.sph,o.headC||'#91a4b8',0,.895,.33,0,0,0,.082,.10,.10),
+    profileAnimal([[.40,.92],[.53,.876],[.41,.853]],.067,'#c8a75d'),
+    // Bare blue head, red throat wattle, and hanging snood distinguish a turkey.
+    profileAnimal([[.285,.82],[.34,.81],[.36,.66],[.31,.625],[.285,.72]],DETAIL>=2?0:.035,R),
+    P(G.sphLo,R,0,.881,.421,-.12,0,0,.025,.065,.028),
+    ...groundBirdEyes('#f7deb0',.060,.923,.383,.035)];
+  for(const g of head)core.push(animalJoint(g,0,.605,.235,2));
+  const flap=turkeyFan(o);
+  for(const side of [1,-1])flap.push(profileAnimal([[.19,.58],[.015,.73],[-.21,.65],[-.31,.45],[-.16,.36],[.10,.37]],
+    DETAIL>=2?0:.045,W,side*.31));
+  return finishGroundBird(core,flap,o.scale,[.51,-.16]);
 }
 
 /* A hawk is not a chicken with a small comb. It reads as a raptor because of
@@ -1721,15 +1848,15 @@ UNITS.forEach(u=>{
 
 /* ---------------- geometry kits ---------------- */
 const KITS={
-  hen:      ()=>BIRD_KITS.hen.map(buildBird),
+  hen:      ()=>BIRD_KITS.hen.map(buildHen),
   rooster:  ()=>BIRD_KITS.rooster.map(buildBird),
   gamecock: ()=>BIRD_KITS.gamecock.map(buildBird),
   guinea:   ()=>[{feather:'#4a4d58',wingC:'#5a5e6a',tail:'#33363f',red:'#c95a3a',comb:.35,tailUp:.7,tailW:.6,tailL:.45,scale:.82,spur:0},
                  {feather:'#5c5f6b',wingC:'#6b6f7c',tail:'#3d404a',red:'#d0623f',comb:.35,tailUp:.7,tailW:.6,tailL:.45,scale:.80,spur:0}].map(buildBird),
-  goose:    ()=>[{feather:'#eae6dc',wingC:'#d8d3c6',tail:'#c8c2b3',red:'#e88a12',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.55,spur:0},
-                 {feather:'#5a5f52',wingC:'#6a6f60',tail:'#3f4438',red:'#1a1a1a',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.52,spur:0}].map(buildBird),
+  goose:    ()=>[{feather:'#eae6dc',wingC:'#d8d3c6',tail:'#c8c2b3',red:'#e88a12',beak:'#e7a12c',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.55,spur:0},
+                 {feather:'#5a5f52',wingC:'#6a6f60',tail:'#3f4438',red:'#1a1a1a',beak:'#cf9231',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.52,spur:0}].map(buildGoose),
   turkey:   ()=>[{feather:'#3a2f26',wingC:'#4a3c30',tail:'#5a4a38',red:'#d0403a',comb:1.7,tailUp:.05,tailW:2.0,tailL:1.5,scale:1.45,spur:0},
-                 {feather:'#2b241d',wingC:'#3a3128',tail:'#4a3e30',red:'#c8382f',comb:1.8,tailUp:.05,tailW:2.1,tailL:1.55,scale:1.48,spur:0}].map(buildBird),
+                 {feather:'#2b241d',wingC:'#3a3128',tail:'#4a3e30',red:'#c8382f',comb:1.8,tailUp:.05,tailW:2.1,tailL:1.55,scale:1.48,spur:0}].map(buildTurkey),
   /* red-tailed and a darker morph */
   hawk:     ()=>[{feather:'#6b533a',wingC:'#7d6244',tail:'#a8482a',hood:'#5a4632',beak:'#e8b022',scale:1.15},
                  {feather:'#4a3d30',wingC:'#5c4d3c',tail:'#7a4030',hood:'#3a3126',beak:'#e0a820',scale:1.10}].map(buildHawk),
@@ -1972,6 +2099,7 @@ function buildArena(R,night){
   const tm=new THREE.Mesh(mergeAll(trees),MAT); tm.castShadow=!night; g.add(tm);
   const pmn=new THREE.Mesh(mergeAll(props),MAT); pmn.castShadow=true; pmn.receiveShadow=true; g.add(pmn);
 
+  if(typeof COOP!=='undefined'&&COOP.active&&typeof buildCoopView==='function')buildCoopView(g);
   scene.add(g); arenaGroup=g;
 }
 
@@ -2133,6 +2261,7 @@ const PU={x:new Float32Array(PUFF_MAX),y:new Float32Array(PUFF_MAX),z:new Float3
 let pHead=0;
 
 function spawnFeathers(x,y,z,n,force){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   for(let i=0;i<n;i++){
     const k=fHead++%FEATHER_MAX;
     F.x[k]=x; F.y[k]=y+rnd(-.1,.3); F.z[k]=z;
@@ -2145,6 +2274,7 @@ function spawnFeathers(x,y,z,n,force){
   }
 }
 function spawnPuff(x,y,z,r){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   const k=pHead++%PUFF_MAX;
   PU.x[k]=x; PU.y[k]=y; PU.z[k]=z; PU.r[k]=r; PU.life[k]=rnd(.5,.9);
 }
@@ -2228,6 +2358,7 @@ for(let v=0;v<3;v++){
    silently stopping, so the ground never freezes mid-battle */
 let stainN=[0,0,0], stainW=[0,0,0], stainHead=0;
 function addStain(x,z,scale){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   if(!GORE) return;
   const v=stainHead%3, i=stainW[v]%STAIN_MAX;
   _v.set(x,0.014+v*0.0012,z); _e.set(0,Math.random()*TAU,0); _q.setFromEuler(_e);
@@ -2253,6 +2384,7 @@ let dHead=0;
 
 /* dx,dz = direction of the blow, so spray throws the right way */
 function spawnBlood(x,y,z,n,force,dx,dz){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   /* blood off — a kick of dust stands in, so a hit still reads as a hit */
   if(!GORE){ if(n>6) spawnPuff(x,Math.max(0.1,y*0.5),z,0.20+n*0.006); return; }
   for(let i=0;i<n;i++){
@@ -2275,6 +2407,7 @@ const MI={x:new Float32Array(MIST_MAX),y:new Float32Array(MIST_MAX),z:new Float3
   r:new Float32Array(MIST_MAX),life:new Float32Array(MIST_MAX)};
 let miHead=0;
 function spawnMist(x,y,z,r){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   if(!GORE) return;
   const k=miHead++%MIST_MAX;
   MI.x[k]=x; MI.y[k]=y; MI.z[k]=z; MI.r[k]=r; MI.life[k]=rnd(.3,.55);
@@ -2821,12 +2954,13 @@ function refineDetail(){
    ============================================================ */
 const CMD={
   horn:0, light:0, feedT:0, feedX:0, feedZ:0,
-  cd:{horn:0,light:0,feed:0}, pts:0, ptAcc:0
+  cd:{horn:0,light:0,feed:0,repair:0}, pts:0, ptAcc:0
 };
 const CMD_DEF=[
   {k:'horn', name:'Sound the horn', key:'1', cool:16, dur:6.0, hint:'Every animal you own moves and swings faster'},
   {k:'feed', name:'Scatter feed',   key:'2', cool:14, dur:7.0, hint:'Birds converge on the pile and hold their nerve'},
-  {k:'light',name:'Floodlight',     key:'3', cool:18, dur:5.5, hint:'Predators flinch, hit softer and swing slower'}
+  {k:'light',name:'Floodlight',     key:'3', cool:18, dur:5.5, hint:'Predators flinch, hit softer and swing slower'},
+  {k:'repair',name:'Repair fence',key:'4',cool:20,dur:0,hint:'Restore half of the weakest fence section; can close a breach'}
 ];
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
@@ -2863,7 +2997,7 @@ const DEPLOY=[
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
-function cmdReady(k){ return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
+function cmdReady(k){ if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
 function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
 function applyDeploy(d){
   if(!canDeploy(d)) return false;
@@ -2895,6 +3029,7 @@ function applyDeploy(d){
     const x=TC.ax+rnd(-2,2), z=TC.az+rnd(-2,2);
     setTimeout(()=>{ if(REPLAY.generation===generation) sfx(vc,x,z,'cry'); },i*rnd(90,240));
   }
+  if(typeof highlightEvent==='function')highlightEvent('deploy',d.n+' '+u.label+' reinforced the defense',TC.ax,TC.az,BATTLE.tick+1);
   killFeedRaw('<b>'+(d.n>1?d.n+' ':'')+u.label.toUpperCase()+'</b> joined the line');
   return true;
 }
@@ -2903,11 +3038,21 @@ function applyCommand(k){
   const d=CMD_DEF.find(c=>c.k===k);
   if(k==='horn'){ CMD.horn=d.dur; if(!oneShot('horn',0.95)) sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
+  if(k==='repair'&&typeof COOP!=='undefined'&&COOP.active){
+    const damaged=COOP.sections.filter(s=>s.hp<s.maxHp);if(!damaged.length)return false;
+    const s=damaged.reduce((a,b)=>a.hp/a.maxHp<b.hp/b.maxHp?a:b);
+    if(s.hp<=0)COOP.breaches--;s.hp=Math.min(s.maxHp,s.hp+240);
+    if(typeof highlightEvent==='function')highlightEvent('repair','Weakest fence repaired',0,0,BATTLE.tick+1);
+    for(let i=0;i<N;i++)if(A.st[i]!==2&&Math.hypot(A.x[i],A.z[i])<COOP.radius+.1&&Math.hypot(A.x[i],A.z[i])>COOP.radius-1){
+      const a=Math.atan2(A.z[i],A.x[i]);if(COOP.sections[coopSector(A.x[i],A.z[i])]===s){A.x[i]=Math.cos(a)*(COOP.radius+1);A.z[i]=Math.sin(a)*(COOP.radius+1);}
+    }
+  }
   if(k==='feed'){
     CMD.feedT=d.dur; CMD.feedX=BATTLE.cx+srnd(-4,4); CMD.feedZ=BATTLE.cz+srnd(-4,4);
     for(let i=0;i<26;i++) spawnPuff(CMD.feedX+rnd(-1.4,1.4),0.15,CMD.feedZ+rnd(-1.4,1.4),0.22);
     sfx('buk',CMD.feedX,CMD.feedZ);
   }
+  if(k!=='repair'&&typeof highlightEvent==='function')highlightEvent('command',d.name,BATTLE.cx,BATTLE.cz,BATTLE.tick+1);
   CMD.cd[k]=d.cool||1e9;
   return true;
 }
@@ -3050,6 +3195,7 @@ function spawnRoster(list,night){
      holding them have been replaced. */
   const stale = setDetail(detailFor(total)) ? dropKitCache() : null;
 
+  if(typeof coopReset==='function')coopReset();
   const R=clamp(Math.sqrt(total*3.4/Math.PI)+10, 20, 78);
   buildArena(R,night); gridInit();
 
@@ -3089,6 +3235,10 @@ function spawnRoster(list,night){
       let a,r;
       if(u.team===0){ a=lerp(-2.30,-0.86,t)+srnd(-.14,.14); r=lerp(R*0.28,R*0.88,Math.sqrt(SR())); }
       else          { a=srnd(0.52,2.10);                      r=lerp(R*0.40,R*0.86,Math.sqrt(SR())); }
+      if(typeof COOP!=='undefined'&&COOP.active){
+        a=t*TAU+srnd(-.12,.12);
+        r=u.team===0?lerp(COOP.radius+2,Math.max(COOP.radius+3,R*.60),Math.sqrt(SR())):lerp(R*.78,R*.94,SR());
+      }
       addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*kits.length)|0);
       if(u.team===0){ aliveA++; initA++; } else { aliveB++; initB++; }
     }
@@ -3174,6 +3324,7 @@ function enemyCentroids(){
    ============================================================ */
 function stepSim(dt){
   gridBuild(); enemyCentroids(); cmdStep(dt);
+  if(typeof coopTick==='function')coopTick(dt);
   const cells=[-1,0,1];
   /* the densest point is almost always deep inside the bird mass, which is not
      where the fight is. Track the centroid of everyone actually in contact with
@@ -3181,7 +3332,8 @@ function stepSim(dt){
   let conX=0, conZ=0, conN=0;
 
   for(let i=0;i<N;i++){
-    if(airborne(i,dt)) continue;      // nothing steers or swings mid-flight
+    const oldX=A.x[i],oldZ=A.z[i];
+    if(airborne(i,dt)){if(typeof coopConstrain==='function')coopConstrain(i,oldX,oldZ);continue;}      // nothing steers or swings mid-flight
     if(A.st[i]===2){ A.dead[i]+=dt; if(A.rev[i]===2) reviveCheck(i,dt); continue; }
 
     const mine=UNITS[A.kind[i]];
@@ -3226,6 +3378,7 @@ function stepSim(dt){
       }
       tg=best;
     }
+    if(tg>=0&&typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[tg],A.z[tg]))tg=-1;
     A.tgt[i]=tg;
 
     /* ---------- desired heading ---------- */
@@ -3239,6 +3392,12 @@ function stepSim(dt){
       if(fd<16 && fd>1.6 && (tg<0 || fd<7)){ desX=fx/fd; desZ=fz/fd; fed=true; }
     }
 
+    const objective=typeof coopHeading==='function'?coopHeading(i,tg):null;
+    if(objective){
+      const ol=Math.hypot(objective.x,objective.z)||1;
+      desX=objective.x/ol;desZ=objective.z/ol;spd*=objective.stop?.02:1;fed=true;
+      if(objective.stop)A.yaw[i]=Math.atan2(objective.x,objective.z);
+    }
     if(!fed && tg>=0){
       const dx2=A.x[tg]-A.x[i], dz2=A.z[tg]-A.z[i];
       const dist=Math.hypot(dx2,dz2)||1e-4;
@@ -3297,6 +3456,7 @@ function stepSim(dt){
     A.vx[i]+=clamp(desX-A.vx[i],-ac,ac);
     A.vz[i]+=clamp(desZ-A.vz[i],-ac,ac);
     A.x[i]+=A.vx[i]*dt; A.z[i]+=A.vz[i]*dt;
+    if(typeof coopConstrain==='function')coopConstrain(i,oldX,oldZ);
 
     const rr=Math.hypot(A.x[i],A.z[i]), lim=ARENA_R-0.9;
     if(rr>lim){ const k=lim/rr; A.x[i]*=k; A.z[i]*=k; A.vx[i]*=0.3; A.vz[i]*=0.3; }
@@ -3388,6 +3548,7 @@ function moraleTick(){
    VIOLENCE
    ============================================================ */
 function attack(i,tg,mine,dist){
+  if(typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[tg],A.z[tg]))return;
   const wild=A.st[i]===1?1.28:1;
   /* a floodlight blinds a raccoon at midnight and barely troubles one at
      noon, so the strength follows the arena rather than being flat */
@@ -3431,6 +3592,7 @@ function attack(i,tg,mine,dist){
         const j=cItems[k];
         if(j===tg||A.st[j]===2||A.team[j]===A.team[i]) continue;
         if(outOfReach(j,mine)) continue;
+        if(typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[j],A.z[j]))continue;
         const ddx=A.x[j]-A.x[i], ddz=A.z[j]-A.z[i];
         if(ddx*ddx+ddz*ddz<cr2){
           hurt(j,dmg*(sw?0.72:0.62),i,false);
@@ -3547,6 +3709,7 @@ function shove(j,dx,dz,f){
 let BITING=0;   /* re-entrancy guard for retaliation — see the bite block below */
 function hurt(j,dmg,by,crit){
   if(A.st[j]===2) return;
+  if(by>=0&&typeof coopBlocks==='function'&&coopBlocks(A.x[by],A.z[by],A.x[j],A.z[j]))return;
   A.hp[j]-=dmg; A.hit[j]=0.18;
   /* remember who did it, so the flinch can be a recoil in the right direction
      instead of a wobble. Guarded: airborne() reads lby at the landing to
@@ -3613,6 +3776,158 @@ function reviveCheck(i,dt){
   A.hp[i]=A.hpMax[i]*0.55; A.hit[i]=0; A.sw[i]=0;
   sfx('hiss',A.x[i],A.z[i]);
   if(SR()<0.3) killFeedRaw('<i>a possum</i> was not, in fact, dead');
+}
+
+
+/* Coop defense is a deterministic objective, separate from combat unit stats.
+   Eight independently destructible sectors form a roofed circular run. */
+const COOP={active:false,radius:7.5,sections:[],hens:[],breaches:0,firstHit:false,
+  entered:false,intruders:0,insideX:0,insideZ:0,limit:90,reason:'',pressure:new Uint8Array(8)};
+const COOP_SIDES=['East','Southeast','South','Southwest','West','Northwest','North','Northeast'];
+function coopReset(){
+  COOP.active=typeof CFG!=='undefined'&&CFG.mode==='defense';
+  COOP.sections=Array.from({length:8},()=>({hp:480,maxHp:480,hit:0}));
+  COOP.hens=[{x:-1.4,z:1.4,hp:100,maxHp:100},{x:1.4,z:1.4,hp:100,maxHp:100}];
+  COOP.breaches=0;COOP.firstHit=false;COOP.entered=false;COOP.intruders=0;COOP.insideX=0;COOP.insideZ=0;COOP.reason='';COOP.pressure.fill(0);
+}
+function coopSector(x,z){return Math.floor(((Math.atan2(z,x)+TAU)%TAU)/(TAU/8))%8;}
+function coopHensAlive(){return COOP.hens.reduce((n,h)=>n+(h.hp>0?1:0),0);}
+function coopEvent(type,label,x=0,z=0){if(typeof highlightEvent==='function')highlightEvent(type,label,x,z);}
+function coopTick(dt){
+  if(!COOP.active)return;
+  COOP.pressure.fill(0);COOP.intruders=0;COOP.insideX=0;COOP.insideZ=0;
+  for(let i=0;i<N;i++)if(A.st[i]!==2&&A.team[i]===1&&Math.hypot(A.x[i],A.z[i])<COOP.radius-.4){
+    COOP.intruders++;COOP.insideX+=A.x[i];COOP.insideZ+=A.z[i];
+  }
+  if(COOP.intruders){COOP.insideX/=COOP.intruders;COOP.insideZ/=COOP.intruders;}
+  for(const s of COOP.sections)s.hit=Math.max(0,s.hit-dt);
+}
+// True when a straight line would pass through an intact section; roof applies to fliers too.
+function coopBlocks(x,z,tx,tz){
+  if(!COOP.active)return false;
+  const dx=tx-x,dz=tz-z,a=dx*dx+dz*dz;if(a<1e-10)return false;
+  const b=2*(x*dx+z*dz),c=x*x+z*z-COOP.radius*COOP.radius,disc=b*b-4*a*c;
+  if(disc<0)return false;
+  const q=Math.sqrt(disc);
+  for(const t of [(-b-q)/(2*a),(-b+q)/(2*a)]){
+    if(t>1e-7&&t<1-1e-7&&COOP.sections[coopSector(x+t*dx,z+t*dz)].hp>0)return true;
+  }
+  return false;
+}
+function coopNearestBreach(i){
+  let best=-1,dist=Infinity;
+  for(let k=0;k<8;k++)if(COOP.sections[k].hp<=0){
+    const a=(k+.5)*TAU/8, x=Math.cos(a)*COOP.radius,z=Math.sin(a)*COOP.radius;
+    const d=(x-A.x[i])**2+(z-A.z[i])**2;
+    if(d<dist){dist=d;best=k;}
+  }
+  return best;
+}
+// Reuse cooldowns and swing poses. No random draws: cosmetic sounds cannot alter the objective.
+function coopStrike(i,target,hen){
+  if(A.cd[i]>0||target.hp<=0)return;
+  const u=UNITS[A.kind[i]];
+  A.cd[i]=u.rate;A.sw[i]=u.swC;
+  const damage=(hen?Math.min(36,Math.max(8,u.dmg)):Math.min(80,Math.max(5,u.dmg*.6)))*
+    (CMD.light>0?(1-.45*floodPower()):1);
+  target.hp=Math.max(0,target.hp-damage);target.hit=.25;
+  if(hen){
+    if(target.hp<=0){coopEvent('hen-lost','A protected hen was lost',target.x,target.z);sfx('bawk',target.x,target.z,'key');}
+  }else{
+    const k=COOP.sections.indexOf(target),a=(k+.5)*TAU/8;
+    if(!COOP.firstHit){COOP.firstHit=true;coopEvent('fence-hit','Predators reached the run',Math.cos(a)*COOP.radius,Math.sin(a)*COOP.radius);}
+    if(target.hp<=0){COOP.breaches++;coopEvent('breach',COOP_SIDES[k]+' fence breached',Math.cos(a)*COOP.radius,Math.sin(a)*COOP.radius);}
+    sfx('peck',A.x[i],A.z[i]);
+  }
+}
+// Supplies an objective heading only when a nearby opponent does not demand combat.
+function coopHeading(i,tg){
+  if(!COOP.active)return null;
+  const u=UNITS[A.kind[i]],x=A.x[i],z=A.z[i],r=Math.hypot(x,z),inside=r<COOP.radius-.4;
+  const enemyNear=tg>=0&&(A.x[tg]-x)**2+(A.z[tg]-z)**2<=(u.team===0?144:9);
+  if(enemyNear&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
+  if(u.team===1){
+    if(inside){
+      if(!COOP.entered){COOP.entered=true;coopEvent('intruder','A predator entered the run',x,z);}
+      let h=null,d=Infinity;
+      for(const hen of COOP.hens)if(hen.hp>0){const q=(hen.x-x)**2+(hen.z-z)**2;if(q<d){h=hen;d=q;}}
+      if(!h)return {x:0,z:0,stop:true};
+      if(d<2.5){coopStrike(i,h,true);return {x:h.x-x,z:h.z-z,stop:true};}
+      return {x:h.x-x,z:h.z-z,stop:false};
+    }
+    let k=coopNearestBreach(i);
+    if(k<0)k=coopSector(x,z);
+    const a=(k+.5)*TAU/8,s=COOP.sections[k],intact=s.hp>0;
+    // Queue around the panel; only three animals can work on one section per tick.
+    const approach=COOP.radius+(intact?u.rad*.5+.5:-1.2);
+    const tx=Math.cos(a)*approach,tz=Math.sin(a)*approach;
+    if(intact&&Math.hypot(tx-x,tz-z)<1.1){
+      if(COOP.pressure[k]<3){COOP.pressure[k]++;coopStrike(i,s,false);}
+      return {x:-x,z:-z,stop:true};
+    }
+    // Go around the outside instead of attempting to walk through another panel.
+    if(coopBlocks(x,z,tx,tz)){
+      const ang=Math.atan2(z,x),delta=Math.atan2(Math.sin(a-ang),Math.cos(a-ang));
+      const next=ang+Math.sign(delta)*.25,rr=COOP.radius+u.rad*.5+1.4;
+      return {x:Math.cos(next)*rr-x,z:Math.sin(next)*rr-z,stop:false};
+    }
+    return {x:tx-x,z:tz-z,stop:false};
+  }
+  // Defenders intercept the closest predator; unengaged animals guard the run.
+  if(tg>=0&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
+  if(aliveB>0){
+    let tx=COOP.intruders?COOP.insideX:ecx[0],tz=COOP.intruders?COOP.insideZ:ecz[0];
+    if(tg>=0){tx=A.x[tg];tz=A.z[tg];}
+    if(coopBlocks(x,z,tx,tz)){
+      const breach=coopNearestBreach(i);
+      if(breach>=0){
+        const ba=(breach+.5)*TAU/8,nearR=COOP.radius+(inside?-1.2:1.4);
+        tx=Math.cos(ba)*nearR;tz=Math.sin(ba)*nearR;
+        if(Math.hypot(tx-x,tz-z)<.9){const farR=COOP.radius+(inside?1.4:-1.4);tx=Math.cos(ba)*farR;tz=Math.sin(ba)*farR;}
+        if(!coopBlocks(x,z,tx,tz))return {x:tx-x,z:tz-z,stop:false};
+      }else if(inside)return {x:0,z:0,stop:true};
+      const angle=Math.atan2(z,x),goal=breach>=0?(breach+.5)*TAU/8:Math.atan2(tz,tx);
+      const delta=Math.atan2(Math.sin(goal-angle),Math.cos(goal-angle));
+      const next=angle+Math.sign(delta||1)*.28,rr=COOP.radius+(inside?-1.2:u.rad*.5+1.4);
+      tx=Math.cos(next)*rr;tz=Math.sin(next)*rr;
+    }
+    return {x:tx-x,z:tz-z,stop:false};
+  }
+  const a=i*2.39996323,rr=COOP.radius+2;
+  return {x:Math.cos(a)*rr-x,z:Math.sin(a)*rr-z,stop:Math.hypot(x-Math.cos(a)*rr,z-Math.sin(a)*rr)<.6};
+}
+// Swept collision prevents launches, high speed and flying units bypassing the roofed run.
+function coopConstrain(i,oldX,oldZ){
+  if(!COOP.active||(A.st[i]===2&&A.rev[i]!==2))return;
+  const r=Math.hypot(A.x[i],A.z[i]),oldR=Math.hypot(oldX,oldZ),pad=UNITS[A.kind[i]].rad*.35;
+  const outside=oldR>=COOP.radius;
+  const touching=outside?r<COOP.radius+pad:r>COOP.radius-pad;
+  if(!touching&&!coopBlocks(oldX,oldZ,A.x[i],A.z[i]))return;
+  let k=coopSector(A.x[i],A.z[i]);
+  if(COOP.sections[k].hp<=0&&!coopBlocks(oldX,oldZ,A.x[i],A.z[i]))return;
+  // Keep agents on the side they came from, using the old angle for a long crossing.
+  const ang=coopBlocks(oldX,oldZ,A.x[i],A.z[i])?Math.atan2(oldZ,oldX):Math.atan2(A.z[i],A.x[i]);
+  const rr=COOP.radius+(outside?pad+.02:-pad-.02);
+  A.x[i]=Math.cos(ang)*rr;A.z[i]=Math.sin(ang)*rr;
+  const nx=Math.cos(ang),nz=Math.sin(ang),dot=A.vx[i]*nx+A.vz[i]*nz;
+  if((outside&&dot<0)||(!outside&&dot>0)){A.vx[i]-=dot*nx;A.vz[i]-=dot*nz;}
+}
+function coopCheckWin(){
+  if(!COOP.active)return false;
+  const hens=coopHensAlive();
+  if(!hens){COOP.reason='Both hens were lost';verdict('coons',COOP.reason);}
+  else if(aliveB<=0){COOP.reason='All predators stopped';verdict('birds',COOP.reason);}
+  else if(BATTLE.t>=COOP.limit){COOP.reason=hens===2?'Both hens survived the raid':'One hen survived the raid';verdict('birds',COOP.reason);}
+  return true; // defense never ends because the old army-elimination/stall rule fired
+}
+function coopHud(){
+  const el=$('coopObjective');if(!el)return;
+  el.hidden=!COOP.active;if(!COOP.active)return;
+  const weakest=Math.min(...COOP.sections.map(s=>s.hp/s.maxHp));
+  $('coopHens').textContent=coopHensAlive()+' / 2 hens safe';
+  $('coopFence').textContent=COOP.breaches?COOP.breaches+' fence breach'+(COOP.breaches===1?'':'es'):'Weakest fence '+Math.ceil(weakest*100)+'%';
+  $('coopTime').textContent=Math.ceil(Math.max(0,COOP.limit-(BATTLE.running||BATTLE.over?BATTLE.t:0)))+'s to hold';
+  el.classList.toggle('danger',COOP.breaches>0||weakest<.3);
 }
 
 
@@ -3688,6 +4003,7 @@ const KILL_VERBS_COON=['unhinged','disassembled','turned into confetti','yeeted'
 const feedEl=$('feed');
 let feedLock=0;
 function killFeed(by,victim,crit){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(!BATTLE.running) return;
   feedLock--;
   if(feedLock>0) return;
@@ -3705,6 +4021,7 @@ function killFeed(by,victim,crit){
   while(feedEl.children.length>5) feedEl.removeChild(feedEl.firstChild);
 }
 function killFeedRaw(html){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   const d=document.createElement('div'); d.className='kf big'; d.innerHTML=html;
   feedEl.appendChild(d);
   while(feedEl.children.length>5) feedEl.removeChild(feedEl.firstChild);
@@ -4223,6 +4540,7 @@ Object.keys(SFX_BANKS).filter(k=>k!=='peck').forEach(k=>{
         'cry'   = a creature using its voice — own budget, never thinned
         'key'   = something that must be heard (a death), never thinned */
 function sfx(kind,x,z,mode){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(mode===true) mode='soft';
   if(!soundOn||!AC||!VOX[kind]) return;
   const always=(mode==='soft'||mode==='cry'||mode==='key');
@@ -4256,6 +4574,7 @@ function sfx(kind,x,z,mode){
 
 /* ---------- non-positional stings ---------- */
 function sting(kind){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(!soundOn||!AC) return;
   const t=AC.currentTime, d=outBus(0);
   // Tactile cues leave the melodic fanfare to the recorded score.
@@ -4382,6 +4701,7 @@ async function decodeAssets(){
    things happening at a place on the field. Returns false when the sample
    isn't there, so every caller can fall back to its synthesized version. */
 function oneShot(name,vol){
+  if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return false;
   if(!AC||!BUF[name]||!soundOn) return false;
   const src=AC.createBufferSource(); src.buffer=BUF[name];
   src.playbackRate.value=rnd(.985,1.015);
@@ -4871,7 +5191,7 @@ function renderAgents(){
               0,s3, c2, pz2-s3*py2-c2*pz2,
               0,0,0,1);
       _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
+      sq.push(A.vr[i],_m,_mF,A.ph[i],0,0,0,!!HERO_ON[i]);
       continue;                       // no blob shadow while it's off the ground
     }
 
@@ -5054,6 +5374,17 @@ function director(dt,real,wall){
     return;
   }
 
+  if(typeof COOP!=='undefined'&&COOP.active){
+    // Keep the actual objective visible throughout a raid; manual and Tactical remain available.
+    const fit=1/Math.sqrt(Math.min(1,camera.aspect)),angle=1.12+Math.sin(BATTLE.t*.035)*.22;
+    const d=Math.max(24,R*1.10)*fit;
+    _v.set(Math.cos(angle)*d,Math.max(18,R*.85)*fit,Math.sin(angle)*d);
+    if(DIR.snap){camPos.copy(_v);DIR.snap=false;}else camPos.lerp(_v,1-Math.pow(.02,real));
+    camAim.set(0,.6,0);camera.position.copy(camPos);camera.lookAt(camAim);
+    if(camera.fov!==46){camera.fov=46;camera.updateProjectionMatrix();}
+    return;
+  }
+
   DIR.t+=(wall||real);
   if(DIR.t>DIR.dur && SEQ.phase==='battle') pickShot();
 
@@ -5176,6 +5507,383 @@ function director(dt,real,wall){
 }
 
 
+/* Meaningful battle moments. Read-only observers: no simulation RNG or mutations.
+   This file may be declared before 06_ui; initialize its UI after every part loads.
+   Events are rebuilt during replay, so the recording needs no per-tick snapshots. */
+const HIGHLIGHTS={events:[],seen:Object.create(null),startTotal:0,lastKills:0,
+  lastTick:-1,lastMoraleTick:-15,milestones:[],finished:false,replayMomentUntil:0};
+const HIGHLIGHT_LIMIT=12;
+const HIGHLIGHT_RULES={
+  firstclash:{priority:110,limit:1},firstloss:{priority:110,limit:1},
+  fencehit:{priority:90,limit:1},breach:{priority:105,limit:2},
+  henlost:{priority:105,limit:2},moralebreak:{priority:90,limit:1},
+  loss25:{priority:55,limit:1},loss50:{priority:65,limit:1},loss75:{priority:75,limit:1},
+  deploy:{priority:40,limit:2},command:{priority:35,limit:2},final:{priority:120,limit:1}
+};
+function highlightTimestamp(tick){
+  const seconds=Math.max(0,Math.floor(tick/60));
+  return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+}
+function highlightReset(){
+  HIGHLIGHTS.events=[]; HIGHLIGHTS.seen=Object.create(null);
+  HIGHLIGHTS.startTotal=typeof initA==='number'&&typeof initB==='number'?initA+initB:0;
+  HIGHLIGHTS.lastKills=0; HIGHLIGHTS.lastTick=-1; HIGHLIGHTS.lastMoraleTick=-15;
+  HIGHLIGHTS.finished=false; HIGHLIGHTS.replayMomentUntil=0;
+  HIGHLIGHTS.milestones=[.25,.50,.75].map((fraction,i)=>({
+    type:['loss25','loss50','loss75'][i],kills:Math.max((i+1)*10,Math.ceil(HIGHLIGHTS.startTotal*fraction)),done:false
+  }));
+  if(typeof document!=='undefined'){
+    const section=document.getElementById('replayHighlights'); if(section) section.hidden=true;
+    const moment=document.getElementById('replayMoment'); if(moment) moment.hidden=true;
+  }
+}
+function highlightEvent(type,label,x,z,tick){
+  if(HIGHLIGHTS.finished) return null;
+  type=String(type||'moment').toLowerCase().replace(/[_-]/g,'');
+  const rule=HIGHLIGHT_RULES[type]||{priority:60,limit:1};
+  if((HIGHLIGHTS.seen[type]||0)>=rule.limit) return null;
+  const now=tick===undefined?(typeof BATTLE!=='undefined'?BATTLE.tick:0):tick;
+  if(!Number.isInteger(now)||now<0||typeof label!=='string'||!label.trim()) return null;
+  const event={type,label:label.trim().slice(0,160),tick:now,
+    x:Number.isFinite(x)?x:0,z:Number.isFinite(z)?z:0,priority:rule.priority};
+  if(HIGHLIGHTS.events.length>=HIGHLIGHT_LIMIT){
+    // Prefer objective events over repetitive purchases or intermediate loss totals.
+    let remove=-1;
+    for(let i=0;i<HIGHLIGHTS.events.length;i++){
+      const candidate=HIGHLIGHTS.events[i];
+      if(candidate.priority<event.priority&&(remove<0||candidate.priority<=HIGHLIGHTS.events[remove].priority)) remove=i;
+    }
+    if(remove<0) return null;
+    HIGHLIGHTS.events.splice(remove,1);
+  }
+  HIGHLIGHTS.seen[type]=(HIGHLIGHTS.seen[type]||0)+1;
+  HIGHLIGHTS.events.push(event);
+  HIGHLIGHTS.events.sort((a,b)=>a.tick-b.tick); // Stable order for multiple events on one tick.
+  if(rule.priority>=75) highlightReplayMoment(event);
+  return event;
+}
+function highlightReplayMoment(event){
+  if(typeof document==='undefined'||typeof REPLAY==='undefined'||!REPLAY.playback||REPLAY.seeking) return;
+  const moment=document.getElementById('replayMoment'); if(!moment) return;
+  moment.textContent='Replay · '+highlightTimestamp(event.tick)+' · '+event.label;
+  moment.hidden=false; HIGHLIGHTS.replayMomentUntil=event.tick+180;
+}
+function highlightTick(){
+  if(typeof BATTLE==='undefined'||!BATTLE.running||BATTLE.over||HIGHLIGHTS.finished) return;
+  const tick=BATTLE.tick;
+  if(!Number.isInteger(tick)||tick<1||tick===HIGHLIGHTS.lastTick) return;
+  HIGHLIGHTS.lastTick=tick;
+  if(BATTLE.conN>0) highlightEvent('firstclash','First contact: the armies meet',BATTLE.conX,BATTLE.conZ);
+  const kills=BATTLE.totalKills;
+  if(kills>0&&!HIGHLIGHTS.seen.firstloss){
+    let x=BATTLE.cx,z=BATTLE.cz;
+    // Find a real casualty location once; possums playing dead are not casualties.
+    if(typeof A!=='undefined'&&typeof N==='number') for(let i=0;i<N;i++){
+      if(A.st[i]===2&&(!A.rev||A.rev[i]===0)){x=A.x[i];z=A.z[i];break;}
+    }
+    highlightEvent('firstloss','First casualty: '+(initA-aliveA>0?'the farm loses an animal':'a predator falls'),x,z);
+  }
+  for(const milestone of HIGHLIGHTS.milestones){
+    if(!milestone.done&&kills>=milestone.kills){
+      milestone.done=true;
+      highlightEvent(milestone.type,milestone.kills.toLocaleString()+' casualties: losses mount',BATTLE.cx,BATTLE.cz);
+    }
+  }
+  HIGHLIGHTS.lastKills=kills;
+  // Morale changes on a 0.45s cadence; scanning four times/second avoids another
+  // full crowd walk on every 60Hz tick. Count living fleeing animals, not panicCount.
+  if(!HIGHLIGHTS.seen.moralebreak&&tick-HIGHLIGHTS.lastMoraleTick>=15){
+    HIGHLIGHTS.lastMoraleTick=tick;
+    let fleeing=0,fx=0,fz=0;
+    if(typeof A!=='undefined'&&typeof N==='number') for(let i=0;i<N;i++){
+      if(A.team[i]===0&&A.st[i]===1){fleeing++;fx+=A.x[i];fz+=A.z[i];}
+    }
+    if(aliveA>0&&fleeing>=Math.max(3,Math.ceil(aliveA*.25)))
+      highlightEvent('moralebreak','Farm morale breaks: '+fleeing+' living animals flee',fx/fleeing,fz/fleeing);
+  }
+  if(typeof document!=='undefined'){
+    const moment=document.getElementById('replayMoment');
+    if(moment&&tick>HIGHLIGHTS.replayMomentUntil) moment.hidden=true;
+  }
+}
+function highlightFinish(who,how){
+  if(HIGHLIGHTS.finished) return;
+  const winner=who==='birds'?'Farm victory':who==='coons'?'Predator victory':'Battle finished';
+  highlightEvent('final',winner+(how?': '+how:''),typeof BATTLE!=='undefined'?BATTLE.cx:0,typeof BATTLE!=='undefined'?BATTLE.cz:0);
+  HIGHLIGHTS.finished=true;
+  if(typeof document!=='undefined'){
+    const moment=document.getElementById('replayMoment');if(moment) moment.hidden=true;
+    renderHighlights();
+  }
+}
+function initHighlightsUI(){
+  if(typeof document==='undefined') return;
+  const tale=document.getElementById('cardTale');if(!tale) return;
+  if(!document.getElementById('highlightsStyle')){
+    const style=document.createElement('style');style.id='highlightsStyle';
+    style.textContent=`
+      #replayHighlights{width:min(560px,100%);margin:18px 0 0;text-align:left;pointer-events:auto}
+      #replayHighlights[hidden],#replayMoment[hidden]{display:none!important}
+      #replayHighlights h3{margin:0 0 6px;font-size:13px;letter-spacing:.04em;color:var(--paper,#eee)}
+      #highlightHint{margin:0 0 10px;font-size:11px;line-height:1.5;color:#c9c2b8}
+      #highlightList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+      #highlightList button{min-height:48px;padding:10px 12px;text-align:left;background:#282531cc;
+        border:1px solid #ffffff25;border-radius:10px;color:var(--paper,#eee);font:inherit;
+        font-size:11px;line-height:1.45;letter-spacing:0;cursor:pointer;display:flex;gap:9px;align-items:flex-start}
+      #highlightList button:hover{background:#3a3040;border-color:#edc78580}
+      #highlightList button:focus-visible{outline:2px solid #edc785;outline-offset:3px}
+      #highlightList button:disabled{opacity:.65;cursor:wait}
+      #highlightList .highlightTime{flex-shrink:0;font-variant-numeric:tabular-nums;color:#edc785;font-weight:700}
+      #replayMoment{position:absolute;top:94px;left:50%;transform:translateX(-50%);z-index:12;
+        width:max-content;max-width:calc(100% - 28px);padding:7px 10px;border-radius:8px;
+        background:#191721dc;color:#ede5d8;box-sizing:border-box;font:11px/1.4 system-ui;
+        text-align:center;pointer-events:none;border:1px solid #ffffff20}
+      @media(max-width:600px){#highlightList{grid-template-columns:1fr}#replayMoment{top:108px;font-size:10px}}
+    `;
+    document.head.appendChild(style);
+  }
+  if(!document.getElementById('replayHighlights')){
+    const section=document.createElement('section');section.id='replayHighlights';section.hidden=true;
+    section.setAttribute('aria-labelledby','highlightHeading');
+    const heading=document.createElement('h3');heading.id='highlightHeading';heading.textContent='Moments to replay';
+    const hint=document.createElement('p');hint.id='highlightHint';hint.textContent='Choose a moment to replay from a few seconds before it.';
+    hint.setAttribute('role','status');hint.setAttribute('aria-live','polite');
+    const list=document.createElement('div');list.id='highlightList';
+    section.appendChild(heading);section.appendChild(hint);section.appendChild(list);(document.getElementById('cardBtns')||tale).after(section);
+  }
+  const frameElement=document.getElementById('frame');
+  if(frameElement&&!document.getElementById('replayMoment')){
+    const moment=document.createElement('div');moment.id='replayMoment';moment.hidden=true;
+    moment.setAttribute('role','status');moment.setAttribute('aria-live','polite');frameElement.appendChild(moment);
+  }
+  if(HIGHLIGHTS.finished) renderHighlights();
+}
+function renderHighlights(){
+  const section=document.getElementById('replayHighlights'),list=document.getElementById('highlightList');
+  if(!section||!list) return;
+  list.replaceChildren();section.hidden=HIGHLIGHTS.events.length===0;
+  const hint=document.getElementById('highlightHint');if(hint)hint.textContent='Choose a moment to replay from a few seconds before it.';
+  for(const event of HIGHLIGHTS.events){
+    const button=document.createElement('button');button.type='button';
+    button.setAttribute('aria-label','Replay shortly before '+highlightTimestamp(event.tick)+': '+event.label);
+    const time=document.createElement('span');time.className='highlightTime';time.textContent=highlightTimestamp(event.tick);
+    const label=document.createElement('span');label.textContent=event.label;button.appendChild(time);button.appendChild(label);
+    button.addEventListener('click',()=>{
+      const hint=document.getElementById('highlightHint');
+      if(typeof seekReplayHighlight!=='function'){hint.textContent='Replay is unavailable for this battle.';return;}
+      button.disabled=true;hint.textContent='Opening '+highlightTimestamp(event.tick)+' · '+event.label;
+      try{
+        const result=seekReplayHighlight(event.tick);
+        if(result===false){button.disabled=false;hint.textContent='This battle could not be replayed.';}
+        else if(result&&typeof result.catch==='function') result.catch(()=>{button.disabled=false;hint.textContent='This battle could not be replayed.';});
+      }catch(e){button.disabled=false;hint.textContent='This battle could not be replayed.';}
+    });
+    list.appendChild(button);
+  }
+}
+
+
+/* Central objective scenery. All resources belong to the supplied arena group.
+   Hoisted functions are intentional: the first arena builds during 06_ui boot.
+   Visual state never writes COOP or consumes the simulation random stream. */
+function coopViewMaterial(color,extra){
+  return new THREE.MeshStandardMaterial(Object.assign({
+    color:new THREE.Color(color).convertSRGBToLinear(),roughness:.88,metalness:0
+  },extra||{}));
+}
+function coopViewMerged(parts,material,parent){
+  const mesh=new THREE.Mesh(mergeAll(parts),material);
+  mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
+}
+function coopViewLine(points,material,parent){
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+  geo.computeBoundingSphere();const line=new THREE.LineSegments(geo,material);parent.add(line);return line;
+}
+function coopViewSegment(points,a,b){points.push(a[0],a[1],a[2],b[0],b[1],b[2]);}
+function coopViewBeam(parts,color,a,b,width){
+  const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],len=Math.hypot(dx,dy,dz);
+  const geo=G.box.clone();
+  const rotation=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(dx,dy,dz).normalize());
+  const matrix=new THREE.Matrix4().compose(new THREE.Vector3((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2),rotation,new THREE.Vector3(width,len,width));
+  geo.applyMatrix4(matrix);
+  const piece=geo.index?geo.toNonIndexed():geo;
+  if(piece!==geo) geo.dispose();
+  if(piece.attributes.uv)piece.deleteAttribute('uv');
+  const c=new THREE.Color(color).convertSRGBToLinear(),colors=new Float32Array(piece.attributes.position.count*3);
+  for(let i=0;i<colors.length;i+=3){colors[i]=c.r;colors[i+1]=c.g;colors[i+2]=c.b;}
+  piece.setAttribute('color',new THREE.BufferAttribute(colors,3));parts.push(piece);
+}
+
+function buildCoopView(parent){
+  buildCoopView.state=null;
+  if(typeof COOP==='undefined'||!COOP.active)return;
+  const root=new THREE.Group();root.name='protected-coop-run';parent.add(root);
+  const radius=COOP.radius||7.5,height=2.7,sectorCount=COOP.sections.length||8;
+  const timber=coopViewMaterial('#ffffff',{vertexColors:true});
+  const earth=coopViewMaterial('#b69a69');
+  const floorGeo=new THREE.CircleGeometry(radius-.08,64);floorGeo.rotateX(-Math.PI/2);
+  const floor=new THREE.Mesh(floorGeo,earth);floor.position.y=.045;floor.receiveShadow=true;root.add(floor);
+  const staticParts=[],panels=[];
+
+  /* Dark earth rim and substantial corner posts establish the protected area
+     even when the wire itself is sub-pixel in the overview. */
+  for(let j=0;j<sectorCount*2;j++){
+    const a=j/(sectorCount*2)*TAU,x=Math.cos(a)*radius,z=Math.sin(a)*radius;
+    staticParts.push(P(G.box,'#775132',x,1.43,z,0,-a,0,.20,2.86,.20));
+    staticParts.push(P(G.box,'#e1ba79',x,2.91,z,0,-a,0,.31,.12,.31));
+    const a2=(j+1)/(sectorCount*2)*TAU;
+    coopViewBeam(staticParts,'#655238',[x,.10,z],[Math.cos(a2)*radius,.10,Math.sin(a2)*radius],.14);
+  }
+  for(let i=0;i<sectorCount;i++){
+    const start=i/sectorCount*TAU,end=(i+1)/sectorCount*TAU,mid=(start+end)/2;
+    const mx=Math.cos(mid)*radius,mz=Math.sin(mid)*radius;
+    const panel=new THREE.Group();panel.position.set(mx,0,mz);root.add(panel);
+    const wood=[],wire=[],sub=10;
+    /* Eight physically separate arcs correspond exactly to simulation sectors. */
+    for(let j=0;j<sub;j++){
+      const a=start+(end-start)*j/sub,a2=start+(end-start)*(j+1)/sub;
+      const x=Math.cos(a)*radius-mx,z=Math.sin(a)*radius-mz;
+      const x2=Math.cos(a2)*radius-mx,z2=Math.sin(a2)*radius-mz;
+      for(let k=1;k<=9;k++)coopViewSegment(wire,[x,k*height/10,z],[x2,k*height/10,z2]);
+      coopViewSegment(wire,[x,.16,z],[x,height,z]);
+      for(const y of [.28,2.61])coopViewBeam(wood,'#be9460',[x,y,z],[x2,y,z2],.085);
+    }
+    const endpoint=[Math.cos(end)*radius-mx,0,Math.sin(end)*radius-mz];
+    coopViewSegment(wire,[endpoint[0],.16,endpoint[2]],[endpoint[0],height,endpoint[2]]);
+    const woodMat=coopViewMaterial('#ffffff',{vertexColors:true});
+    const wireMat=new THREE.LineBasicMaterial({color:new THREE.Color('#a9c4ba').convertSRGBToLinear(),transparent:true,opacity:.62});
+    const woodMesh=coopViewMerged(wood,woodMat,panel);coopViewLine(wire,wireMat,panel);
+    panels.push({group:panel,wood:woodMat,wire:wireMat,woodMesh:woodMesh,angle:mid,pulse:0,lastHit:0,breached:false});
+  }
+
+  /* A closed mesh roof protects against hawks. Sparse lines preserve views of
+     the hens and ground combat, while four ribs make the enclosure unmistakable. */
+  const net=[];
+  function netY(r){return 4.35-1.65*(r/radius);}
+  for(let j=0;j<40;j++){
+    const a=j/40*TAU;
+    for(let k=0;k<9;k++){
+      const r=k/9*radius,r2=(k+1)/9*radius;
+      coopViewSegment(net,[Math.cos(a)*r,netY(r),Math.sin(a)*r],[Math.cos(a)*r2,netY(r2),Math.sin(a)*r2]);
+    }
+  }
+  for(let k=1;k<=9;k++){
+    const r=k/9*radius;
+    for(let j=0;j<64;j++){
+      const a=j/64*TAU,b=(j+1)/64*TAU;
+      coopViewSegment(net,[Math.cos(a)*r,netY(r),Math.sin(a)*r],[Math.cos(b)*r,netY(r),Math.sin(b)*r]);
+    }
+  }
+  for(let j=0;j<4;j++){
+    const a=j/4*TAU;
+    coopViewBeam(staticParts,'#c3a571',[0,4.35,0],[Math.cos(a)*radius,height,Math.sin(a)*radius],.065);
+  }
+  const roofNet=coopViewLine(net,new THREE.LineBasicMaterial({color:new THREE.Color('#a7b6a0').convertSRGBToLinear(),transparent:true,opacity:.28,depthWrite:false}),root);
+  roofNet.name='closed-hawk-net';
+
+  /* Raised wood house, open front door, pitched roof and a slatted ramp.
+     The doorway is a real gap rather than a black rectangle on a solid box. */
+  const hz=-2.05;
+  for(const x of [-1.55,1.55])for(const z of [hz-1.3,hz+1.3])
+    staticParts.push(P(G.box,'#684329',x,.53,z,0,0,0,.20,1.06,.20));
+  staticParts.push(P(G.box,'#91633b',0,1.02,hz,0,0,0,3.7,.16,3.15));
+  for(let j=0;j<8;j++){
+    const y=1.20+j*.19,c=j%2?'#a97846':'#b58450';
+    for(const x of [-1.76,1.76])staticParts.push(P(G.box,c,x,y,hz,0,0,0,.13,.18,3.08));
+    staticParts.push(P(G.box,c,0,y,hz-1.48,0,0,0,3.48,.18,.13));
+    for(const x of [-1.22,1.22])staticParts.push(P(G.box,c,x,y,hz+1.48,0,0,0,1.04,.18,.13));
+    if(j>5)staticParts.push(P(G.box,c,0,y,hz+1.48,0,0,0,1.38,.18,.13));
+  }
+  for(const x of [-.71,.71])staticParts.push(P(G.box,'#dfc499',x,1.76,hz+1.57,0,0,0,.11,1.40,.13));
+  staticParts.push(P(G.box,'#dfc499',0,2.48,hz+1.57,0,0,0,1.54,.13,.13));
+  for(const side of [-1,1]){
+    staticParts.push(P(G.box,'#566b68',side*.95,2.97,hz,0,0,-side*.30,2.02,.15,3.58));
+    coopViewBeam(staticParts,'#ded0ad',[side*1.96,2.68,hz+1.80],[0,3.30,hz+1.80],.105);
+  }
+  staticParts.push(P(G.box,'#84918a',0,3.28,hz,0,0,0,.14,.10,3.65));
+  const rampStart=[0,1.04,hz+1.62],rampEnd=[0,.12,1.10];
+  /* Ramp plank is oriented along its slope, with contrasting traction slats. */
+  const rampLen=Math.hypot(rampEnd[1]-rampStart[1],rampEnd[2]-rampStart[2]);
+  const rampTilt=Math.atan2(rampStart[1]-rampEnd[1],rampEnd[2]-rampStart[2]);
+  staticParts.push(P(G.box,'#997345',0,(rampStart[1]+rampEnd[1])/2,(rampStart[2]+rampEnd[2])/2,rampTilt,0,0,1.14,.09,rampLen));
+  for(let j=1;j<7;j++){
+    const t=j/7;
+    staticParts.push(P(G.box,'#d3af73',0,lerp(rampStart[1],rampEnd[1],t)+.07,lerp(rampStart[2],rampEnd[2],t),rampTilt,0,0,1.10,.065,.11));
+  }
+  /* Two side nesting boxes, individual openings and pale eggs. */
+  for(const z of [hz-.67,hz+.55]){
+    staticParts.push(P(G.box,'#765034',2.10,1.20,z,0,0,0,.76,.10,1.05));
+    staticParts.push(P(G.box,'#a17749',2.10,1.73,z,0,0,0,.79,.10,1.08));
+    for(const zz of [z-.48,z+.48])staticParts.push(P(G.box,'#94663d',2.10,1.45,zz,0,0,0,.72,.47,.09));
+    staticParts.push(P(G.sphLo,'#d9be74',2.10,1.29,z,0,0,0,.27,.06,.34));
+    staticParts.push(P(G.sphLo,'#f0dfb9',2.23,1.37,z,0,0,.15,.10,.13,.10));
+  }
+  /* A low water pan and feed bowl help the protected space feel inhabited. */
+  staticParts.push(P(G.cyl,'#788789',-3.5,.18,.3,0,0,0,.55,.24,.55));
+  staticParts.push(P(G.cyl,'#8ebabe',-3.5,.31,.3,0,0,0,.47,.025,.47));
+  staticParts.push(P(G.cyl,'#9d6239',3.1,.13,2.5,0,0,0,.45,.18,.45));
+  staticParts.push(P(G.cyl,'#d6b270',3.1,.23,2.5,0,0,0,.37,.025,.37));
+  coopViewMerged(staticParts,timber,root);
+
+  const hens=[];
+  for(let i=0;i<COOP.hens.length;i++){
+    const data=COOP.hens[i],group=new THREE.Group();group.position.set(data.x,.055,data.z);root.add(group);
+    const kit=buildHen(Object.assign({},BIRD_KITS.hen[i%2?1:3],{scale:1.65}));
+    const mat=coopViewMaterial('#ffffff',{vertexColors:true});
+    const hen=coopViewMerged([kit.core,kit.flap],mat,group);hen.rotation.y=i?-.52:.52;
+    const nestMat=coopViewMaterial(i?'#d5bb7c':'#cfaa6c');
+    const nestParts=[P(G.sphLo,'#ffffff',0,.04,0,0,0,0,.72,.075,.66)];
+    const nest=coopViewMerged(nestParts,nestMat,group);nest.castShadow=false;
+    hens.push({group:group,mesh:hen,material:mat,nest:nest,nestMaterial:nestMat,angle:hen.rotation.y,index:i});
+  }
+  buildCoopView.state={root:root,panels:panels,hens:hens,time:0};
+  updateCoopView(0);
+}
+
+function updateCoopView(dt){
+  const state=buildCoopView.state;
+  if(!state||typeof COOP==='undefined')return;
+  state.root.visible=!!COOP.active;
+  if(!COOP.active)return;
+  state.time+=Math.max(0,Number(dt)||0);
+  for(let i=0;i<state.panels.length;i++){
+    const visual=state.panels[i],section=COOP.sections[i];if(!section)continue;
+    const health=clamp(section.hp/Math.max(1,section.maxHp),0,1),hit=Number(section.hit)||0;
+    if(hit>visual.lastHit)visual.pulse=.32;
+    visual.lastHit=hit;visual.pulse=Math.max(0,visual.pulse-(Number(dt)||0));
+    const breached=section.hp<=0;
+    /* Breached arc drops outward below the animals' eye line: the roof remains
+       closed, but the fence opening is physically visible and traversable. */
+    visual.group.rotation.set(0,0,0);
+    if(breached){
+      const axis=new THREE.Vector3(Math.sin(visual.angle),0,-Math.cos(visual.angle));
+      visual.group.quaternion.setFromAxisAngle(axis,Math.PI*.48);
+      visual.group.position.y=.03;
+    }else{
+      visual.group.position.y=0;
+      const lean=(1-health)*.065;
+      visual.group.quaternion.setFromAxisAngle(new THREE.Vector3(Math.sin(visual.angle),0,-Math.cos(visual.angle)),lean);
+    }
+    const color=visual.pulse>0?'#fff0ba':breached?'#b65b39':health<.35?'#e79650':health<.7?'#d3b66c':'#a9c4ba';
+    visual.wire.color.set(color).convertSRGBToLinear();visual.wire.opacity=breached?.35:.62;
+    visual.wood.color.set(breached?'#bd8265':health<.35?'#e1a176':'#ffffff').convertSRGBToLinear();
+    visual.wood.emissive.set(visual.pulse>0?'#d38b24':'#000000').convertSRGBToLinear();
+    visual.wood.emissiveIntensity=visual.pulse>0?.22:0;
+    visual.breached=breached;
+  }
+  for(const hen of state.hens){
+    const data=COOP.hens[hen.index];if(!data)continue;
+    const alive=data.hp>0,health=clamp(data.hp/Math.max(1,data.maxHp),0,1);
+    hen.group.position.x=data.x;hen.group.position.z=data.z;hen.mesh.visible=alive;
+    hen.mesh.position.y=alive?.012*Math.sin(state.time*2.4+hen.index*2):0;
+    hen.mesh.rotation.y=hen.angle+.035*Math.sin(state.time*.65+hen.index);
+    hen.material.color.set(health<.35?'#c9b19d':'#ffffff').convertSRGBToLinear();
+    hen.nestMaterial.color.set(alive?'#d5bb7c':'#786e60').convertSRGBToLinear();
+    hen.nest.scale.setScalar(alive?1:.85);
+  }
+}
+
+
 
 /* ============================================================
    SEQUENCER — title card, countdown, battle, verdict
@@ -5210,7 +5918,7 @@ function flockBlurb(){ return CFG.mix?'Hens, roosters and warrior fowls. Everyth
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={birds:1000,coons:100,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
+let CFG={mode:'defense',birds:260,coons:24,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
 
 /* ============================================================
@@ -5229,8 +5937,8 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-09-04.1';
-const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:''};
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.1';
+const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function validateRoster(rows){
   if(!Array.isArray(rows)||!rows.length||rows.length>UNITS.length) throw Error('Choose at least one animal.');
@@ -5246,6 +5954,7 @@ function validateRoster(rows){
 function validateFight(f){
   if(!f||f.v!==REPLAY_VERSION||f.sim!==SIM_VERSION) throw Error('This replay uses a different simulator version.');
   validateRoster(f.roster);
+  if(!['defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
   if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
   if(!Array.isArray(f.actions)||f.actions.length>512) throw Error('Invalid replay commands.');
   let tick=0;
@@ -5258,7 +5967,7 @@ function validateFight(f){
   return f;
 }
 function configFight(){
-  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,roster:rosterList(),actions:[]};
+  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,mode:CFG.mode,roster:rosterList(),actions:[]};
 }
 function encodeFight(){
   const f=REPLAY.current||configFight();
@@ -5266,7 +5975,7 @@ function encodeFight(){
 }
 function fightURL(){ return location.origin+location.pathname+'?'+encodeFight(); }
 function applyFightConfig(f){
-  CFG.seed=f.seed; CFG.arena=f.arena;
+  CFG.seed=f.seed; CFG.arena=f.arena; CFG.mode=f.mode||'battle';
   Object.keys(CFG.foes).forEach(k=>delete CFG.foes[k]);
   CFG.allies={}; CFG.mix={};
   CFG.coons=0;
@@ -5295,7 +6004,7 @@ function decodeFight(){
   }
   if(!q.has('s')&&!q.has('b')) return false;
   // Legacy links describe setup only; they omitted mixed armies and actions.
-  CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
+  CFG.mode='battle'; CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
   const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,600);
   const k=q.get('k'); if(k&&Object.hasOwn(UI_,k)&&UNITS[UI_[k]].team===0) CFG.kind=k;
@@ -5319,7 +6028,7 @@ function notifyBattle(message){
 }
 function resetReplayRuntime(){
   REPLAY.generation++; REPLAY.pending=[]; REPLAY.cursor=0;
-  BATTLE.tick=0; VIEW.paused=false;
+  BATTLE.tick=0; VIEW.paused=false; REPLAY.seeking=false; REPLAY.seekTo=0;
 }
 function queueBattleAction(type,k){
   if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback) return false;
@@ -5442,7 +6151,7 @@ function setPhase(p){
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
       a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:teamCount(1)+' '+teamName(1).toUpperCase(),
-      sub:CFG.arena==='coop'?'Night · inside the coop · nowhere to run':'Daylight · open field',
+      sub:CFG.mode==='defense'?'Protect two hens · stop the predators or hold for 90 seconds':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
       call:true});
   }
   if(p==='count'){ musicCountIn(3.4); showCard({count:'3',call:true}); }
@@ -5471,13 +6180,17 @@ function verdict(who,how){
     result:true,
     trib:who==='birds',          // the flock only gets its dedication when it earns it
     kick:how,
-    a:who==='birds'?teamName(0).toUpperCase()+' WIN':(who==='coons'?teamName(1).toUpperCase()+' WIN':'STALEMATE'),
+    a:COOP.active?(who==='birds'?(coopHensAlive()===2?'HENS PROTECTED':'ONE HEN SURVIVED'):'THE COOP FELL'):who==='birds'?teamName(0).toUpperCase()+' WIN':(who==='coons'?teamName(1).toUpperCase()+' WIN':'STALEMATE'),
     vs:'', b:'',
     sub:survivors+' of '+initA+' '+teamName(0)+' standing &nbsp;·&nbsp; '+coonsLeft+' of '+initB+
         ' '+teamName(1)+' standing<br>MVP: <span style="color:var(--hot)">'+mvp+'</span> — '+mk+' kills &nbsp;·&nbsp; '+
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
   renderTale(who,how);
+  if(COOP.active){
+    $('cardTale').textContent=coopHensAlive()+' of 2 hens survived. '+COOP.breaches+' fence section'+(COOP.breaches===1?' was':'s were')+' open when the raid ended.';
+  }
+  if(typeof highlightFinish==='function')highlightFinish(who,how);
   /* Build the mail link at verdict time so the subject carries the fight the
      person just watched — a suggestion is far more useful with that context,
      and it saves them describing it. */
@@ -5522,6 +6235,7 @@ let hudT=0;
 function hud(dt){
   hudT-=dt; if(hudT>0 && !hudDirty) return; hudT=0.08; hudDirty=false;
   if(BATTLE.running) cmdHud();
+  if(typeof coopHud==='function')coopHud();
   const fleeing=farmFleeing();
   $('ctA').textContent=Math.max(0,aliveA);
   $('ctB').textContent=Math.max(0,aliveB);
@@ -5589,6 +6303,7 @@ function hudBlocked(l,t,r,b){
 let winT=0, routT=0, stallT=0, lastKills=-1;
 function checkWin(dt){
   if(!BATTLE.running||BATTLE.over) return;
+  if(typeof coopCheckWin==='function'&&coopCheckWin())return;
   winT-=dt; if(winT>0) return; winT=0.4;
   if(initA===0||initB===0){ verdict(initA?'birds':'coons','Uncontested'); return; }
   if(initB>0&&aliveB<=0){ verdict('birds','The flock holds the field'); return; }
@@ -5636,6 +6351,7 @@ function startBattle(options={}){
   if(saved) applyFightConfig(saved);
   try{ validateRoster(rosterList()); }catch(e){ return notifyBattle(e.message); }
   resetReplayRuntime();
+  if($('replaySeek'))$('replaySeek').hidden=true;
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
   /* one event per fight started — this is the 'how many battles have been
      simulated' number, and it carries the matchup so the answer to 'what do
@@ -5659,6 +6375,7 @@ function startBattle(options={}){
   pushFightURL();
   callReset();
   spawnRoster(rosterList(),CFG.arena==='coop');
+  if(typeof highlightReset==='function')highlightReset();
   camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
   setPhase(VIEW.quick?'title':'introA');
   $('go').textContent='Reset'; $('go').classList.add('rst');
@@ -5679,6 +6396,7 @@ function standby(){
   callReset();
   try{ validateRoster(rosterList()); spawnRoster(rosterList(),CFG.arena==='coop'); }
   catch(e){ notifyBattle(e.message); }
+  if(typeof highlightReset==='function')highlightReset();
   SEQ.phase='idle'; SEQ.t=0;
   $('go').textContent='Fight'; $('go').classList.remove('rst');
   if(typeof syncControls==='function') syncControls();
@@ -5750,12 +6468,13 @@ DEPLOY.slice().sort((a,b)=>a.cost-b.cost).forEach(d=>{
 function cmdHud(){
   for(const b of cmdAct.children){
     const k=b.dataset.k, d=CMD_DEF.find(c=>c.k===k);
+    b.hidden=k==='repair'&&!COOP.active;
     const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0);
     const ready = cmdReady(k);
     b.classList.toggle('ready',ready);
     b.disabled=!ready||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
     const left=k==='feed'?CMD.feedT:CMD[k];
-    b.querySelector('.ck').textContent=live?Math.ceil(left)+'s active':ready?'Key '+d.key:Math.ceil(CMD.cd[k])+'s';
+    b.querySelector('.ck').textContent=live?Math.ceil(left)+'s active':ready?'Key '+d.key:k==='repair'&&CMD.cd[k]<=0?'Intact':Math.ceil(CMD.cd[k])+'s';
     b.classList.toggle('live',live);
     const bar=b.querySelector('i');
     if(ready) bar.style.width='100%';
@@ -5783,6 +6502,8 @@ function syncSliders(){
   document.querySelectorAll('#segBird button').forEach(b=>b.classList.toggle('on',!CFG.mix&&b.dataset.v===CFG.kind));
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
+  document.querySelectorAll('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.mode));
+  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Two hens. Eight fence sections. Stop every predator or keep a hen alive for 90 seconds. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
   const preview=$('rosterPreview');
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
@@ -5803,7 +6524,12 @@ document.querySelectorAll('#segBird button').forEach(b=>
 document.querySelectorAll('#segArena button').forEach(b=>
   b.addEventListener('click',()=>{CFG.arena=b.dataset.v;queueStandby();syncSliders();}));
 
+document.querySelectorAll('#segMode button').forEach(b=>b.addEventListener('click',()=>{
+  CFG.mode=b.dataset.v;queueStandby();syncSliders();
+}));
+
 const PRESETS={
+  defense:{birds:260,coons:24,kind:'rooster',arena:'field',mode:'defense',foes:{}},
   classic :{birds:1000,coons:100,kind:'rooster', arena:'field',foes:{}},
   massacre:{birds:1200,coons:60, kind:'hen',     arena:'coop', foes:{possum:20}},
   even    :{birds:485, coons:100,kind:'gamecock',arena:'field',foes:{fox:8,coyote:4}},
@@ -5831,7 +6557,7 @@ document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',
   EXTRA_B.forEach(k=>CFG.foes[k]=P.foes[k]||0);
   CFG.allies=P.allies||{};
   CFG.mix=P.mix||null;
-  CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
+  CFG.mode=P.mode||'battle';CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
   CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false;
   syncSliders(); standby();
 }));
@@ -6048,6 +6774,32 @@ function poke(){
 ['pointermove','pointerdown','keydown','wheel'].forEach(e=>addEventListener(e,poke,{passive:true}));
 poke();
 
+function seekReplayHighlight(tick){
+  if(!Number.isInteger(tick)||tick<0||!REPLAY.last)return false;
+  const target=Math.max(0,tick-180);
+  if(!startBattle({replay:true}))return false;
+  setPhase('battle');REPLAY.seeking=target>0;REPLAY.seekTo=target;VIEW.tactical=true;
+  BATTLE.timeScale=1;BATTLE.slowT=0;simAcc=0;
+  $('replaySeek').hidden=!REPLAY.seeking;
+  if(REPLAY.seeking&&AC)master.gain.setTargetAtTime(0,AC.currentTime,.02);
+  if(!target)syncControls();
+  return true;
+}
+function advanceReplaySeek(){
+  const start=performance.now();
+  // Sound and visual particles are suppressed only while reconstructing earlier ticks.
+  while(BATTLE.tick<REPLAY.seekTo&&!BATTLE.over&&performance.now()-start<12){
+    applyBattleActions(BATTLE.tick+1);if(VIEW.paused){REPLAY.seeking=false;break;}
+    BATTLE.tick++;BATTLE.t+=SIM_DT;stepSim(SIM_DT);
+    if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);
+  }
+  $('replaySeek').textContent='Finding highlight · '+Math.min(100,Math.round(BATTLE.tick/Math.max(1,REPLAY.seekTo)*100))+'%';
+  if(BATTLE.tick>=REPLAY.seekTo||BATTLE.over||!REPLAY.seeking){
+    REPLAY.seeking=false;REPLAY.generation++;clearParticles();clearFeed();simAcc=0;
+    $('replaySeek').hidden=true;syncControls();
+  }
+}
+
 /* ============================================================
    MAIN LOOP
    ============================================================ */
@@ -6069,13 +6821,14 @@ function loop(now){
      steps a frame at 2× speed and never drops one — the number of steps, and therefore
      the fight, does not depend on the machine. Slow-motion changes how much
      sim time a wall second buys, not the sequence of steps themselves. */
-  if(BATTLE.running&&!BATTLE.over&&!VIEW.paused){
+  if(REPLAY.seeking)advanceReplaySeek();
+  if(BATTLE.running&&!BATTLE.over&&!VIEW.paused&&!REPLAY.seeking){
     simAcc+=dt;
     while(simAcc>=SIM_DT && !BATTLE.over){
       applyBattleActions(BATTLE.tick+1);
       if(VIEW.paused) break;
       BATTLE.tick++; BATTLE.t+=SIM_DT;
-      stepSim(SIM_DT); checkWin(SIM_DT); simAcc-=SIM_DT;
+      stepSim(SIM_DT); if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);simAcc-=SIM_DT;
     }
   }
   else if(SEQ.phase!=='battle'){ idleSway(dt); }
@@ -6083,13 +6836,13 @@ function loop(now){
   stepParticles(dt);
   stepGore(dt);
   renderAgents();
+  if(typeof updateCoopView==='function')updateCoopView(dt);
   director(dt,real,wall);
   hud(real);
-  audioUpdate(real);
+  if(!REPLAY.seeking)audioUpdate(real);
   worldFxUpdate(real);
 
-  perfWatch(raw);
-  refineWatch(real);
+  if(!REPLAY.seeking){perfWatch(raw);refineWatch(real);}
 
   fpsAcc+=raw; fpsN++;
   if(fpsAcc>0.5){ $('fps').textContent=(fpsN/fpsAcc).toFixed(0)+' FPS · '+N+' UNITS'; fpsAcc=0; fpsN=0; }
@@ -6111,6 +6864,7 @@ function idleSway(dt){
 /* ============================================================
    BOOT
    ============================================================ */
+if(typeof initHighlightsUI==='function')initHighlightsUI();
 buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 /* a link that carries a fight skips the preamble and goes straight to it */
 const LINKED=decodeFight();
@@ -6379,6 +7133,9 @@ function syncControls(){
   $('btnQuick').checked=VIEW.quick;
   $('btnMotion').checked=VIEW.reducedMotion;
   document.body.classList.toggle('paused',VIEW.paused);
+  document.body.classList.toggle('defense',COOP.active);
+  if(!REPLAY.seeking)$('replaySeek').hidden=true;
+  coopHud();
   document.body.classList.toggle('reducedMotion',VIEW.reducedMotion);
   document.body.classList.toggle('finished',BATTLE.over);
   if(!playing){ document.body.classList.remove('deployOpen'); $('btnDeploy').setAttribute('aria-expanded','false'); }
@@ -6436,7 +7193,7 @@ function syncToggleSemantics(){
     b.setAttribute('aria-pressed',String(b.classList.contains('on'))));
 }
 const toggleObserver=new MutationObserver(syncToggleSemantics);
-for(const id of ['tools','segBird','segArena','callBtns'])
+for(const id of ['tools','segBird','segArena','segMode','callBtns'])
   toggleObserver.observe($(id),{subtree:true,attributes:true,attributeFilter:['class']});
 syncToggleSemantics();
 
