@@ -205,32 +205,41 @@ if(GA_ID){
     opacity:0;transition:opacity .5s}
   body.rules #rules{display:flex}
   body.rules.rulesIn #rules{opacity:1}
-  #rules h2{margin:0 0 4px;font-size:11px;letter-spacing:.42em;text-transform:uppercase;
-    color:#f4ead67a;font-weight:700}
-  #rules .sub{margin:0 0 22px;font-size:12.5px;color:#f4ead68c;letter-spacing:.02em}
-  #rulesList{width:100%;max-width:560px;max-height:60vh;overflow-y:auto;
-    scrollbar-width:thin;scrollbar-color:#ffffff2e transparent;
-    display:flex;flex-direction:column;gap:11px;padding-right:4px}
+  #rules h2{flex-shrink:0;margin:0 0 8px;font-size:clamp(21px,3vmin,27px);letter-spacing:.06em;text-transform:uppercase;
+    color:#fff4de;font-weight:800;text-align:center}
+  #rules .sub{flex-shrink:0;margin:0 0 20px;font-size:15px;line-height:1.5;color:#ded3c2;text-align:center}
+  #rulesList{--fade-top:0px;--fade-bottom:40px;width:100%;max-width:660px;min-height:0;max-height:60vh;overflow-y:auto;
+    overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#b6aa9666 transparent;
+    display:flex;flex-direction:column;gap:22px;padding:10px 14px 24px 4px;scroll-padding-block:32px;
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 var(--fade-top),#000 calc(100% - var(--fade-bottom)),transparent 100%);
+    mask-image:linear-gradient(to bottom,transparent 0,#000 var(--fade-top),#000 calc(100% - var(--fade-bottom)),transparent 100%)}
+  #rulesList:focus-visible{outline:2px solid #f2c16c;outline-offset:4px;border-radius:5px}
   #rulesList::-webkit-scrollbar{width:5px}
-  #rulesList::-webkit-scrollbar-thumb{background:#ffffff2e;border-radius:4px}
-  .rl{display:flex;gap:13px;align-items:flex-start;text-align:left}
-  .rl .kx{flex:0 0 auto;min-width:74px;padding:5px 8px;border-radius:7px;text-align:center;
-    font-size:9px;letter-spacing:.11em;text-transform:uppercase;font-weight:800;
-    border:1px solid #ffffff1f;background:#ffffff0a;color:#f4ead6b8}
-  .rl.hot .kx{border-color:#ffb02052;background:rgba(255,176,32,.1);color:#ffd58a}
-  .rl .tx{flex:1;min-width:0;font-size:12.5px;line-height:1.55;color:#f4ead6b0;letter-spacing:.01em}
-  .rl .tx b{color:var(--paper);font-weight:700}
-  #rulesGo{margin-top:24px;padding:14px 30px;font-size:11.5px;font-weight:800;
-    letter-spacing:.2em;text-transform:uppercase;border-radius:10px;cursor:pointer;
+  #rulesList::-webkit-scrollbar-thumb{background:#b6aa9666;border-radius:4px}
+  .rl{display:flex;flex-shrink:0;gap:18px;align-items:flex-start;text-align:left}
+  .rl .kx{flex:0 0 auto;min-width:86px;padding:7px 9px;border-radius:7px;text-align:center;
+    font-size:11px;line-height:1.4;letter-spacing:.06em;text-transform:uppercase;font-weight:800;
+    border:1px solid #ffffff38;background:#ffffff0d;color:#efe3d0}
+  .rl.hot .kx{border-color:#ffb02070;background:rgba(255,176,32,.12);color:#ffda99}
+  .rl .tx{flex:1;min-width:0;font-size:16px;line-height:1.7;color:#eee4d5;letter-spacing:0}
+  .rl .tx b{color:#fff5e3;font-weight:750}
+  #rulesGo{flex-shrink:0;margin-top:22px;padding:15px 32px;min-height:48px;font-size:13px;font-weight:800;
+    letter-spacing:.12em;text-transform:uppercase;border-radius:10px;cursor:pointer;
     font-family:inherit;border:none;color:#fff;
     background:linear-gradient(180deg,#ff6a3d,#d8452f);
     box-shadow:0 4px 0 #8c2418,0 10px 24px #d8452f40;transition:.15s}
   #rulesGo:hover{filter:brightness(1.08)}
   #rulesGo:active{transform:translateY(2px);box-shadow:0 2px 0 #8c2418}
-  body.narrow #rulesList{max-height:64vh;gap:9px}
-  body.narrow .rl .kx{min-width:62px;font-size:8px;padding:4px 5px}
-  body.narrow .rl .tx{font-size:11.5px;line-height:1.5}
+  body.narrow #rules{padding:24px 24px}
+  body.narrow #rulesList{max-height:64vh;gap:24px;padding-right:10px}
+  body.narrow .rl{flex-direction:column;gap:9px}
+  body.narrow .rl .kx{min-width:0;font-size:11px;padding:6px 9px}
+  body.narrow .rl .tx{font-size:15px;line-height:1.7}
+  body.short #rules{padding:14px 24px}
+  body.short #rules h2{font-size:20px;margin-bottom:4px}
+  body.short #rules .sub{margin-bottom:10px;font-size:14px}
   body.short #rulesList{max-height:56vh}
+  body.short #rulesGo{margin-top:12px;min-height:44px;padding:12px 26px}
 
   /* With the name gone the portrait carries the top of the card on its own,
      so it inherits the space the headline was using. */
@@ -627,8 +636,6 @@ if(GA_ID){
   #cardBtns{gap:8px;max-width:560px}
   #cardBtns button{min-height:44px;letter-spacing:.06em;font-size:11px;padding:11px 16px}
   #storySkip{min-height:44px;color:#c5b8a8;font-size:11px}
-  #rulesList .rl .tx{color:#dfd2bf}
-  #rulesList .rl .kx{font-size:10px}
   body.reducedMotion *,body.reducedMotion *::before,body.reducedMotion *::after{
     animation:none!important;transition:none!important;scroll-behavior:auto!important}
   body.reducedMotion #grain,body.reducedMotion #slowmo{display:none!important}
@@ -787,7 +794,7 @@ if(GA_ID){
   <div id="rules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1">
     <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
-    <div id="rulesList">
+    <div id="rulesList" tabindex="0" role="region" aria-label="How to play instructions">
       <div class="rl hot"><div class="kx">Protect</div><div class="tx">In <b>Defend the coop</b>, two hens shelter inside a roofed run. Predators must break a fence section to enter. A breach does not end the raid: call reinforcements and fight off the intruders. Stop all predators to win; lose both hens and the raid is over.</div></div>
       <div class="rl hot"><div class="kx">4 &nbsp;Repair</div><div class="tx">Repair half of the weakest fence section, even after a breach. It recharges in <b>20 seconds</b>. The status above the field shows the weakest fence and how many hens remain.</div></div>
       <div class="rl hot"><div class="kx">5 &nbsp;Rally</div><div class="tx">For <b>8 seconds</b>, defenders within 24 metres of the coop regroup at the weakest fence or pursue intruders inside. They still fight enemies in reach. Recharges in <b>22 seconds</b>. Each hen’s health bar shows how much time you have to rescue her.</div></div>

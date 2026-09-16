@@ -723,10 +723,18 @@ function storyHide(){
   setTimeout(()=>document.body.classList.remove('story'),620);
   audioResume();
 }
+function updateRulesFade(){
+  const list=$('rulesList'),remaining=list.scrollHeight-list.clientHeight-list.scrollTop;
+  // Only fade edges that have more content beyond them; first/last lines stay readable.
+  list.style.setProperty('--fade-top',list.scrollTop>2?'28px':'0px');
+  list.style.setProperty('--fade-bottom',remaining>2?'40px':'0px');
+}
+$('rulesList').addEventListener('scroll',updateRulesFade,{passive:true});
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(updateRulesFade).observe($('rulesList'));
 function rulesShow(){
   document.body.classList.add('rules');
   $('rulesList').scrollTop=0;
-  requestAnimationFrame(()=>document.body.classList.add('rulesIn'));
+  requestAnimationFrame(()=>{document.body.classList.add('rulesIn');updateRulesFade();});
 }
 function rulesHide(){
   document.body.classList.remove('rulesIn');

@@ -1,3 +1,11 @@
+# Instructions readability — September 16, 2026
+
+- Increased the How this works heading, instruction text, label sizes, contrast, line spacing, and section spacing. Phone layouts stack labels above paragraphs for a comfortable reading width.
+- Replaced hard scrolling edges with soft opacity fades. The top fade appears only after scrolling, and the bottom fade clears at the end so the final instruction remains readable.
+- The instructions support keyboard scrolling, with a persistent Got it button and layouts for short screens. Gameplay and replay version are unchanged.
+
+Validation: browser checks covered desktop and phone typography, scrolling fades, keyboard navigation, and reachable dismissal controls. Both HTML entry points are rebuilt from the same sources.
+
 # Hen health and Rally — September 16, 2026
 
 - Added a labeled health bar and percentage for each protected hen. Critical health changes color and a lost hen is explicitly marked Lost; values reset on a new raid.
