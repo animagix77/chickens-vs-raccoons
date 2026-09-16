@@ -688,16 +688,27 @@ if(GA_ID){
   body.short #card.result{padding-top:25px}
 
   [hidden]{display:none!important}
-  #coopObjective{display:flex;justify-content:center;gap:14px;margin:7px auto 0;width:max-content;max-width:95%;padding:8px 14px;
+  #coopObjective{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:6px;margin:7px auto 0;width:max-content;max-width:95%;padding:8px 14px;
     border:1px solid #98c5a350;background:#18251ee8;border-radius:10px;color:#d9efdc;font:11px/1.3 system-ui;font-variant-numeric:tabular-nums}
   #coopObjective strong{color:#f2d592}#coopObjective.danger{background:#3d231fee;border-color:#f09d7666}
+  .coopSummary{display:flex;justify-content:center;gap:12px;align-items:center}
+  .henHealthRow{display:flex;gap:14px}.henHealth{display:grid;grid-template-columns:auto 1fr auto;gap:6px;align-items:center;flex:1;min-width:0}
+  .henHealth label{white-space:nowrap}.henHealth output{min-width:30px;text-align:right}
+  .henHealth progress{appearance:none;-webkit-appearance:none;width:100%;min-width:36px;height:7px;border:0;border-radius:4px;background:#ffffff20;overflow:hidden}
+  .henHealth progress::-webkit-progress-bar{background:#ffffff20;border-radius:4px}.henHealth progress::-webkit-progress-value{background:#9ad8a4;border-radius:4px}
+  .henHealth progress::-moz-progress-bar{background:#9ad8a4;border-radius:4px}.henHealth progress.critical::-webkit-progress-value{background:#ff9073}.henHealth progress.critical::-moz-progress-bar{background:#ff9073}
+  .henHealth progress.lost{opacity:.5}
   #objectiveHint{margin:7px 0 12px;color:#d7c9b4;font-size:11px;line-height:1.55}
   #replaySeek{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);background:#191721ed;border:1px solid #edc78566;border-radius:12px;padding:18px 28px;z-index:22;color:#f5e7cb;font:14px system-ui}
-  #replayMoment{top:144px!important}
+  #replayMoment{top:170px!important}
   body.narrow #coopObjective{font-size:10px;gap:8px;padding:7px 9px;margin-top:6px}
-  body.narrow #replayMoment{top:182px!important}
-  body.defense #cmdact{grid-template-columns:repeat(4,minmax(0,1fr))}
-  body.defense.narrow .cmd{min-width:0;padding:8px 3px}body.defense.narrow .cmd .cn{font-size:8px}
+  body.narrow #replayMoment{top:205px!important}
+  body.defense.narrow #cmdact{grid-template-columns:repeat(6,minmax(0,1fr))}
+  body.defense.narrow #cmdact .cmd{grid-column:span 2}
+  body.defense.narrow #cmdact .cmd:nth-last-child(-n+2){grid-column:span 3}
+  body.defense.narrow.short #cmdact{grid-template-columns:repeat(5,minmax(0,1fr))}
+  body.defense.narrow.short #cmdact .cmd{grid-column:auto}
+  body.defense.narrow .cmd{min-width:0;padding:8px 3px}body.defense.narrow .cmd .cn{font-size:9px}
   body.short #coopObjective{padding:5px 9px;margin-top:4px}
 </style>
 </head>
@@ -713,7 +724,9 @@ if(GA_ID){
   </div>
   <div id="bar"><div id="barA" style="width:50%"></div><div id="barB"></div></div>
   <div id="battleReadout"><span>Army remaining</span><span id="moraleReadout">Ready to deploy</span></div>
-  <div id="coopObjective" hidden><strong id="coopHens">2 / 2 hens safe</strong><span id="coopFence">Fence intact</span><span id="coopStatus">Protect the hens</span></div>
+  <div id="coopObjective" hidden><div class="coopSummary"><strong id="coopHens">2 / 2 hens safe</strong><span id="coopFence">Fence intact</span><span id="coopStatus">Protect the hens</span></div>
+    <div class="henHealthRow"><div class="henHealth"><label for="henHealth0">Hen 1</label><progress id="henHealth0" max="100" value="100" aria-valuetext="100 percent health"></progress><output id="henHealthText0">100%</output></div><div class="henHealth"><label for="henHealth1">Hen 2</label><progress id="henHealth1" max="100" value="100" aria-valuetext="100 percent health"></progress><output id="henHealthText1">100%</output></div></div>
+  </div>
   </div>
   <div id="replaySeek" role="status" aria-live="polite" hidden>Finding highlight…</div>
 
@@ -777,6 +790,7 @@ if(GA_ID){
     <div id="rulesList">
       <div class="rl hot"><div class="kx">Protect</div><div class="tx">In <b>Defend the coop</b>, two hens shelter inside a roofed run. Predators must break a fence section to enter. A breach does not end the raid: call reinforcements and fight off the intruders. Stop all predators to win; lose both hens and the raid is over.</div></div>
       <div class="rl hot"><div class="kx">4 &nbsp;Repair</div><div class="tx">Repair half of the weakest fence section, even after a breach. It recharges in <b>20 seconds</b>. The status above the field shows the weakest fence and how many hens remain.</div></div>
+      <div class="rl hot"><div class="kx">5 &nbsp;Rally</div><div class="tx">For <b>8 seconds</b>, defenders within 24 metres of the coop regroup at the weakest fence or pursue intruders inside. They still fight enemies in reach. Recharges in <b>22 seconds</b>. Each hen’s health bar shows how much time you have to rescue her.</div></div>
       <div class="rl"><div class="kx">Replay</div><div class="tx">After the battle, choose a timestamp under <b>Moments to replay</b> to watch from three seconds before that event.</div></div>
       <div class="rl hot"><div class="kx">War chest</div><div class="tx">
         Points build the whole fight. Spend them on the chips along the bottom to
@@ -2953,14 +2967,15 @@ function refineDetail(){
    THE COMMANDER — four things you can do while it is happening
    ============================================================ */
 const CMD={
-  horn:0, light:0, feedT:0, feedX:0, feedZ:0,
-  cd:{horn:0,light:0,feed:0,repair:0}, pts:0, ptAcc:0
+  horn:0, light:0, rally:0, feedT:0, feedX:0, feedZ:0,
+  cd:{horn:0,light:0,feed:0,repair:0,rally:0}, pts:0, ptAcc:0
 };
 const CMD_DEF=[
   {k:'horn', name:'Sound the horn', key:'1', cool:16, dur:6.0, hint:'Every animal you own moves and swings faster'},
   {k:'feed', name:'Scatter feed',   key:'2', cool:14, dur:7.0, hint:'Birds converge on the pile and hold their nerve'},
   {k:'light',name:'Floodlight',     key:'3', cool:18, dur:5.5, hint:'Predators flinch, hit softer and swing slower'},
-  {k:'repair',name:'Repair fence',key:'4',cool:20,dur:0,hint:'Restore half of the weakest fence section; can close a breach'}
+  {k:'repair',name:'Repair fence',key:'4',cool:20,dur:0,hint:'Restore half of the weakest fence section; can close a breach'},
+  {k:'rally',name:'Rally to coop',key:'5',cool:22,dur:8,hint:'For 8 seconds, nearby defenders protect the run and pursue intruders; recharges in 22 seconds'}
 ];
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
@@ -2997,7 +3012,7 @@ const DEPLOY=[
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
-function cmdReady(k){ if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
+function cmdReady(k){ if(k==='rally'&&!(typeof COOP!=='undefined'&&COOP.active))return false;if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
 function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
 function applyDeploy(d){
   if(!canDeploy(d)) return false;
@@ -3048,6 +3063,7 @@ function applyCommand(k){
   const d=CMD_DEF.find(c=>c.k===k);
   if(k==='horn'){ CMD.horn=d.dur; if(!oneShot('horn',0.95)) sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
+  if(k==='rally'){CMD.rally=d.dur;if(!oneShot('horn',.7))sting('go');}
   if(k==='repair'&&typeof COOP!=='undefined'&&COOP.active){
     const damaged=COOP.sections.filter(s=>s.hp<s.maxHp);if(!damaged.length)return false;
     const s=damaged.reduce((a,b)=>a.hp/a.maxHp<b.hp/b.maxHp?a:b);
@@ -3069,6 +3085,7 @@ function applyCommand(k){
 function cmdStep(dt){
   CMD.horn=Math.max(0,CMD.horn-dt);
   CMD.light=Math.max(0,CMD.light-dt);
+  CMD.rally=Math.max(0,CMD.rally-dt);
   CMD.feedT=Math.max(0,CMD.feedT-dt);
   for(const k in CMD.cd) CMD.cd[k]=Math.max(0,CMD.cd[k]-dt);
   if(BATTLE.running&&!BATTLE.over){
@@ -3078,7 +3095,7 @@ function cmdStep(dt){
   if(CMD.feedT>0 && VR()<dt*8) spawnPuff(CMD.feedX+rnd(-1,1),0.12,CMD.feedZ+rnd(-1,1),0.16);
 }
 function cmdReset(){
-  CMD.horn=CMD.light=CMD.feedT=0;
+  CMD.horn=CMD.light=CMD.rally=CMD.feedT=0;
   CMD.pts=PTS_START; CMD.ptAcc=0;
   for(const k in CMD.cd) CMD.cd[k]=0;
 }
@@ -3854,7 +3871,9 @@ function coopStrike(i,target,hen){
 function coopHeading(i,tg){
   if(!COOP.active)return null;
   const u=UNITS[A.kind[i]],x=A.x[i],z=A.z[i],r=Math.hypot(x,z),inside=r<COOP.radius-.4;
-  const enemyNear=tg>=0&&(A.x[tg]-x)**2+(A.z[tg]-z)**2<=(u.team===0?144:9);
+  const rally=u.team===0&&CMD.rally>0&&r<=24;
+  const engage=rally&&tg>=0?u.reach+UNITS[A.kind[tg]].rad*.5:u.team===0?12:3;
+  const enemyNear=tg>=0&&(A.x[tg]-x)**2+(A.z[tg]-z)**2<=engage*engage;
   if(enemyNear&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
   if(u.team===1){
     if(inside){
@@ -3883,28 +3902,42 @@ function coopHeading(i,tg){
     }
     return {x:tx-x,z:tz-z,stop:false};
   }
+  if(rally){
+    if(COOP.intruders)return coopRouteHeading(i,COOP.insideX,COOP.insideZ);
+    // Guard the weakest panel; spread around the run when every panel is intact.
+    let weakest=0;for(let k=1;k<8;k++)if(COOP.sections[k].hp<COOP.sections[weakest].hp)weakest=k;
+    const damaged=COOP.sections[weakest].hp<COOP.sections[weakest].maxHp;
+    const a=damaged?(weakest+.5)*TAU/8+(i%5-2)*.08:i*2.39996323;
+    const rr=COOP.radius+(inside?-1.4:1.6);
+    return coopRouteHeading(i,Math.cos(a)*rr,Math.sin(a)*rr,true);
+  }
   // Defenders intercept the closest predator; unengaged animals guard the run.
   if(tg>=0&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
   if(aliveB>0){
     let tx=COOP.intruders?COOP.insideX:ecx[0],tz=COOP.intruders?COOP.insideZ:ecz[0];
     if(tg>=0){tx=A.x[tg];tz=A.z[tg];}
-    if(coopBlocks(x,z,tx,tz)){
-      const breach=coopNearestBreach(i);
-      if(breach>=0){
-        const ba=(breach+.5)*TAU/8,nearR=COOP.radius+(inside?-1.2:1.4);
-        tx=Math.cos(ba)*nearR;tz=Math.sin(ba)*nearR;
-        if(Math.hypot(tx-x,tz-z)<.9){const farR=COOP.radius+(inside?1.4:-1.4);tx=Math.cos(ba)*farR;tz=Math.sin(ba)*farR;}
-        if(!coopBlocks(x,z,tx,tz))return {x:tx-x,z:tz-z,stop:false};
-      }else if(inside)return {x:0,z:0,stop:true};
-      const angle=Math.atan2(z,x),goal=breach>=0?(breach+.5)*TAU/8:Math.atan2(tz,tx);
-      const delta=Math.atan2(Math.sin(goal-angle),Math.cos(goal-angle));
-      const next=angle+Math.sign(delta||1)*.28,rr=COOP.radius+(inside?-1.2:u.rad*.5+1.4);
-      tx=Math.cos(next)*rr;tz=Math.sin(next)*rr;
-    }
-    return {x:tx-x,z:tz-z,stop:false};
+    return coopRouteHeading(i,tx,tz);
   }
   const a=i*2.39996323,rr=COOP.radius+2;
   return {x:Math.cos(a)*rr-x,z:Math.sin(a)*rr-z,stop:Math.hypot(x-Math.cos(a)*rr,z-Math.sin(a)*rr)<.6};
+}
+// Shared path for ordinary defense and Rally; all movement still uses fence collision.
+function coopRouteHeading(i,tx,tz,hold=false){
+  const x=A.x[i],z=A.z[i],u=UNITS[A.kind[i]],inside=Math.hypot(x,z)<COOP.radius-.4;
+  if(coopBlocks(x,z,tx,tz)){
+    const breach=coopNearestBreach(i);
+    if(breach>=0){
+      const ba=(breach+.5)*TAU/8,nearR=COOP.radius+(inside?-1.2:1.4);
+      tx=Math.cos(ba)*nearR;tz=Math.sin(ba)*nearR;
+      if(Math.hypot(tx-x,tz-z)<.9){const farR=COOP.radius+(inside?1.4:-1.4);tx=Math.cos(ba)*farR;tz=Math.sin(ba)*farR;}
+      if(!coopBlocks(x,z,tx,tz))return {x:tx-x,z:tz-z,stop:false};
+    }else if(inside)return {x:0,z:0,stop:true};
+    const angle=Math.atan2(z,x),goal=breach>=0?(breach+.5)*TAU/8:Math.atan2(tz,tx);
+    const delta=Math.atan2(Math.sin(goal-angle),Math.cos(goal-angle));
+    const next=angle+Math.sign(delta||1)*.28,rr=COOP.radius+(inside?-1.2:u.rad*.5+1.4);
+    tx=Math.cos(next)*rr;tz=Math.sin(next)*rr;
+  }
+  return {x:tx-x,z:tz-z,stop:hold&&Math.hypot(tx-x,tz-z)<.6};
 }
 // Swept collision prevents launches, high speed and flying units bypassing the roofed run.
 function coopConstrain(i,oldX,oldZ){
@@ -3934,8 +3967,14 @@ function coopHud(){
   el.hidden=!COOP.active;if(!COOP.active)return;
   const weakest=Math.min(...COOP.sections.map(s=>s.hp/s.maxHp));
   $('coopHens').textContent=coopHensAlive()+' / 2 hens safe';
+  COOP.hens.forEach((hen,i)=>{
+    const value=Math.ceil(clamp(hen.hp/hen.maxHp,0,1)*100),bar=$('henHealth'+i);
+    bar.value=value;bar.setAttribute('aria-valuetext',value>0?value+' percent health':'Lost');
+    $('henHealthText'+i).textContent=value>0?value+'%':'Lost';
+    bar.classList.toggle('critical',value<=30);bar.classList.toggle('lost',value===0);
+  });
   $('coopFence').textContent=COOP.breaches?COOP.breaches+' fence breach'+(COOP.breaches===1?'':'es'):'Weakest fence '+Math.ceil(weakest*100)+'%';
-  $('coopStatus').textContent=BATTLE.over?COOP.reason:COOP.intruders?'Predators inside!':COOP.breaches?'Defend the hens!':'Protect the hens';
+  $('coopStatus').textContent=BATTLE.over?COOP.reason:COOP.intruders?'Predators inside!':COOP.breaches?'Defend the hens!':CMD.rally>0?'Rally active · '+Math.ceil(CMD.rally)+'s':'Protect the hens';
   el.classList.toggle('danger',COOP.breaches>0||weakest<.3);
 }
 
@@ -5946,7 +5985,7 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.2';
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.3';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function validateRoster(rows){
@@ -6477,8 +6516,8 @@ DEPLOY.slice().sort((a,b)=>a.cost-b.cost).forEach(d=>{
 function cmdHud(){
   for(const b of cmdAct.children){
     const k=b.dataset.k, d=CMD_DEF.find(c=>c.k===k);
-    b.hidden=k==='repair'&&!COOP.active;
-    const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0);
+    b.hidden=(k==='repair'||k==='rally')&&!COOP.active;
+    const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0)||(k==='rally'&&CMD.rally>0);
     const ready = cmdReady(k);
     b.classList.toggle('ready',ready);
     b.disabled=!ready||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
@@ -6512,7 +6551,7 @@ function syncSliders(){
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
   document.querySelectorAll('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.mode));
-  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
+  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair with 4. Rally nearby defenders to the coop with 5.':'An open battle: the last army standing wins.';
   const preview=$('rosterPreview');
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);

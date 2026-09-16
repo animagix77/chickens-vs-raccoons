@@ -10,7 +10,7 @@ The game runs from one HTML file with Three.js inlined and models generated from
 
 ## September 2026 update
 
-**Coop Defense** puts two hens inside a central coop and roofed run. Predators damage eight fence sections and enter through breaches. Use reinforcements, horn, feed, floodlight, and **Repair fence (4)** to protect them. A breach leaves time to rescue the hens: stop all predators to win. The raid ends in defeat only when both hens are lost, with no automatic victory timer. Open Battle is still available.
+**Coop Defense** puts two hens inside a central coop and roofed run. Predators damage eight fence sections and enter through breaches. Use reinforcements, horn, feed, floodlight, **Repair fence (4)**, and **Rally to coop (5)** to protect them. Individual hen health bars show the urgency; Rally draws nearby defenders to the run or intruders for eight seconds, with a 22-second cooldown. A breach leaves time to rescue the hens: stop all predators to win. The raid ends in defeat only when both hens are lost, with no automatic victory timer. Open Battle is still available.
 
 The results screen offers clickable replay highlights for fence attacks, breaches, casualties, commands, and turning points. Dedicated hen, goose, and turkey models join the articulated roosters and raccoons. Sampled effects supplement the procedural audio. See [release notes](RELEASE-NOTES.md) for validation and compatibility details. Historical balance measurements below describe Open Battle.
 

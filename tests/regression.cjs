@@ -47,7 +47,7 @@ function runtime(dir){
       BATTLE.tick++;BATTLE.t+=1/60;stepSim(1/60);checkWin(1/60);
     }
     function snapshot(){return {aliveA,aliveB,kills:BATTLE.totalKills,panic:panicCount,tick:BATTLE.tick,winner:BATTLE.winner,reason:BATTLE.reason,
-      ...(typeof COOP!=='undefined'&&COOP.active?{coop:{sections:COOP.sections,hens:COOP.hens,breaches:COOP.breaches,entered:COOP.entered,firstHit:COOP.firstHit,intruders:COOP.intruders,insideX:COOP.insideX,insideZ:COOP.insideZ,reason:COOP.reason,pressure:Array.from(COOP.pressure)}}:{}),
+      ...(typeof COOP!=='undefined'&&COOP.active?{coop:{sections:COOP.sections,hens:COOP.hens,breaches:COOP.breaches,entered:COOP.entered,firstHit:COOP.firstHit,intruders:COOP.intruders,insideX:COOP.insideX,insideZ:COOP.insideZ,reason:COOP.reason,rally:CMD.rally,rallyCooldown:CMD.cd.rally,pressure:Array.from(COOP.pressure)}}:{}),
       cx:BATTLE.cx,cz:BATTLE.cz,arrays:['x','z','vx','vz','hp','st','cd','tgt','panicT','fy','rev','vy','kills'].map(k=>Buffer.from(A[k].buffer,0,N*A[k].BYTES_PER_ELEMENT))};}
   `,c);
   return {c,eval:code=>vm.runInContext(code,c),flushTimers:()=>timers.splice(0).forEach(fn=>fn()),audioCalls:()=>audioCalls};

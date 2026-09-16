@@ -1,3 +1,12 @@
+# Hen health and Rally — September 16, 2026
+
+- Added a labeled health bar and percentage for each protected hen. Critical health changes color and a lost hen is explicitly marked Lost; values reset on a new raid.
+- Rally to coop (key 5) sends defenders within 24 metres toward the weakest fence or intruders inside for eight seconds. Defenders still fight targets within reach and follow real breaches through the fencing. The command recharges in 22 seconds and is available only in Coop Defense.
+- Rally is recorded in battle links/replays, respects pause and replay input guards, and displays its active duration and cooldown. Added two-row phone controls so all five commands remain easy to reach.
+- Simulation version is `2026-09-16.3`; previous recorded simulator versions remain explicitly rejected.
+
+Validation: objective tests cover Rally queueing, cooldown, expiry/reset, nearby-versus-distant steering, combat in reach, breach routing, pause/mode guards, and exact replay at 1/2/4 ticks per frame. Health display tests cover damage, critical/lost labels, accessibility values, and reset. Existing defense outcomes, collision/repair checks, highlight, audio, and replay/capacity suites passed. Browser checks exercised key 5, active/paused status, health bars, and the 390×844 command layout.
+
 # Coop rescue window — September 16, 2026
 
 - Removed the automatic 90-second victory from Coop Defense. A breached fence, intruder, or first hen casualty leaves play and reinforcements active. Stop all predators to win; losing both protected hens ends the raid in defeat.

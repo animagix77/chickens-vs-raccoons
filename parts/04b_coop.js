@@ -63,7 +63,9 @@ function coopStrike(i,target,hen){
 function coopHeading(i,tg){
   if(!COOP.active)return null;
   const u=UNITS[A.kind[i]],x=A.x[i],z=A.z[i],r=Math.hypot(x,z),inside=r<COOP.radius-.4;
-  const enemyNear=tg>=0&&(A.x[tg]-x)**2+(A.z[tg]-z)**2<=(u.team===0?144:9);
+  const rally=u.team===0&&CMD.rally>0&&r<=24;
+  const engage=rally&&tg>=0?u.reach+UNITS[A.kind[tg]].rad*.5:u.team===0?12:3;
+  const enemyNear=tg>=0&&(A.x[tg]-x)**2+(A.z[tg]-z)**2<=engage*engage;
   if(enemyNear&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
   if(u.team===1){
     if(inside){
@@ -92,28 +94,42 @@ function coopHeading(i,tg){
     }
     return {x:tx-x,z:tz-z,stop:false};
   }
+  if(rally){
+    if(COOP.intruders)return coopRouteHeading(i,COOP.insideX,COOP.insideZ);
+    // Guard the weakest panel; spread around the run when every panel is intact.
+    let weakest=0;for(let k=1;k<8;k++)if(COOP.sections[k].hp<COOP.sections[weakest].hp)weakest=k;
+    const damaged=COOP.sections[weakest].hp<COOP.sections[weakest].maxHp;
+    const a=damaged?(weakest+.5)*TAU/8+(i%5-2)*.08:i*2.39996323;
+    const rr=COOP.radius+(inside?-1.4:1.6);
+    return coopRouteHeading(i,Math.cos(a)*rr,Math.sin(a)*rr,true);
+  }
   // Defenders intercept the closest predator; unengaged animals guard the run.
   if(tg>=0&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
   if(aliveB>0){
     let tx=COOP.intruders?COOP.insideX:ecx[0],tz=COOP.intruders?COOP.insideZ:ecz[0];
     if(tg>=0){tx=A.x[tg];tz=A.z[tg];}
-    if(coopBlocks(x,z,tx,tz)){
-      const breach=coopNearestBreach(i);
-      if(breach>=0){
-        const ba=(breach+.5)*TAU/8,nearR=COOP.radius+(inside?-1.2:1.4);
-        tx=Math.cos(ba)*nearR;tz=Math.sin(ba)*nearR;
-        if(Math.hypot(tx-x,tz-z)<.9){const farR=COOP.radius+(inside?1.4:-1.4);tx=Math.cos(ba)*farR;tz=Math.sin(ba)*farR;}
-        if(!coopBlocks(x,z,tx,tz))return {x:tx-x,z:tz-z,stop:false};
-      }else if(inside)return {x:0,z:0,stop:true};
-      const angle=Math.atan2(z,x),goal=breach>=0?(breach+.5)*TAU/8:Math.atan2(tz,tx);
-      const delta=Math.atan2(Math.sin(goal-angle),Math.cos(goal-angle));
-      const next=angle+Math.sign(delta||1)*.28,rr=COOP.radius+(inside?-1.2:u.rad*.5+1.4);
-      tx=Math.cos(next)*rr;tz=Math.sin(next)*rr;
-    }
-    return {x:tx-x,z:tz-z,stop:false};
+    return coopRouteHeading(i,tx,tz);
   }
   const a=i*2.39996323,rr=COOP.radius+2;
   return {x:Math.cos(a)*rr-x,z:Math.sin(a)*rr-z,stop:Math.hypot(x-Math.cos(a)*rr,z-Math.sin(a)*rr)<.6};
+}
+// Shared path for ordinary defense and Rally; all movement still uses fence collision.
+function coopRouteHeading(i,tx,tz,hold=false){
+  const x=A.x[i],z=A.z[i],u=UNITS[A.kind[i]],inside=Math.hypot(x,z)<COOP.radius-.4;
+  if(coopBlocks(x,z,tx,tz)){
+    const breach=coopNearestBreach(i);
+    if(breach>=0){
+      const ba=(breach+.5)*TAU/8,nearR=COOP.radius+(inside?-1.2:1.4);
+      tx=Math.cos(ba)*nearR;tz=Math.sin(ba)*nearR;
+      if(Math.hypot(tx-x,tz-z)<.9){const farR=COOP.radius+(inside?1.4:-1.4);tx=Math.cos(ba)*farR;tz=Math.sin(ba)*farR;}
+      if(!coopBlocks(x,z,tx,tz))return {x:tx-x,z:tz-z,stop:false};
+    }else if(inside)return {x:0,z:0,stop:true};
+    const angle=Math.atan2(z,x),goal=breach>=0?(breach+.5)*TAU/8:Math.atan2(tz,tx);
+    const delta=Math.atan2(Math.sin(goal-angle),Math.cos(goal-angle));
+    const next=angle+Math.sign(delta||1)*.28,rr=COOP.radius+(inside?-1.2:u.rad*.5+1.4);
+    tx=Math.cos(next)*rr;tz=Math.sin(next)*rr;
+  }
+  return {x:tx-x,z:tz-z,stop:hold&&Math.hypot(tx-x,tz-z)<.6};
 }
 // Swept collision prevents launches, high speed and flying units bypassing the roofed run.
 function coopConstrain(i,oldX,oldZ){
@@ -143,7 +159,13 @@ function coopHud(){
   el.hidden=!COOP.active;if(!COOP.active)return;
   const weakest=Math.min(...COOP.sections.map(s=>s.hp/s.maxHp));
   $('coopHens').textContent=coopHensAlive()+' / 2 hens safe';
+  COOP.hens.forEach((hen,i)=>{
+    const value=Math.ceil(clamp(hen.hp/hen.maxHp,0,1)*100),bar=$('henHealth'+i);
+    bar.value=value;bar.setAttribute('aria-valuetext',value>0?value+' percent health':'Lost');
+    $('henHealthText'+i).textContent=value>0?value+'%':'Lost';
+    bar.classList.toggle('critical',value<=30);bar.classList.toggle('lost',value===0);
+  });
   $('coopFence').textContent=COOP.breaches?COOP.breaches+' fence breach'+(COOP.breaches===1?'':'es'):'Weakest fence '+Math.ceil(weakest*100)+'%';
-  $('coopStatus').textContent=BATTLE.over?COOP.reason:COOP.intruders?'Predators inside!':COOP.breaches?'Defend the hens!':'Protect the hens';
+  $('coopStatus').textContent=BATTLE.over?COOP.reason:COOP.intruders?'Predators inside!':COOP.breaches?'Defend the hens!':CMD.rally>0?'Rally active · '+Math.ceil(CMD.rally)+'s':'Protect the hens';
   el.classList.toggle('danger',COOP.breaches>0||weakest<.3);
 }

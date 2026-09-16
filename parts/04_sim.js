@@ -171,14 +171,15 @@ function refineDetail(){
    THE COMMANDER — four things you can do while it is happening
    ============================================================ */
 const CMD={
-  horn:0, light:0, feedT:0, feedX:0, feedZ:0,
-  cd:{horn:0,light:0,feed:0,repair:0}, pts:0, ptAcc:0
+  horn:0, light:0, rally:0, feedT:0, feedX:0, feedZ:0,
+  cd:{horn:0,light:0,feed:0,repair:0,rally:0}, pts:0, ptAcc:0
 };
 const CMD_DEF=[
   {k:'horn', name:'Sound the horn', key:'1', cool:16, dur:6.0, hint:'Every animal you own moves and swings faster'},
   {k:'feed', name:'Scatter feed',   key:'2', cool:14, dur:7.0, hint:'Birds converge on the pile and hold their nerve'},
   {k:'light',name:'Floodlight',     key:'3', cool:18, dur:5.5, hint:'Predators flinch, hit softer and swing slower'},
-  {k:'repair',name:'Repair fence',key:'4',cool:20,dur:0,hint:'Restore half of the weakest fence section; can close a breach'}
+  {k:'repair',name:'Repair fence',key:'4',cool:20,dur:0,hint:'Restore half of the weakest fence section; can close a breach'},
+  {k:'rally',name:'Rally to coop',key:'5',cool:22,dur:8,hint:'For 8 seconds, nearby defenders protect the run and pursue intruders; recharges in 22 seconds'}
 ];
 /* reinforcements are no longer chosen up front — you call them in as it happens,
    paying out of a pool that fills while the fight is going badly for someone */
@@ -215,7 +216,7 @@ const DEPLOY=[
 ];
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
-function cmdReady(k){ if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
+function cmdReady(k){ if(k==='rally'&&!(typeof COOP!=='undefined'&&COOP.active))return false;if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
 function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
 function applyDeploy(d){
   if(!canDeploy(d)) return false;
@@ -266,6 +267,7 @@ function applyCommand(k){
   const d=CMD_DEF.find(c=>c.k===k);
   if(k==='horn'){ CMD.horn=d.dur; if(!oneShot('horn',0.95)) sting('go'); }
   if(k==='light'){ CMD.light=d.dur; sfx('spur',BATTLE.cx,BATTLE.cz); }
+  if(k==='rally'){CMD.rally=d.dur;if(!oneShot('horn',.7))sting('go');}
   if(k==='repair'&&typeof COOP!=='undefined'&&COOP.active){
     const damaged=COOP.sections.filter(s=>s.hp<s.maxHp);if(!damaged.length)return false;
     const s=damaged.reduce((a,b)=>a.hp/a.maxHp<b.hp/b.maxHp?a:b);
@@ -287,6 +289,7 @@ function applyCommand(k){
 function cmdStep(dt){
   CMD.horn=Math.max(0,CMD.horn-dt);
   CMD.light=Math.max(0,CMD.light-dt);
+  CMD.rally=Math.max(0,CMD.rally-dt);
   CMD.feedT=Math.max(0,CMD.feedT-dt);
   for(const k in CMD.cd) CMD.cd[k]=Math.max(0,CMD.cd[k]-dt);
   if(BATTLE.running&&!BATTLE.over){
@@ -296,7 +299,7 @@ function cmdStep(dt){
   if(CMD.feedT>0 && VR()<dt*8) spawnPuff(CMD.feedX+rnd(-1,1),0.12,CMD.feedZ+rnd(-1,1),0.16);
 }
 function cmdReset(){
-  CMD.horn=CMD.light=CMD.feedT=0;
+  CMD.horn=CMD.light=CMD.rally=CMD.feedT=0;
   CMD.pts=PTS_START; CMD.ptAcc=0;
   for(const k in CMD.cd) CMD.cd[k]=0;
 }

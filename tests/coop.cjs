@@ -120,6 +120,48 @@ const capacity=boot();capacity.eval("var growths=0;buildOneSquad=function(k){gro
 assert.ok(capacity.eval('growths>0&&SQUAD_NEED.goose>=TALE.bought.goose'),'late reinforcement packets grow their render reservation');
 console.log('PASS rescue window after breach/first hen loss, no timed victory, late reinforcement points/capacity, both-hen defeat and predator-clear victory');
 
+// Rally is a recorded, temporary steering order, with no health/stat changes.
+const rally=boot();rally.eval('A.x[0]=16;A.z[0]=0;A.x[1]=22;A.z[1]=0');
+assert.equal(rally.eval('coopHeading(0,1)'),null,'ordinary defenders pursue the nearby enemy');
+const rallyHp=json(rally,'[A.hp[0],...COOP.hens.map(h=>h.hp)]');
+assert.equal(rally.eval("cmdFire('rally')"),true);assert.equal(rally.eval('CMD.rally'),0,'rally waits for a fixed simulation tick');
+rally.eval('tickTest()');assert.ok(rally.eval('CMD.rally>7.9&&CMD.cd.rally>21.9'));
+assert.ok(rally.eval('coopHeading(0,1).x<0'),'rally redirects a nearby defender toward the coop');
+assert.equal(rally.eval("applyCommand('rally')"),false,'cooldown rejects immediate reuse');
+assert.deepEqual(json(rally,'[A.hp[0],...COOP.hens.map(h=>h.hp)]'),rallyHp,'rally does not heal or modify health');
+rally.eval('A.x[0]=30;A.x[1]=36');assert.equal(rally.eval('coopHeading(0,1)'),null,'distant defenders retain their normal target');
+rally.eval('A.x[0]=10;A.x[1]=10.5');assert.equal(rally.eval('coopHeading(0,1)'),null,'defenders keep fighting an enemy in reach');
+rally.eval('A.x[0]=-10;A.z[0]=0;A.x[1]=0;A.z[1]=0;COOP.sections[0].hp=0;COOP.breaches=1;coopTick(1/60)');
+rally.eval('var rallyCrossings=0;for(var step=0;step<600;step++){const ox=A.x[0],oz=A.z[0],h=coopHeading(0,-1),len=Math.hypot(h.x,h.z)||1;if(len<.1)break;A.x[0]+=h.x/len*.08;A.z[0]+=h.z/len*.08;if(coopBlocks(ox,oz,A.x[0],A.z[0]))rallyCrossings++;coopConstrain(0,ox,oz)}');
+assert.equal(rally.eval('rallyCrossings'),0,'rally uses an opening instead of crossing intact fencing');
+assert.ok(rally.eval('Math.hypot(A.x[0],A.z[0])<COOP.radius-.4'),'rally reaches intruders inside through a real breach');
+rally.eval('cmdStep(8)');assert.equal(rally.eval('CMD.rally'),0);assert.ok(rally.eval('CMD.cd.rally>0'));
+rally.eval('cmdStep(22)');assert.equal(rally.eval("cmdReady('rally')"),true);
+rally.eval('VIEW.paused=true');assert.equal(rally.eval("cmdFire('rally')"),false,'paused input is rejected');
+rally.eval("bootTest([{k:'rooster',n:1},{k:'coon',n:1}],1,[],'battle')");
+assert.equal(rally.eval('CMD.rally'),0,'reset clears active rally');assert.equal(rally.eval("cmdReady('rally')"),false,'rally is defense-only');
+const rallyActions=[{tick:1,type:'command',k:'rally'},{tick:2,type:'deploy',k:'goose'},{tick:500,type:'command',k:'horn'}];
+let rallyBaseline=null;
+for(const batch of [1,2,4]){
+ const r=boot([{k:'rooster',n:260},{k:'coon',n:24}],3,rallyActions);
+ r.eval(`while(BATTLE.tick<900&&!BATTLE.over){for(let n=0;n<${batch}&&BATTLE.tick<900&&!BATTLE.over;n++)tickTest()}`);
+ assert.equal(r.eval('VIEW.paused'),false,'rally recording plays back without rejected actions');
+ const state=checksum(r);if(rallyBaseline)assert.deepEqual(state,rallyBaseline);else rallyBaseline=state;
+}
+console.log('PASS rally queue/cooldown/expiry/reset, local regrouping, melee combat, breach routing, pause/mode guards and 1/2/4 replay');
+const healthHud=boot();healthHud.eval(`var healthElements={};$=id=>healthElements[id]||(healthElements[id]={textContent:'',value:0,attrs:{},classes:{},setAttribute(k,v){this.attrs[k]=v},classList:{toggle(k,v){healthElements[id].classes[k]=v}}});COOP.hens[0].hp=24;COOP.hens[1].hp=0;COOP.intruders=1;coopHud()`);
+assert.equal(healthHud.eval('healthElements.henHealth0.value'),24);
+assert.equal(healthHud.eval('healthElements.henHealthText0.textContent'),'24%');
+assert.equal(healthHud.eval('healthElements.henHealth0.classes.critical'),true);
+assert.equal(healthHud.eval("healthElements.henHealth1.attrs['aria-valuetext']"),'Lost');
+assert.equal(healthHud.eval('healthElements.henHealthText1.textContent'),'Lost');
+assert.equal(healthHud.eval('healthElements.coopStatus.textContent'),'Predators inside!');
+healthHud.eval("bootTest([{k:'rooster',n:1},{k:'coon',n:1}],1,[],'defense');coopHud()");
+assert.equal(healthHud.eval('healthElements.henHealth0.value'),100);
+assert.equal(healthHud.eval('healthElements.henHealth1.classes.lost'),false);
+console.log('PASS individual hen health/critical/lost display, accessible values and new-raid reset');
+
+
 const codec=boot();codec.eval('CFG.rosterOverride=[{k:"rooster",n:160},{k:"coon",n:24}];CFG.mode="defense";CFG.seed=777;REPLAY.current=null;location.search="?"+encodeFight()');
 assert.equal(codec.eval('decodeFight()'),true);assert.equal(codec.eval('CFG.mode'),'defense');assert.equal(codec.eval('REPLAY.loaded.mode'),'defense');
 assert.throws(()=>codec.eval("validateFight({...configFight(),mode:'unknown'})"),/objective/);

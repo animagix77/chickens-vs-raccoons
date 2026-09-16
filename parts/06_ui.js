@@ -51,7 +51,7 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.2';
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.3';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function validateRoster(rows){
@@ -582,8 +582,8 @@ DEPLOY.slice().sort((a,b)=>a.cost-b.cost).forEach(d=>{
 function cmdHud(){
   for(const b of cmdAct.children){
     const k=b.dataset.k, d=CMD_DEF.find(c=>c.k===k);
-    b.hidden=k==='repair'&&!COOP.active;
-    const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0);
+    b.hidden=(k==='repair'||k==='rally')&&!COOP.active;
+    const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0)||(k==='rally'&&CMD.rally>0);
     const ready = cmdReady(k);
     b.classList.toggle('ready',ready);
     b.disabled=!ready||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
@@ -617,7 +617,7 @@ function syncSliders(){
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
   document.querySelectorAll('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.mode));
-  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
+  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair with 4. Rally nearby defenders to the coop with 5.':'An open battle: the last army standing wins.';
   const preview=$('rosterPreview');
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
