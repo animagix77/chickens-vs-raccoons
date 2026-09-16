@@ -51,7 +51,7 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.1';
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.2';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function validateRoster(rows){
@@ -265,7 +265,7 @@ function setPhase(p){
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
       a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:teamCount(1)+' '+teamName(1).toUpperCase(),
-      sub:CFG.mode==='defense'?'Protect two hens · stop the predators or hold for 90 seconds':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
+      sub:CFG.mode==='defense'?'Protect the hens · stop every predator':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
       call:true});
   }
   if(p==='count'){ musicCountIn(3.4); showCard({count:'3',call:true}); }
@@ -617,7 +617,7 @@ function syncSliders(){
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
   document.querySelectorAll('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.mode));
-  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Two hens. Eight fence sections. Stop every predator or keep a hen alive for 90 seconds. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
+  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
   const preview=$('rosterPreview');
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);

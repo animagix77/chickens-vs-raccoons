@@ -225,6 +225,16 @@ function applyDeploy(d){
      here — one kind is 1.5 to 8 ms, under the cover of the dust puff and the
      animal's own arrival cry. It draws no seeded numbers and it runs before
      the SR() below, so the fight the seed describes is unchanged. */
+  // Defense raids have no time limit. Grow this kind's render capacity as needed.
+  if(typeof COOP!=='undefined'&&COOP.active){
+    let required=d.n;
+    for(let i=0;i<N;i++)if(A.kind[i]===u.i)required++;
+    if(required>(SQUAD_NEED[d.k]||0)){
+      SQUAD_NEED[d.k]=Math.min(MAXA,Math.max(required,(SQUAD_NEED[d.k]||d.n)*2));
+      if(SQUADS[u.i])SQUADS[u.i].dispose();
+      SQUADS[u.i]=null;
+    }
+  }
   if(!SQUADS[u.i]) buildOneSquad(d.k);
   if(!SQUADS[u.i]) return false;
   CMD.pts-=d.cost; TALE.spent+=d.cost;

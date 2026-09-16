@@ -713,7 +713,7 @@ if(GA_ID){
   </div>
   <div id="bar"><div id="barA" style="width:50%"></div><div id="barB"></div></div>
   <div id="battleReadout"><span>Army remaining</span><span id="moraleReadout">Ready to deploy</span></div>
-  <div id="coopObjective" hidden><strong id="coopHens">2 / 2 hens safe</strong><span id="coopFence">Fence intact</span><span id="coopTime">90s to hold</span></div>
+  <div id="coopObjective" hidden><strong id="coopHens">2 / 2 hens safe</strong><span id="coopFence">Fence intact</span><span id="coopStatus">Protect the hens</span></div>
   </div>
   <div id="replaySeek" role="status" aria-live="polite" hidden>Finding highlight…</div>
 
@@ -775,7 +775,7 @@ if(GA_ID){
     <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList">
-      <div class="rl hot"><div class="kx">Protect</div><div class="tx">In <b>Defend the coop</b>, two hens shelter inside a roofed run. Predators must break a fence section to enter. Stop all predators or keep at least one hen alive for 90 seconds.</div></div>
+      <div class="rl hot"><div class="kx">Protect</div><div class="tx">In <b>Defend the coop</b>, two hens shelter inside a roofed run. Predators must break a fence section to enter. A breach does not end the raid: call reinforcements and fight off the intruders. Stop all predators to win; lose both hens and the raid is over.</div></div>
       <div class="rl hot"><div class="kx">4 &nbsp;Repair</div><div class="tx">Repair half of the weakest fence section, even after a breach. It recharges in <b>20 seconds</b>. The status above the field shows the weakest fence and how many hens remain.</div></div>
       <div class="rl"><div class="kx">Replay</div><div class="tx">After the battle, choose a timestamp under <b>Moments to replay</b> to watch from three seconds before that event.</div></div>
       <div class="rl hot"><div class="kx">War chest</div><div class="tx">
@@ -3007,6 +3007,16 @@ function applyDeploy(d){
      here — one kind is 1.5 to 8 ms, under the cover of the dust puff and the
      animal's own arrival cry. It draws no seeded numbers and it runs before
      the SR() below, so the fight the seed describes is unchanged. */
+  // Defense raids have no time limit. Grow this kind's render capacity as needed.
+  if(typeof COOP!=='undefined'&&COOP.active){
+    let required=d.n;
+    for(let i=0;i<N;i++)if(A.kind[i]===u.i)required++;
+    if(required>(SQUAD_NEED[d.k]||0)){
+      SQUAD_NEED[d.k]=Math.min(MAXA,Math.max(required,(SQUAD_NEED[d.k]||d.n)*2));
+      if(SQUADS[u.i])SQUADS[u.i].dispose();
+      SQUADS[u.i]=null;
+    }
+  }
   if(!SQUADS[u.i]) buildOneSquad(d.k);
   if(!SQUADS[u.i]) return false;
   CMD.pts-=d.cost; TALE.spent+=d.cost;
@@ -3782,7 +3792,7 @@ function reviveCheck(i,dt){
 /* Coop defense is a deterministic objective, separate from combat unit stats.
    Eight independently destructible sectors form a roofed circular run. */
 const COOP={active:false,radius:7.5,sections:[],hens:[],breaches:0,firstHit:false,
-  entered:false,intruders:0,insideX:0,insideZ:0,limit:90,reason:'',pressure:new Uint8Array(8)};
+  entered:false,intruders:0,insideX:0,insideZ:0,reason:'',pressure:new Uint8Array(8)};
 const COOP_SIDES=['East','Southeast','South','Southwest','West','Northwest','North','Northeast'];
 function coopReset(){
   COOP.active=typeof CFG!=='undefined'&&CFG.mode==='defense';
@@ -3917,7 +3927,6 @@ function coopCheckWin(){
   const hens=coopHensAlive();
   if(!hens){COOP.reason='Both hens were lost';verdict('coons',COOP.reason);}
   else if(aliveB<=0){COOP.reason='All predators stopped';verdict('birds',COOP.reason);}
-  else if(BATTLE.t>=COOP.limit){COOP.reason=hens===2?'Both hens survived the raid':'One hen survived the raid';verdict('birds',COOP.reason);}
   return true; // defense never ends because the old army-elimination/stall rule fired
 }
 function coopHud(){
@@ -3926,7 +3935,7 @@ function coopHud(){
   const weakest=Math.min(...COOP.sections.map(s=>s.hp/s.maxHp));
   $('coopHens').textContent=coopHensAlive()+' / 2 hens safe';
   $('coopFence').textContent=COOP.breaches?COOP.breaches+' fence breach'+(COOP.breaches===1?'':'es'):'Weakest fence '+Math.ceil(weakest*100)+'%';
-  $('coopTime').textContent=Math.ceil(Math.max(0,COOP.limit-(BATTLE.running||BATTLE.over?BATTLE.t:0)))+'s to hold';
+  $('coopStatus').textContent=BATTLE.over?COOP.reason:COOP.intruders?'Predators inside!':COOP.breaches?'Defend the hens!':'Protect the hens';
   el.classList.toggle('danger',COOP.breaches>0||weakest<.3);
 }
 
@@ -5937,7 +5946,7 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.1';
+const REPLAY_VERSION=2, SIM_VERSION='2026-09-16.2';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function validateRoster(rows){
@@ -6151,7 +6160,7 @@ function setPhase(p){
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
       a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:teamCount(1)+' '+teamName(1).toUpperCase(),
-      sub:CFG.mode==='defense'?'Protect two hens · stop the predators or hold for 90 seconds':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
+      sub:CFG.mode==='defense'?'Protect the hens · stop every predator':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
       call:true});
   }
   if(p==='count'){ musicCountIn(3.4); showCard({count:'3',call:true}); }
@@ -6503,7 +6512,7 @@ function syncSliders(){
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
   document.querySelectorAll('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.mode));
-  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Two hens. Eight fence sections. Stop every predator or keep a hen alive for 90 seconds. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
+  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair the weakest fence with key 4.':'An open battle: the last army standing wins.';
   const preview=$('rosterPreview');
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);

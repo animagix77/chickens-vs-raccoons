@@ -1,3 +1,12 @@
+# Coop rescue window — September 16, 2026
+
+- Removed the automatic 90-second victory from Coop Defense. A breached fence, intruder, or first hen casualty leaves play and reinforcements active. Stop all predators to win; losing both protected hens ends the raid in defeat.
+- Replaced the countdown with objective status and an intruder warning. Updated setup and rules to explain the rescue window.
+- Reinforcement rendering grows on demand for longer defense raids, while the existing overall animal limit remains enforced. Open Battle keeps its existing end rules.
+- Simulation version is now `2026-09-16.2`; older recorded replay versions remain explicitly rejected rather than silently changing their result.
+
+Validation: objective tests passed for play beyond 90/120/125 seconds, reinforcement accrual and deployment after the first hen is lost, render-capacity growth, both-hen defeat, predator-clear victory, and command replay. Existing collision, repair, reset, highlight, and replay/capacity checks passed.
+
 # Coop defense, replay highlights, and bird models — September 16, 2026
 
 - Added Coop Defense as the default mode: two hens shelter inside a central wooden coop and roofed run. Eight fence sections show damage, collapse into breaches, and block ground, flying, and launched animals while intact.

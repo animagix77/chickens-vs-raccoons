@@ -28,7 +28,7 @@ function runtime(dir){
   ui.slice(ui.indexOf('const PRESETS='),ui.indexOf("document.querySelectorAll('.mini button')"))+
   ui.slice(ui.indexOf('let winT='),ui.indexOf('let slowCool=')),c);
   vm.runInContext(`
-    function buildSquads(need){SQUAD_NEED=need;SQUADS=UNITS.map(()=>({}));KIT_PIV=UNITS.map(()=>[{y:0,z:0},{y:0,z:0}]);}
+    function buildSquads(need){SQUAD_NEED=need;SQUADS=UNITS.map(()=>({dispose(){}}));KIT_PIV=UNITS.map(()=>[{y:0,z:0},{y:0,z:0}]);}
     function verdict(winner,reason){BATTLE.over=true; BATTLE.running=false; BATTLE.winner=winner;BATTLE.reason=reason||'';}
     function bootTest(rows,seed,actions=[],mode='battle'){
       CFG.mode=mode;

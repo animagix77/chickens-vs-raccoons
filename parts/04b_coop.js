@@ -1,7 +1,7 @@
 /* Coop defense is a deterministic objective, separate from combat unit stats.
    Eight independently destructible sectors form a roofed circular run. */
 const COOP={active:false,radius:7.5,sections:[],hens:[],breaches:0,firstHit:false,
-  entered:false,intruders:0,insideX:0,insideZ:0,limit:90,reason:'',pressure:new Uint8Array(8)};
+  entered:false,intruders:0,insideX:0,insideZ:0,reason:'',pressure:new Uint8Array(8)};
 const COOP_SIDES=['East','Southeast','South','Southwest','West','Northwest','North','Northeast'];
 function coopReset(){
   COOP.active=typeof CFG!=='undefined'&&CFG.mode==='defense';
@@ -136,7 +136,6 @@ function coopCheckWin(){
   const hens=coopHensAlive();
   if(!hens){COOP.reason='Both hens were lost';verdict('coons',COOP.reason);}
   else if(aliveB<=0){COOP.reason='All predators stopped';verdict('birds',COOP.reason);}
-  else if(BATTLE.t>=COOP.limit){COOP.reason=hens===2?'Both hens survived the raid':'One hen survived the raid';verdict('birds',COOP.reason);}
   return true; // defense never ends because the old army-elimination/stall rule fired
 }
 function coopHud(){
@@ -145,6 +144,6 @@ function coopHud(){
   const weakest=Math.min(...COOP.sections.map(s=>s.hp/s.maxHp));
   $('coopHens').textContent=coopHensAlive()+' / 2 hens safe';
   $('coopFence').textContent=COOP.breaches?COOP.breaches+' fence breach'+(COOP.breaches===1?'':'es'):'Weakest fence '+Math.ceil(weakest*100)+'%';
-  $('coopTime').textContent=Math.ceil(Math.max(0,COOP.limit-(BATTLE.running||BATTLE.over?BATTLE.t:0)))+'s to hold';
+  $('coopStatus').textContent=BATTLE.over?COOP.reason:COOP.intruders?'Predators inside!':COOP.breaches?'Defend the hens!':'Protect the hens';
   el.classList.toggle('danger',COOP.breaches>0||weakest<.3);
 }

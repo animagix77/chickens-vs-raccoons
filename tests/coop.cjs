@@ -99,19 +99,26 @@ console.log('PASS repair selection, breach closure/collision, overlap correction
 
 const objective=boot();objective.eval('aliveA=0;A.st[0]=2;BATTLE.t=1;checkWin(1/60)');
 assert.equal(objective.eval('BATTLE.over'),false,'defender army loss does not end hen defense');
-objective.eval('COOP.hens[0].hp=0;BATTLE.t=89.999;checkWin(1/60)');assert.equal(objective.eval('BATTLE.over'),false);
-objective.eval('BATTLE.t=90;checkWin(1/60)');assert.equal(objective.eval('BATTLE.winner'),'birds');assert.equal(objective.eval('BATTLE.reason'),'One hen survived the raid');
-objective.eval("bootTest([{k:'rooster',n:1},{k:'coon',n:1}],1,[],'defense');COOP.hens.forEach(h=>h.hp=0);checkWin(1/60)");
+objective.eval('COOP.sections[0].hp=0;COOP.breaches=1;COOP.entered=true;A.x[1]=0;A.z[1]=0;COOP.hens[0].hp=0');
+for(const time of [89.999,90,120,125,180]){
+ objective.eval(`BATTLE.t=${time};checkWin(1/60)`);
+ assert.equal(objective.eval('BATTLE.over'),false,'breach, intruder, first hen loss, and elapsed time leave a rescue window');
+}
+objective.eval('CMD.pts=0;cmdStep(20)');assert.ok(objective.eval('CMD.pts')>=20,'reinforcement points keep accruing after old deadlines');
+assert.equal(objective.eval("canDeploy(DEPLOY.find(d=>d.k==='goose'))"),true,'reinforcements remain available after a breach and first hen loss');
+objective.eval('COOP.hens[1].hp=0;checkWin(1/60)');
 assert.equal(objective.eval('BATTLE.winner'),'coons');assert.match(objective.eval('BATTLE.reason'),/Both hens/);
-objective.eval("bootTest([{k:'rooster',n:1},{k:'coon',n:1}],1,[],'defense');aliveB=0;checkWin(1/60)");
+objective.eval("bootTest([{k:'rooster',n:1},{k:'coon',n:1}],1,[],'defense');COOP.hens[0].hp=0;aliveB=0;checkWin(1/60)");
 assert.equal(objective.eval('BATTLE.winner'),'birds');assert.match(objective.eval('BATTLE.reason'),/predators stopped/);
 const timed=boot([{k:'coon',n:1}],8);
-// Durable fence fixture isolates the deadline without changing any animal stats.
-timed.eval('COOP.sections.forEach(s=>{s.hp=s.maxHp=1000000});while(BATTLE.tick<5500&&!BATTLE.over)tickTest()');
-assert.equal(timed.eval('BATTLE.winner'),'birds');assert.equal(timed.eval('aliveB'),1);assert.equal(timed.eval('coopHensAlive()'),2);
-assert.equal(timed.eval('BATTLE.reason'),'Both hens survived the raid');
-assert.ok(timed.eval('BATTLE.t>=90&&BATTLE.t<=90+1/60+.000001'),'actual fixed-step defense deadline is within one tick');
-console.log('PASS objective victories, fixed-step deadline with surviving predators, both-hen defeat and army-loss isolation');
+// Durable fence isolates elapsed-time behavior without changing animal stats.
+timed.eval('COOP.sections.forEach(s=>{s.hp=s.maxHp=1000000});while(BATTLE.tick<7800&&!BATTLE.over)tickTest()');
+assert.equal(timed.eval('BATTLE.over'),false);assert.equal(timed.eval('aliveB'),1);assert.equal(timed.eval('coopHensAlive()'),2);
+assert.ok(timed.eval('BATTLE.t>125'),'actual fixed steps continue beyond both former time limits');
+// Long raids can exceed the original two-minute render reservation for a species.
+const capacity=boot();capacity.eval("var growths=0;buildOneSquad=function(k){growths++;SQUADS[UI_[k]]={dispose(){}}};var packet=DEPLOY.find(d=>d.k==='goose');var reserved=SQUAD_NEED.goose;while(TALE.bought.goose===undefined||TALE.bought.goose<=reserved){CMD.pts=80;applyDeploy(packet)}");
+assert.ok(capacity.eval('growths>0&&SQUAD_NEED.goose>=TALE.bought.goose'),'late reinforcement packets grow their render reservation');
+console.log('PASS rescue window after breach/first hen loss, no timed victory, late reinforcement points/capacity, both-hen defeat and predator-clear victory');
 
 const codec=boot();codec.eval('CFG.rosterOverride=[{k:"rooster",n:160},{k:"coon",n:24}];CFG.mode="defense";CFG.seed=777;REPLAY.current=null;location.search="?"+encodeFight()');
 assert.equal(codec.eval('decodeFight()'),true);assert.equal(codec.eval('CFG.mode'),'defense');assert.equal(codec.eval('REPLAY.loaded.mode'),'defense');
