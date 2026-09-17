@@ -1,3 +1,12 @@
+# Independent predator targeting — September 17, 2026
+
+- Each farm defender now selects the closest attackable predator across the arena, replacing the short local search and shared enemy-center fallback. Defenders recheck every six fixed ticks (0.1 simulated seconds), staggered across the flock, and immediately replace dead or unreachable targets.
+- Blocked individual targets remain available to fence routing. Rally still gathers defenders toward the coop; when predators are inside, each defender intercepts its own closest intruder. Existing combat stats, commands, and collision rules are unchanged.
+- The more effective interception changes battle outcomes. The three sampled default raids now ended in flock victories in 10.4–11.4 simulated seconds; this is a behavior fix, not a full balance pass.
+- Simulation version is `2026-09-17.1`; older recorded simulation versions are explicitly rejected because their outcomes cannot be reproduced by the new targeting.
+
+Validation: `node tests/targeting.cjs` covers opposing flanks, distant and newly closer targets, immediate casualty response, grid-boundary distances, stable ties, flight eligibility, RNG isolation, fence routing, Rally intruders, and an independent nearest-distance oracle. Target selection averaged 1.32 ms per fixed tick for the Max Chaos roster in the headless harness (excludes rendering). Coop objective, command replay at 1/2/4 ticks per frame, final cinematic, and highlight checks passed. Browser inspection showed separate skirmishes around the coop with no reported errors.
+
 # Final-moment cinematic — September 16, 2026
 
 - A true elimination now plays a 3.6-second camera push-in and slow-motion fall before the results card appears. Open Battle follows the losing army’s final unit; Coop Defense follows the last predator or protected hen.

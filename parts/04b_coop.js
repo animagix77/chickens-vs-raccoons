@@ -95,7 +95,10 @@ function coopHeading(i,tg){
     return {x:tx-x,z:tz-z,stop:false};
   }
   if(rally){
-    if(COOP.intruders)return coopRouteHeading(i,COOP.insideX,COOP.insideZ);
+    if(COOP.intruders){
+      const intruder=nearestPredator(i,true);
+      if(intruder>=0)return coopRouteHeading(i,A.x[intruder],A.z[intruder]);
+    }
     // Guard the weakest panel; spread around the run when every panel is intact.
     let weakest=0;for(let k=1;k<8;k++)if(COOP.sections[k].hp<COOP.sections[weakest].hp)weakest=k;
     const damaged=COOP.sections[weakest].hp<COOP.sections[weakest].maxHp;
@@ -105,11 +108,7 @@ function coopHeading(i,tg){
   }
   // Defenders intercept the closest predator; unengaged animals guard the run.
   if(tg>=0&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
-  if(aliveB>0){
-    let tx=COOP.intruders?COOP.insideX:ecx[0],tz=COOP.intruders?COOP.insideZ:ecz[0];
-    if(tg>=0){tx=A.x[tg];tz=A.z[tg];}
-    return coopRouteHeading(i,tx,tz);
-  }
+  if(tg>=0)return coopRouteHeading(i,A.x[tg],A.z[tg]);
   const a=i*2.39996323,rr=COOP.radius+2;
   return {x:Math.cos(a)*rr-x,z:Math.sin(a)*rr-z,stop:Math.hypot(x-Math.cos(a)*rr,z-Math.sin(a)*rr)<.6};
 }

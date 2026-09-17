@@ -550,6 +550,24 @@ function enemyCentroids(){
   TC.bfx=TC.bx-ux*fb; TC.bfz=TC.bz-uz*fb;
 }
 
+/* Each defender chooses a real predator, even beyond the local collision grid.
+   Scan only the enemy buckets, with local array references for large flocks.
+   Stable index ties and a fixed-tick refresh keep replay independent of FPS. */
+function nearestPredator(i,insideOnly=false){
+  const xs=A.x,zs=A.z,states=A.st,kinds=A.kind,heights=A.fy;
+  const x=xs[i],z=zs[i],aa=UNITS[kinds[i]].aa,items=tItems[1];
+  const count=tCount[1][cellCount],insideR=COOP.radius-.4;
+  let best=-1,bd=Infinity;
+  for(let k=0;k<count;k++){
+    const j=items[k];
+    if(states[j]===2||(!aa&&U_FLY[kinds[j]]&&heights[j]>SKY_LINE))continue;
+    if(insideOnly&&xs[j]*xs[j]+zs[j]*zs[j]>=insideR*insideR)continue;
+    const dx=xs[j]-x,dz=zs[j]-z,d=dx*dx+dz*dz;
+    if(d<bd||(d===bd&&(best<0||j<best))){bd=d;best=j;}
+  }
+  return best;
+}
+
 /* ============================================================
    MAIN SIM STEP
    ============================================================ */
@@ -583,7 +601,11 @@ function stepSim(dt){
     /* ---------- retarget ---------- */
     let tg=A.tgt[i];
     if(tg>=0 && (A.st[tg]===2 || A.team[tg]===A.team[i] || outOfReach(tg,mine))) tg=-1;
-    if(tg<0 || ((i+((BATTLE.t*20)|0))&15)===0){
+    if(isAlly){
+      // Ten checks per simulated second, spread across the flock; casualties
+      // and newly unreachable targets are replaced immediately.
+      if(tg<0||(BATTLE.tick+i)%6===0)tg=nearestPredator(i);
+    }else if(tg<0 || ((i+((BATTLE.t*20)|0))&15)===0){
       let best=-1,bd=1e9;
       const gx=clamp(((A.x[i]+ARENA_R+12)/CS)|0,0,gridW-1);
       const gz=clamp(((A.z[i]+ARENA_R+12)/CS)|0,0,gridW-1);
@@ -609,7 +631,8 @@ function stepSim(dt){
       }
       tg=best;
     }
-    if(tg>=0&&typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[tg],A.z[tg]))tg=-1;
+    // Keep a defender's blocked target so coopHeading can route to it.
+    if(!isAlly&&tg>=0&&typeof coopBlocks==='function'&&coopBlocks(A.x[i],A.z[i],A.x[tg],A.z[tg]))tg=-1;
     A.tgt[i]=tg;
 
     /* ---------- desired heading ---------- */
@@ -649,6 +672,8 @@ function stepSim(dt){
         const wob=Math.sin(BATTLE.t*6.5+i*1.7)*0.6;
         desX+=-desZ*wob; desZ+=desX*wob;
       }
+    }else if(!fed&&isAlly){
+      desX=0;desZ=0; // No attackable predator: wait instead of chasing a shared centroid.
     }else if(!fed){
       const fx=ecx[A.team[i]]-A.x[i], fz=ecz[A.team[i]]-A.z[i];
       const l=Math.hypot(fx,fz)||1; desX=fx/l; desZ=fz/l;
