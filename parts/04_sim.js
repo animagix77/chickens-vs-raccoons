@@ -33,7 +33,7 @@ const A={
 };
 let N=0;
 let aliveA=0, aliveB=0, initA=0, initB=0, panicCount=0;
-let SQUADS=[], KIT_PIV=[], ROSTER_USED=[];
+let SQUADS=[], ROSTER_USED=[];
 /* what each standing squad was sized for. Kept so the instanced meshes can be
    rebuilt at a finer polygon tier later without re-deriving the fight's needs
    — which is the reason the rebuild could not be triggered from outside. */
@@ -87,58 +87,33 @@ function gridBuild(){
     tItems[t][tCursor[t][c]++]=i; }
 }
 
-const KIT_CACHE={};
-function kitCache(k,fn){ if(!KIT_CACHE[k]) KIT_CACHE[k]=fn(); return KIT_CACHE[k]; }
-
 /* ---------- building the instanced meshes ----------
-   This used to be three fragments inline in spawnRoster, which meant the
-   polygon tier was decided once and could never be revisited: there was no way
-   to rebuild at tier N because the capacities were local to that call.
-   spawnRoster's behaviour through these functions is unchanged.
+   One SkinSquad per kind on the field (03b_skin.js). The meshes and bone
+   textures behind them are built once per species and cached; a squad is only
+   the instance buffers, so rebuilding one is cheap.
 
-   Everything the renderer reads comes out of here together — SQUADS, KIT_PIV
-   and, through kitCache, KIT_CACHE — so any caller may run it between frames,
-   with one condition: renderAgents() must run before the next draw. That is
-   not optional. A fresh THREE.InstancedMesh starts with count === max, so a
-   squad built after renderAgents() and drawn before the next one would put a
-   few thousand uninitialised matrices on screen for a frame. */
+   Any caller may run these between frames, with one condition: renderAgents()
+   must run before the next draw, so no squad is ever drawn with instances it
+   has not been handed. */
 function buildOneSquad(k){
   const n=SQUAD_NEED[k]; if(n===undefined) return;
   const u=UNITS[UI_[k]];
-  const kits=kitCache(u.kit,KITS[u.kit]);
-  SQUADS[u.i]=new Squad(kits,Math.max(2,n+4));
-  KIT_PIV[u.i]=kits.map(kk=>({y:kk.pivot.y,z:kk.pivot.z}));
+  SQUADS[u.i]=new SkinSquad(k,Math.max(2,n+4));
 }
 /* `only`, when given, restricts the rebuild to the kinds named in it; the rest
-   stand down and are built on demand by deploy(). That is what makes a rebuild
-   affordable at all — the classic matchup has two kinds on the field and ten
-   more waiting on the commander bar, and merging those ten is 50 of the 60 ms. */
+   stand down and are built on demand by deploy(). */
 function buildSquads(need,only){
   SQUAD_NEED=need;
   SQUADS.forEach(s=>s&&s.dispose());
   SQUADS=new Array(UNITS.length).fill(null);
-  KIT_PIV=new Array(UNITS.length).fill(null);
   for(const k in need){ if(only&&!only[k]) continue; buildOneSquad(k); }
 }
-/* The kits bake the primitives in at build time, so a tier change throws all of
-   them away. They were previously dropped from the cache and left to the
-   garbage collector, which never frees the GPU buffers — five rebuilds of Max
-   Chaos leaked 420 geometries out of renderer.info.memory. Hand them back
-   explicitly, and only once the squads holding them are gone. */
-function dropKitCache(){
-  const old=[];
-  for(const k in KIT_CACHE){ old.push.apply(old,KIT_CACHE[k]); delete KIT_CACHE[k]; }
-  return old;
-}
-function disposeKits(list){ for(const kit of list){ kit.core.dispose(); kit.flap.dispose(); } }
 
 /* Move the whole scene to another polygon tier without disturbing the fight.
    Returns false if the tier did not actually move. */
 function setDetailLive(level,only){
   if(!setDetail(level)) return false;
-  const stale=dropKitCache();
   buildSquads(SQUAD_NEED,only);
-  disposeKits(stale);
   renderAgents();            // see buildSquads — never leave a squad undrawn
   return true;
 }
@@ -243,7 +218,7 @@ function applyDeploy(d){
   const base=Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
     const a=base+srnd(-0.30,0.30), r=ARENA_R*srnd(0.86,0.95);
-    const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*KIT_PIV[u.i].length)|0);
+    const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*VARIANTS[d.k])|0);
     A.yaw[j]=Math.atan2(-A.x[j],-A.z[j]);
     aliveA++; initA++;
     spawnPuff(A.x[j],0.2,A.z[j],0.3);
@@ -343,8 +318,8 @@ function farmFleeing(){
 /* ============================================================
    ADAPTIVE LOAD SHEDDING
 
-   The geometry tier is picked once, at spawn, and baked into the kits — it
-   cannot move mid-fight without rebuilding every mesh, which is exactly the
+   The geometry tier is picked once, at spawn, and chooses each squad's mesh —
+   it cannot move mid-fight without rebuilding every squad, which is exactly the
    hitch you do not want in the middle of a melee. So the tier handles the
    part we can predict from the unit count, and this handles the part we
    cannot: how fast the machine actually turns out to be.
@@ -420,11 +395,9 @@ function spawnRoster(list,night){
   let total=0; rows.forEach(r=>total+=r.n);
   total=Math.max(1,total);
 
-  /* pick the polygon budget before any kit gets built, and throw away the
-     cached kits if the tier moved — they bake the primitives in at build time.
-     The old geometries are disposed further down, once the squads that were
-     holding them have been replaced. */
-  const stale = setDetail(detailFor(total)) ? dropKitCache() : null;
+  /* pick the detail tier before any squad gets built — it chooses which of
+     each animal's Blender levels of detail the squads draw */
+  setDetail(detailFor(total));
 
   if(typeof coopReset==='function')coopReset();
   const R=clamp(Math.sqrt(total*3.4/Math.PI)+10, 20, 78);
@@ -456,10 +429,9 @@ function spawnRoster(list,night){
   const purse=PTS_START+CAP_T*PTS_RATE;
   DEPLOY.forEach(d=>{ need[d.k]=(need[d.k]||0)+Math.ceil(purse/d.cost)*d.n; });
   buildSquads(need);
-  if(stale) disposeKits(stale);
   for(const row of rows){
     const u=UNITS[UI_[row.k]];
-    const kits=KIT_PIV[u.i];
+    const nv=VARIANTS[u.k];
     /* team 0 forms a broad arc on -Z, team 1 a wedge on +Z */
     for(let i=0;i<row.n;i++){
       const t=row.n<2?0.5:i/(row.n-1);
@@ -470,7 +442,7 @@ function spawnRoster(list,night){
         a=t*TAU+srnd(-.12,.12);
         r=u.team===0?lerp(COOP.radius+2,Math.max(COOP.radius+3,R*.60),Math.sqrt(SR())):lerp(R*.78,R*.94,SR());
       }
-      addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*kits.length)|0);
+      addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*nv)|0);
       if(u.team===0){ aliveA++; initA++; } else { aliveB++; initB++; }
     }
   }

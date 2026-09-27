@@ -807,9 +807,16 @@ function trackSync(){
     m==='menu'?'menu': m==='tension'?'tension': m==='battle'?'battle': null;
   if(want===TRK.want) return;
   TRK.want=want;
-  ['menu','tension','battle','battlehi'].forEach(k=>{ if(k!==want&&k!=='battlehi') trackStop(k,.5); });
+  /* Stop by exclusion, not by list. The victory and defeat cues are started
+     from the verdict and were never on the list, so they played on into the
+     next fight's intro and the menu. Anything playing that this phase does
+     not want is faded out, whatever it is. */
+  Object.keys(TRK.on).forEach(k=>{
+    if(k===want || (want==='battle'&&k==='battlehi')) return;
+    trackStop(k,.35);
+  });
   if(want==='battle'){ trackStart('battle',.85,true); trackStart('battlehi',.0001,true); }
-  else { trackStop('battle',.5); trackStop('battlehi',.5); if(want) trackStart(want,.8,true); }
+  else if(want) trackStart(want,.8,true);
 }
 
 /* ---------- per-frame mix + the background barnyard ---------- */
@@ -1196,23 +1203,26 @@ function musicUpdate(dt){
 /* ============================================================
    AGENT RENDER
    ============================================================ */
-const _mL=new THREE.Matrix4(), _mF=new THREE.Matrix4();
-/* Crowd hinge motion still follows live count; the articulated legs and neck
-   are a separate shader path enabled within 32 world units of the camera.
-   Thus a close subject keeps its gait even during a 5,000-animal battle.
-   Up to 24 visible headline animals additionally use prebuilt hero geometry. */
-const LIMB_MAX=2600;
+/* Every animal is drawn by its own skeleton (03b_skin.js): this decides, per
+   animal per frame, which clip it is in and how far through, and still owns
+   everything the whole body does — where it stands, its heading, the lunge,
+   the recoil, the tumble, the corpse rolling onto its side. Every animal walks
+   at every crowd size; there is no longer a count above which limbs freeze.
+
+   All of it is arithmetic on state the sim already wrote — no random
+   anywhere, so a seed still replays exactly. */
 const HERO_MAX=24,HERO_ON=new Uint8Array(5200),HERO_IDS=new Int32Array(HERO_MAX),HERO_D=new Float32Array(HERO_MAX);
 const heroFrustum=new THREE.Frustum(),heroMatrix=new THREE.Matrix4(),heroSphere=new THREE.Sphere();
-/* At most 24 close, visible headline animals get fine geometry. Selection has
-   a small incumbent bias so neighbors do not flicker between LODs. No rebuild. */
+/* When a big fight has put the crowd on a coarse mesh, the 24 closest visible
+   animals are drawn with the finest one instead. A small incumbent bias stops
+   neighbours flickering between the two. No rebuild. */
 function selectHeroAnimals(){
   heroMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);
   heroFrustum.setFromProjectionMatrix(heroMatrix);let used=0;
   for(let i=0;i<N;i++){
     if(A.st[i]===2)continue;
     const u=UNITS[A.kind[i]],sq=SQUADS[A.kind[i]];
-    if((u.k!=='rooster'&&u.k!=='coon')||!sq||!sq.hero)continue;
+    if(!sq||!sq.hero)continue;
     const x=A.x[i]-camera.position.x,y=(A.fy[i]||0)+.55-camera.position.y,z=A.z[i]-camera.position.z;
     const d=(x*x+y*y+z*z)*(HERO_ON[i]?.88:1);
     if(d>484)continue;
@@ -1226,40 +1236,36 @@ function selectHeroAnimals(){
   HERO_ON.fill(0);for(let i=0;i<used;i++)HERO_ON[HERO_IDS[i]]=1;
 }
 
+const SKK=[];     // unit index -> skin species, cached
 function renderAgents(){
   if(!SQUADS.length) return;
   for(let q=0;q<SQUADS.length;q++) if(SQUADS[q]) SQUADS[q].begin();
   let sN=0;
-  const LIMBS = (aliveA+aliveB) <= LIMB_MAX;
   selectHeroAnimals();
   const calmMotion=typeof VIEW!=='undefined'&&VIEW.reducedMotion;
+  const T=BATTLE.t;
 
   for(let i=0;i<N;i++){
     const ki=A.kind[i], sq=SQUADS[ki];
     if(!sq) continue;
-    const u=UNITS[ki], kit=KIT_PIV[ki][A.vr[i]];
-    const st=A.st[i], bird=u.build==='bird';
+    const u=UNITS[ki], sk=SKK[ki]||(SKK[ki]=skinSpecies(u.k)), CL=sk.clip;
+    const st=A.st[i], bird=u.build==='bird', vr=A.vr[i], hero=!!HERO_ON[i];
     const finalVictim=typeof finaleSubject==='function'&&finaleSubject('unit',i);
-    let y=A.fy[i]||0, roll=0, pitch=0, amp, fr, motionSpeed=0;
+    const sc=sk.scale[vr]||1;
+    let y=A.fy[i]||0, roll=0, pitch=0;
     let ex=0, swYaw=0, lx=0, lz=0;   // strike extension, its yaw arc, its lunge
+    let rA, rB=0, wB=0;              // the two clip rows being shown, and the mix
 
-    /* thrown: ignore the gait and the corpse pose entirely and just cartwheel.
-       A dead bird keeps its arc — dying mid-flight shouldn't stop it. */
+    /* thrown: ignore the gait and the corpse pose entirely and just cartwheel,
+       limbs flailing. A dead bird keeps its arc — dying mid-flight shouldn't
+       stop it. */
     if(!finalVictim && !u.fly && A.fy[i]>0.02){
       pitch=A.tum[i]; roll=A.tum[i]*0.63;
-      amp=bird?0.95:0.35; fr=15;
       const yaw2=A.yaw[i]+A.tum[i]*0.25;
       _e.set(pitch,yaw2,roll,'YXZ'); _q.setFromEuler(_e);
-      _v.set(A.x[i],y,A.z[i]); _s.set(1,1,1);
+      _v.set(A.x[i],y,A.z[i]); _s.set(sc,sc,sc);
       _m.compose(_v,_q,_s);
-      const ang2=Math.sin(A.ph[i]*fr)*amp;
-      const c2=Math.cos(ang2), s3=Math.sin(ang2), py2=kit.y, pz2=kit.z;
-      _mL.set(1,0,0,0,
-              0,c2,-s3, py2-c2*py2+s3*pz2,
-              0,s3, c2, pz2-s3*py2-c2*pz2,
-              0,0,0,1);
-      _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF,A.ph[i],0,0,0,!!HERO_ON[i]);
+      sq.push(_m, clipRow(CL.flail,T*(calmMotion?1.6:3.2)+i*0.137), 0, 0, vr, hero);
       continue;                       // no blob shadow while it's off the ground
     }
 
@@ -1268,40 +1274,59 @@ function renderAgents(){
       if(finalVictim)y=FINALE.target.y*(1-Math.min(1,d/.32));
       if(d>30) continue;
       if(A.rev[i]===2){                       // playing dead: flat on its side, no sinking
-        roll=1.5; y=-0.05;
+        roll=1.5; y=-0.05; rA=clipRow(CL.die,1);
       }else{
         roll=Math.min(1,d/0.32)*1.5;
         y+=-clamp((d-26)/3.5,0,1)*1.4;
         if(u.fly&&!finalVictim) y=Math.max(0,(u.fly)*(1-Math.min(1,d/0.6)));
         if(y<-1.3) continue;
         y+=Math.min(1,d/0.32)*(bird?-0.06:-0.03);
+        rA=clipRow(CL.die,d/0.65);
       }
-      amp=0; fr=0;
     }else{
-      const sp=motionSpeed=Math.hypot(A.vx[i],A.vz[i]);
-      y+=Math.abs(Math.sin(A.ph[i]))*(bird?0.05:0.035)*(0.35+sp*0.2);
+      const sp=Math.hypot(A.vx[i],A.vz[i]);
+      y+=Math.abs(Math.sin(A.ph[i]))*(bird?0.05:0.035)*(0.35+sp*0.2)*(calmMotion?.55:1);
       pitch=-clamp(sp*0.045,0,0.26)+Math.sin(A.ph[i]*2)*(bird?0.028:0.02);
 
-      amp=st===1?(bird?0.62:0.40):(bird?0.24:0.16); fr=st===1?11:5.2;
+      /* ---- getting about ---- */
+      let loc, alt=-1, wAlt=0;
+      if(u.fly){
+        /* a soaring raptor locks its wings and banks; it only beats them to
+           climb or when it is about to hit something */
+        const high=A.fy[i]>1.7;
+        loc=high?clipRow(CL.glide,T*0.22+i*0.071):clipRow(CL.fly,A.ph[i]*0.1);
+        roll+=Math.sin(T*0.9+i)*(high?0.34:0.12);
+        pitch+=high?-0.05:0.30;                    // nose down in the stoop
+      }else if(st===1){
+        loc=clipRow(CL.run,A.ph[i]*sk.gait*0.8);
+      }else{
+        const w=clamp((sp-0.15)/(0.35*u.speed),0,1);
+        const idle=clipRow(CL.idle,T*0.42+i*0.137), walk=clipRow(CL.walk,A.ph[i]*sk.gait);
+        if(w<=0) loc=idle; else if(w>=1) loc=walk;
+        else { loc=idle; alt=walk; wAlt=w; }
+      }
+
       /* ---- the blow, and being on the end of one ----
          Both read the animal's heading, so they share one sin/cos and one
-         branch. Everything in here is arithmetic on state the sim already
-         wrote — no random anywhere, so a seed still replays exactly. */
+         branch. The skeleton carries the strike itself; the body still lunges,
+         drops its weight and, for the heavies, swings through an arc. */
       const swv=A.sw[i], hitv=A.hit[i];
       if(swv>0||hitv>0){
         const sy=Math.sin(A.yaw[i]), cy=Math.cos(A.yaw[i]);
         if(swv>0){
-          /* ex runs 0 -> about -swK/4 (rearing back) -> +1 on contact -> 0.
-             Two curves meeting at 1: a quadratic that dips on the way in, and
-             f*f on the way out, which sheds most of the pose in the first
-             third of the follow-through and then settles. Snap, not a fade. */
+          /* ex runs 0 -> about -swK/4 (rearing back) -> +1 on contact -> 0. */
           if(swv>u.swC){ const a=1-(swv-u.swC)*u.swI; ex=a*(a*(1+u.swK)-u.swK); }
           else         { const f=swv*u.swJ; ex=f*f; }
-          pitch-=ex*u.swP;                       // drive the head down into it
-          y-=ex*u.swD;                           // and the weight with it
+          pitch-=ex*u.swP*0.35;                  // most of the pitch lives in the rig now
+          y-=ex*u.swD;
           swYaw=ex*u.swY*((i&1)?1:-1);           // heavies swing wide, half each way
-          const L=ex*u.swL;                      // and the whole animal commits
+          const L=ex*u.swL;
           lx=sy*L; lz=cy*L;
+          /* the clip lands its blow at sk.contact; line that up with the
+             instant the sim applies the damage (sw === swC) */
+          const ta=swv>u.swC?(1-swv)/(1-u.swC)*sk.contact:sk.contact+(1-swv/u.swC)*(1-sk.contact);
+          alt=clipRow(CL.atk,ta);
+          wAlt=Math.min(1,(1-swv)*8,swv*6);
         }
         if(hitv>0){
           /* the recoil. lby is whoever just connected, so the direction is
@@ -1314,50 +1339,25 @@ function renderAgents(){
             pitch-=(ax*sy+az*cy)*il*0.42;        // hit from the front, head comes up
             roll -=(ax*cy-az*sy)*il*0.55;        // hit from the side, it tips
           }else pitch+=k*0.10;                   // no attacker on record: just flinch
+          if(swv<=0){                            // a swing in progress outranks a flinch
+            alt=clipRow(CL.flinch,1-hitv/0.3);
+            wAlt=Math.min(1,hitv*12);
+          }
         }
       }
-      /* A soaring raptor holds its wings still and banks; it only beats them
-         to climb or when it is about to hit something. */
-      if(u.soar){
-        const high=A.fy[i]>1.7;
-        amp=high?0.03:0.55; fr=high?1.2:13;
-        roll+=Math.sin(BATTLE.t*0.9+i)*(high?0.34:0.12);
-        pitch+=high?-0.05:0.30;                    // nose down in the stoop
-      }
+      if(calmMotion) wAlt*=.55;                  // Reduced Motion: every gesture at half strength
+      rA=loc; rB=alt<0?0:alt; wB=alt<0?0:wAlt;
     }
 
-    const yaw=A.yaw[i]+swYaw+(st===1?Math.sin(A.ph[i]*3.1)*0.28:0);
+    const yaw=A.yaw[i]+swYaw+(st===1&&!calmMotion?Math.sin(A.ph[i]*3.1)*0.28:0);
     _e.set(pitch,yaw,roll,'YXZ'); _q.setFromEuler(_e);
-    _v.set(A.x[i]+lx,y,A.z[i]+lz); _s.set(1,1,1);
+    _v.set(A.x[i]+lx,y,A.z[i]+lz); _s.set(sc,sc,sc);
     _m.compose(_v,_q,_s);
-
-    const nx=A.x[i]-camera.position.x,nz=A.z[i]-camera.position.z,ny=camera.position.y-y;
-    const near=nx*nx+nz*nz+ny*ny<1024;
-    const articulate=st===2?0:(near?(calmMotion?.55:1):0);
-    const gait=st===2?0:clamp(motionSpeed*.32,0,1);
-    /* Nearby subjects keep their joints even while distant crowds are cheap. */
-    if(!LIMBS&&!near){
-      sq.push(A.vr[i],_m,_m,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
-    }else{
-      let ang=amp?Math.sin(A.ph[i]*fr)*amp:(st===2?0.35:0);
-      /* the hinge stops oscillating and flares. Sign does the work for free:
-         positive lifts a bird's tail and drops its wings, and drops a
-         quadruped's shoulders while its tail comes up — a strike. Negative,
-         which is where the wind-up lives, is the mirror of both: rearing. */
-      if(ex!==0){ const ae=ex<0?-ex:ex; ang=ang*(ae<1?1-ae:0)+ex*u.swF; }
-      if(calmMotion)ang*=.55;
-      const c=Math.cos(ang), s2=Math.sin(ang), py=kit.y, pz=kit.z;
-      _mL.set(1,0,0,0,
-              0,c,-s2, py-c*py+s2*pz,
-              0,s2, c, pz-s2*py-c*pz,
-              0,0,0,1);
-      _mF.multiplyMatrices(_m,_mL);
-      sq.push(A.vr[i],_m,_mF,A.ph[i],gait,ex,articulate,!!HERO_ON[i]);
-    }
+    sq.push(_m,rA,rB,wB,vr,hero);
 
     if(sN<6000){
-      const sc=u.rad*(bird?0.46:0.55)*(st===2?0.8:1)*(A.fy[i]>0.4?0.6:1);
-      _v.set(A.x[i]+lx,0.024,A.z[i]+lz); _q.identity(); _s.set(sc,1,sc*1.2);
+      const bs=u.rad*(bird?0.46:0.55)*(st===2?0.8:1)*(A.fy[i]>0.4?0.6:1);
+      _v.set(A.x[i]+lx,0.024,A.z[i]+lz); _q.identity(); _s.set(bs,1,bs*1.2);
       _m2.compose(_v,_q,_s);
       shadowIM.setMatrixAt(sN++,_m2);
     }

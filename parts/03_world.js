@@ -248,62 +248,6 @@ function floodStep(dt,on,cx,cz){
   hemi.intensity=(NIGHT?0.21:0.20)+floodLvl*(NIGHT?0.12:0.03);
 }
 
-/* Every squad owns its per-instance geometry attributes. Cached base kits stay
-   immutable. Hero instances replace crowd instances and share the pose contract. */
-class Squad{
-  constructor(kits,max,heroPass=false){
-    this.kits=kits; this.max=max; this.heroPass=heroPass;
-    this.core=[]; this.flap=[]; this.pose=[]; this.n=new Int32Array(kits.length);
-    this.hero=null;
-    for(let i=0;i<kits.length;i++){
-      const cg=kits[i].core.clone(),fg=kits[i].flap.clone();
-      const pose=new THREE.InstancedBufferAttribute(new Float32Array(max*4),4).setUsage(THREE.DynamicDrawUsage);
-      for(const g of [cg,fg]){
-        if(!g.attributes.animPart)g.setAttribute('animPart',new THREE.BufferAttribute(new Float32Array(g.attributes.position.count*4),4));
-        g.setAttribute('animalPose',pose);
-      }
-      const c=new THREE.InstancedMesh(cg,ANIMAL_MAT,max),f=new THREE.InstancedMesh(fg,ANIMAL_MAT,max);
-      c.frustumCulled=false; f.frustumCulled=false;
-      c.castShadow=true; f.castShadow=true;
-      c.customDepthMaterial=ANIMAL_DEPTH;f.customDepthMaterial=ANIMAL_DEPTH;
-      c.count=f.count=0;c.visible=f.visible=false;
-      c.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      f.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      scene.add(c); scene.add(f);
-      this.core.push(c); this.flap.push(f);this.pose.push(pose);
-    }
-    if(!heroPass&&kits.every(k=>k.heroFactory))
-      this.hero=new Squad(kits.map(k=>k.heroFactory()),24,true);
-  }
-  begin(){ this.n.fill(0);if(this.hero)this.hero.begin(); }
-  push(v,mCore,mFlap,phase=0,speed=0,attack=0,articulate=0,hero=false){
-    if(hero&&this.hero){this.hero.push(v,mCore,mFlap,phase,speed,attack,articulate);return;}
-    const i=this.n[v]++;
-    if(i>=this.max) return;
-    this.core[v].setMatrixAt(i,mCore);this.flap[v].setMatrixAt(i,mFlap);
-    this.pose[v].setXYZW(i,phase,speed,attack,articulate);
-  }
-  end(){
-    for(let v=0;v<this.core.length;v++){
-      const c=Math.min(this.n[v],this.max), on=c>0;
-      this.core[v].visible=on; this.flap[v].visible=on;
-      this.core[v].count=c; this.flap[v].count=c;
-      this.core[v].instanceMatrix.needsUpdate=true;this.flap[v].instanceMatrix.needsUpdate=true;
-      this.pose[v].needsUpdate=true;
-    }
-    if(this.hero)this.hero.end();
-  }
-  dispose(){
-    if(this.hero)this.hero.dispose();
-    for(let v=0;v<this.core.length;v++){
-      scene.remove(this.core[v]); scene.remove(this.flap[v]);
-      this.core[v].geometry.dispose();this.flap[v].geometry.dispose();
-      this.core[v].dispose(); this.flap[v].dispose();
-      if(this.heroPass){this.kits[v].core.dispose();this.kits[v].flap.dispose();}
-    }
-  }
-}
-
 /* ============================================================
    BLOB SHADOWS
    ============================================================ */

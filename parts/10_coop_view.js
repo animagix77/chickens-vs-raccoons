@@ -143,13 +143,13 @@ function buildCoopView(parent){
   const hens=[];
   for(let i=0;i<COOP.hens.length;i++){
     const data=COOP.hens[i],group=new THREE.Group();group.position.set(data.x,.055,data.z);root.add(group);
-    const kit=buildHen(Object.assign({},BIRD_KITS.hen[i%2?1:3],{scale:1.65}));
-    const mat=coopViewMaterial('#ffffff',{vertexColors:true});
-    const hen=coopViewMerged([kit.core,kit.flap],mat,group);hen.rotation.y=i?-.52:.52;
+    /* the protected hens are the Blender hen, larger, idling on the nest */
+    const sk=skinSingle('hen',i%2?1:3), mat=sk.material, hen=sk.mesh;
+    hen.scale.setScalar(1.65); group.add(hen); hen.rotation.y=i?-.52:.52;
     const nestMat=coopViewMaterial(i?'#d5bb7c':'#cfaa6c');
     const nestParts=[P(G.sphLo,'#ffffff',0,.04,0,0,0,0,.72,.075,.66)];
     const nest=coopViewMerged(nestParts,nestMat,group);nest.castShadow=false;
-    hens.push({group:group,mesh:hen,material:mat,nest:nest,nestMaterial:nestMat,angle:hen.rotation.y,index:i});
+    hens.push({group:group,mesh:hen,skin:sk,material:mat,nest:nest,nestMaterial:nestMat,angle:hen.rotation.y,index:i});
   }
   buildCoopView.state={root:root,panels:panels,hens:hens,time:0};
   updateCoopView(0);
@@ -195,6 +195,9 @@ function updateCoopView(dt){
     hen.mesh.rotation.y=hen.angle+.035*Math.sin(state.time*.65+hen.index);
     hen.mesh.rotation.z=finalHen?Math.min(1,finaleDeathTime()/.32)*1.5:0;
     if(finalHen)hen.mesh.position.y=-.08*Math.min(1,finaleDeathTime()/.32);
+    const C=hen.skin.sp.clip;
+    if(finalHen) hen.skin.pose(clipRow(C.die,finaleDeathTime()/0.65));
+    else if(alive) hen.skin.pose(clipRow(C.idle,state.time*0.42+hen.index*0.5), clipRow(C.flinch,.25), health<.35?.35:0);
     hen.material.color.set(health<.35?'#c9b19d':'#ffffff').convertSRGBToLinear();
     hen.nestMaterial.color.set(alive?'#d5bb7c':'#786e60').convertSRGBToLinear();
     hen.nest.scale.setScalar(alive?1:.85);

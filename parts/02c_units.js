@@ -162,71 +162,13 @@ UNITS.forEach(u=>{
   u.swD=(barge?0.05:0.03)*u.rad;                                     // weight dropping in
 });
 
-/* ---------------- geometry kits ---------------- */
-const KITS={
-  hen:      ()=>BIRD_KITS.hen.map(buildHen),
-  rooster:  ()=>BIRD_KITS.rooster.map(buildBird),
-  gamecock: ()=>BIRD_KITS.gamecock.map(buildBird),
-  guinea:   ()=>[{feather:'#4a4d58',wingC:'#5a5e6a',tail:'#33363f',red:'#c95a3a',comb:.35,tailUp:.7,tailW:.6,tailL:.45,scale:.82,spur:0},
-                 {feather:'#5c5f6b',wingC:'#6b6f7c',tail:'#3d404a',red:'#d0623f',comb:.35,tailUp:.7,tailW:.6,tailL:.45,scale:.80,spur:0}].map(buildBird),
-  goose:    ()=>[{feather:'#eae6dc',wingC:'#d8d3c6',tail:'#c8c2b3',red:'#e88a12',beak:'#e7a12c',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.55,spur:0},
-                 {feather:'#5a5f52',wingC:'#6a6f60',tail:'#3f4438',red:'#1a1a1a',beak:'#cf9231',comb:.15,tailUp:.75,tailW:.7,tailL:.5,scale:1.52,spur:0}].map(buildGoose),
-  turkey:   ()=>[{feather:'#3a2f26',wingC:'#4a3c30',tail:'#5a4a38',red:'#d0403a',comb:1.7,tailUp:.05,tailW:2.0,tailL:1.5,scale:1.45,spur:0},
-                 {feather:'#2b241d',wingC:'#3a3128',tail:'#4a3e30',red:'#c8382f',comb:1.8,tailUp:.05,tailW:2.1,tailL:1.55,scale:1.48,spur:0}].map(buildTurkey),
-  /* red-tailed and a darker morph */
-  hawk:     ()=>[{feather:'#6b533a',wingC:'#7d6244',tail:'#a8482a',hood:'#5a4632',beak:'#e8b022',scale:1.15},
-                 {feather:'#4a3d30',wingC:'#5c4d3c',tail:'#7a4030',hood:'#3a3126',beak:'#e0a820',scale:1.10}].map(buildHawk),
+/* what each animal looks like, how it is rigged and every way it can move
+   live in blender/animals.py; `build` above only says which rig it is on.
 
-  cat:   ()=>[{body:'#3b3a40',dark:'#2a292e',legs:'#33323a',muzzle:'#c9c4bc',ear:'prick',tail:'bush',tailC:'#2a292e',
-               len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:1.0,eye:'#bfe36a'},
-              {body:'#b8823f',dark:'#8a6030',legs:'#a5743a',muzzle:'#e8dcc4',ear:'prick',tail:'bush',tailC:'#8a6030',
-               len:.34,high:.26,wide:.13,leg:.20,legR:.032,neck:.13,head:.10,snout:.09,scale:.97,eye:'#e0c14a'}].map(buildQuad),
-  /* long, low, barrel-shaped, almost no legs, blunt square head — and no
-     tail at all, which is most of why a capybara reads as a capybara */
-  capybara:()=>[{body:'#7d5a36',dark:'#5a4026',legs:'#6a4a2c',muzzle:'#9c7c52',ear:'round',tail:'stub',
-                 tailC:'#5a4026',blunt:1,
-                 len:.54,high:.32,wide:.25,leg:.19,legR:.055,neck:.09,neckA:-.1,head:.16,snout:.15,scale:1.18,eye:'#3a2a18'},
-                {body:'#94693e',dark:'#6b4b2b',legs:'#7d5832',muzzle:'#b08c5e',ear:'round',tail:'stub',
-                 tailC:'#6b4b2b',blunt:1,
-                 len:.54,high:.32,wide:.25,leg:.19,legR:.055,neck:.09,neckA:-.1,head:.16,snout:.15,scale:1.15,eye:'#3a2a18'}].map(buildQuad),
-  goat:  ()=>[{body:'#e6e0d2',dark:'#b8b0a0',legs:'#c9c2b2',muzzle:'#f2ece0',ear:'flop',tail:'stub',horn:'goat',
-               len:.46,high:.38,wide:.19,leg:.34,legR:.042,neck:.22,head:.13,snout:.14,scale:1.05},
-              {body:'#57493c',dark:'#3d332a',legs:'#4a3f34',muzzle:'#cbbfa8',ear:'flop',tail:'stub',horn:'goat',
-               len:.46,high:.38,wide:.19,leg:.34,legR:.042,neck:.22,head:.13,snout:.14,scale:1.08}].map(buildQuad),
-  pig:   ()=>[{body:'#e0a7a4',dark:'#c98d8a',legs:'#c98d8a',muzzle:'#f0c2bf',ear:'flop',tail:'curl',blunt:1,
-               len:.52,high:.36,wide:.24,leg:.22,legR:.055,neck:.12,neckA:-.2,head:.15,snout:.12,scale:1.15},
-              {body:'#6d5f57',dark:'#524741',legs:'#524741',muzzle:'#9c8b80',ear:'flop',tail:'curl',blunt:1,
-               len:.52,high:.36,wide:.24,leg:.22,legR:.055,neck:.12,neckA:-.2,head:.15,snout:.12,scale:1.18}].map(buildQuad),
-  llama: ()=>[{body:'#dcc9a8',dark:'#b9a58c',legs:'#c4ae8c',muzzle:'#efe4cf',ear:'long',tail:'tuft',
-               len:.44,high:.36,wide:.19,leg:.46,legR:.045,neck:.58,neckA:-.15,neckR:.075,head:.13,snout:.13,scale:1.15},
-              {body:'#8b7460',dark:'#6a5748',legs:'#7a6553',muzzle:'#c9b6a0',ear:'long',tail:'tuft',
-               len:.44,high:.36,wide:.19,leg:.46,legR:.045,neck:.58,neckA:-.15,neckR:.075,head:.13,snout:.13,scale:1.12}].map(buildQuad),
-  donkey:()=>[{body:'#8e8880',dark:'#5f5a54',legs:'#7d7770',muzzle:'#d8d2c6',ear:'long',tail:'tuft',hoof:'#2a2620',
-               len:.60,high:.46,wide:.22,leg:.48,legR:.052,neck:.32,neckA:-.5,neckR:.095,head:.16,snout:.17,scale:1.30},
-              {body:'#6a5f56',dark:'#463e38',legs:'#5c524a',muzzle:'#c2b8a8',ear:'long',tail:'tuft',hoof:'#2a2620',
-               len:.60,high:.46,wide:.22,leg:.48,legR:.052,neck:.32,neckA:-.5,neckR:.095,head:.16,snout:.17,scale:1.33}].map(buildQuad),
-  dog:   ()=>[{body:'#4a3a2c',dark:'#2e241b',legs:'#3f3126',muzzle:'#1d1712',bib:'#e8e2d4',ear:'flop',tail:'bush',tailTip:'#e8e2d4',
-               len:.54,high:.36,wide:.19,leg:.34,legR:.045,neck:.20,neckA:-.35,head:.145,snout:.19,scale:1.22},
-              {body:'#151318',dark:'#0d0c10',legs:'#1a181e',muzzle:'#8a6a3a',bib:'#8a6a3a',ear:'prick',tail:'bush',
-               len:.56,high:.38,wide:.20,leg:.36,legR:.046,neck:.21,neckA:-.35,head:.15,snout:.19,scale:1.26}].map(buildQuad),
-  bull:  ()=>[{body:'#2b2621',dark:'#191512',legs:'#221e1a',muzzle:'#c9bfae',ear:'round',tail:'tuft',horn:'bull',blunt:1,hoof:'#141210',
-               len:.78,high:.60,wide:.32,leg:.50,legR:.070,neck:.20,neckA:-.25,neckR:.15,head:.22,snout:.17,scale:1.55},
-              {body:'#8a5a34',dark:'#5f3c22',legs:'#744c2c',muzzle:'#d8cbb4',ear:'round',tail:'tuft',horn:'bull',blunt:1,hoof:'#141210',
-               len:.78,high:.60,wide:.32,leg:.50,legR:.070,neck:.20,neckA:-.25,neckR:.15,head:.22,snout:.17,scale:1.58}].map(buildQuad),
-
-  coon:  ()=>COON_KITS.map(buildCoon),
-  possum:()=>[{body:'#b9b4ac',dark:'#6e6a64',legs:'#57534d',muzzle:'#f2ece2',ear:'round',tail:'tuft',tailC:'#e8c9b8',mask:'#3a3630',
-               len:.44,high:.30,wide:.18,leg:.22,legR:.040,neck:.14,head:.13,snout:.20,scale:1.05},
-              {body:'#9a958d',dark:'#5c5852',legs:'#4a4741',muzzle:'#e6dfd2',ear:'round',tail:'tuft',tailC:'#dbbfae',mask:'#332f2a',
-               len:.44,high:.30,wide:.18,leg:.22,legR:.040,neck:.14,head:.13,snout:.20,scale:1.02}].map(buildQuad),
-  fox:   ()=>[{body:'#c05a1e',dark:'#8a3c12',legs:'#2a2320',muzzle:'#f2eadc',bib:'#f2eadc',ear:'prick',tail:'bush',tailTip:'#f2eadc',
-               len:.48,high:.30,wide:.16,leg:.28,legR:.038,neck:.17,neckA:-.35,head:.125,snout:.20,scale:1.10},
-              {body:'#a8481a',dark:'#78310f',legs:'#241e1b',muzzle:'#e8dfd0',bib:'#e8dfd0',ear:'prick',tail:'bush',tailTip:'#e8dfd0',
-               len:.48,high:.30,wide:.16,leg:.28,legR:.038,neck:.17,neckA:-.35,head:.125,snout:.20,scale:1.07}].map(buildQuad),
-  coyote:()=>[{body:'#8f7a5c',dark:'#645440',legs:'#6d5c46',muzzle:'#ddd2bc',bib:'#ddd2bc',ear:'prick',tail:'bush',tailTip:'#3a3128',
-               len:.56,high:.36,wide:.18,leg:.38,legR:.042,neck:.21,neckA:-.4,head:.14,snout:.21,scale:1.20},
-              {body:'#7a684f',dark:'#544738',legs:'#5d4f3c',muzzle:'#cec3ad',bib:'#cec3ad',ear:'prick',tail:'bush',tailTip:'#332c24',
-               len:.56,high:.36,wide:.18,leg:.38,legR:.042,neck:.21,neckA:-.4,head:.14,snout:.21,scale:1.17}].map(buildQuad),
-  bear:  ()=>[{body:'#3a2a1e',dark:'#241a12',legs:'#2e2118',muzzle:'#a8875f',ear:'round',tail:'stub',tailC:'#241a12',blunt:1,
-               len:1.05,high:.80,wide:.44,leg:.52,legR:.105,neck:.20,neckA:-.2,neckR:.20,head:.30,snout:.22,scale:1.9}].map(buildQuad)
-};
+   How many colour variants each animal comes in. The spawn draws one from the
+   seeded stream per animal whatever this says, so it never changes a fight —
+   but it lives here, beside the roster, so the simulation does not have to
+   reach into the renderer for it. The Blender export must provide at least
+   this many; skinSpecies() complains if it does not. */
+const VARIANTS={hen:4,rooster:4,gamecock:4,guinea:2,goose:2,turkey:2,hawk:2,cat:2,capybara:2,
+  goat:2,pig:2,llama:2,donkey:2,dog:2,bull:2,coon:3,possum:2,fox:2,coyote:2,bear:1};
