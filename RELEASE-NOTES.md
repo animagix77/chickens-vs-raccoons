@@ -1,3 +1,13 @@
+# Every animal rebuilt in Blender — September 27, 2026
+
+- All 20 animals are remodelled in Blender as chunky low-poly, with real joints: thighs and toes, two-part wings, jaws that open, two-bone tails, and upper and lower legs. They share two rigs (birds and four-legged animals) and 23 animation clips: idle, walk, run, flinch, death, being thrown, flying and gliding for the hawk, and a signature attack for each kind. The gamecock leaps and spur-kicks, the goose lunges with its wings spread, the donkey kicks backwards, the bear, cat and raccoon rear up and swipe, the goat, pig and bull head-butt, the llama spits, and the hawk strikes with its talons.
+- Each attack is timed so its contact frame lands on the exact simulation step the damage does. Every animal walks at every crowd size; the old limb freeze above 2,600 animals is gone. The coop's protected hens are the same Blender hen and idle on their nests.
+- Drawing is GPU-skinned from a baked bone texture: one instanced mesh and one draw per species, with all colour variants sharing it. In the headline fight draw calls fall from 59 to 27 and in Max Chaos from 99 to 34, and per-frame animation CPU drops from 1.25 to 0.77 ms and from 2.67 to 2.01 ms. Triangles rise about 10%. The 24 animals nearest the camera still get the finest mesh during big fights. WebGL1 falls back to float textures.
+- Recorded victory and defeat cues now stop when the next phase begins instead of playing on into the next fight or the menu.
+- Page weight grows by about 400 KB for the model data. Gameplay, random draws and simulation version are unchanged.
+
+Validation: `node tests/regression.cjs --baseline-dir <previous release>` reports all six seeded battles identical to the previous release at every checkpoint, and the coop, targeting, finale, highlight and audio suites all pass. Browser checks covered every species in seven poses, Open Battle at 1,000 v 100 and Max Chaos, the coop's protected hens, detail-tier rebuilds with stable GPU memory, the WebGL1 path, and a clean real-time loop with no errors.
+
 # Independent predator targeting — September 17, 2026
 
 - Each farm defender now selects the closest attackable predator across the arena, replacing the short local search and shared enemy-center fallback. Defenders recheck every six fixed ticks (0.1 simulated seconds), staggered across the flock, and immediately replace dead or unreachable targets.

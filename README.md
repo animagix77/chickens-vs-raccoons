@@ -126,10 +126,11 @@ That writes identical `index.html` and `chickens-vs-raccoons.html` entry points.
 | File | What's in it |
 |---|---|
 | `parts/01_shell.html` | Markup, all CSS, HUD, setup panel, commander bar, story card |
-| `parts/02_core.js` | Renderer, lights, the two random streams, geometry helpers, bird builders |
-| `parts/02b_quad.js` | One parameterized builder covering all twelve quadrupeds |
+| `parts/02_core.js` | Renderer, lights, the two random streams, detail tiers, geometry helpers |
 | `parts/02c_units.js` | The 20-unit roster table, its stats, and how they were derived |
+| `parts/02d_models.js` | Generated from `blender/animals.blend`: every animal's meshes, skeleton and clips |
 | `parts/03_world.js` | Arena, terrain, props, particles, blood and gore |
+| `parts/03b_skin.js` | GPU-skinned instanced renderer that draws the Blender animals |
 | `parts/04_sim.js` | Combat, steering, morale, the commander and deploy system |
 | `parts/04b_coop.js` | Deterministic coop objective, fencing, routes, repairs, and victory rules |
 | `parts/05_view.js` | Sound engine and its iOS unlock, music engine, kill feed, camera director |
@@ -138,6 +139,8 @@ That writes identical `index.html` and `chickens-vs-raccoons.html` entry points.
 | `parts/09_highlights.js` | Ranked battle moments and replay timeline |
 | `parts/10_coop_view.js` | Coop, roofed run, hens, and visible fence damage |
 | `parts/11_finale.js` | Final casualty camera, slow visual clock, and result transition |
+
+The animals are modelled, rigged and animated in Blender. `blender/animals.py` builds them into `blender/animals.blend` and exports `parts/02d_models.js`. That file is committed, so an ordinary build needs only Python. See `blender/README.md` to change an animal.
 
 Run `node tests/coop.cjs`, `node tests/highlights.cjs`, and `node tests/audio.cjs` for objective, event, and audio checks. Run `node tests/regression.cjs --checks-only` for replay/capacity checks or `node tests/regression.cjs` for seeded battle regressions. Serve the project over HTTP to load the recorded audio assets.
 
