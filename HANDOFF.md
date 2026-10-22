@@ -8,9 +8,9 @@ and animated in Blender and exported into the page.
 **Repo:** https://github.com/animagix77/chickens-vs-raccoons (GitHub Pages serves `main`)
 **Working folder:** `LaCie ssd/vibe_coding/chics vs coons`
 **Developer:** Judge Dean LLC
-**Simulation version:** `2026-10-21.1` (`SIM_VERSION` in `parts/06_ui.js`)
+**Simulation version:** `2026-10-22.1` (`SIM_VERSION` in `parts/06_ui.js`)
 
-Last updated 2026-10-21. For what changed and when, see `RELEASE-NOTES.md`
+Last updated 2026-10-22. For what changed and when, see `RELEASE-NOTES.md`
 (newest first). This file covers how the project works and how to work on it.
 
 ---
@@ -34,6 +34,8 @@ is broken.
 
 - **Three modes.** *Save the Coop* is the default: three escalating waves with
   eight-second breaks to repair two panels, recruit six geese, or bank 18 supplies.
+  Selections remain editable until the timer ends, including while paused; only
+  the final choice grants a reward. Paused edits enter the action log on resume.
   Defenders persist between waves. Foxes flank; the final bear warns before its
   fence strike. Placed reinforcements take 1.8 simulated seconds to arrive.
   *Coop Defense* is the single-attack sandbox. Two hens shelter in a central
@@ -45,8 +47,9 @@ is broken.
   Repair Fence (4, defense only), Rally to Coop (5, defense only), plus paid
   reinforcements from a war chest that fills during the fight.
 - **Replays.** Battle links record the seed, the roster and every command.
-  Results show up to 12 highlight moments, and you can seek to any of them. Old
-  simulation versions are rejected rather than replayed wrong.
+  Results show up to 12 highlight moments, and you can seek to any of them.
+  `2026-10-21.1` links use their original immediate, locked regroup rewards;
+  new battles defer the reward until the next wave. Other old versions are rejected.
 - **Final moment.** A true elimination plays a slow-motion push-in on the last
   casualty before the result card (`parts/11_finale.js`). Reduced Motion gets a
   short steady hold instead.
@@ -110,8 +113,9 @@ reproduce a fight exactly on any machine at any frame rate.
 - `VR()` / `rnd()` / `pick()` are cosmetic only: camera, blood, clouds, music.
 - Never call `VR` or `Math.random()` from anything `stepSim` reaches. Reordering
   draws also breaks replays, even when the logic looks equivalent.
-- Any change that can alter outcomes must bump `SIM_VERSION`, so old links are
-  refused rather than replayed wrong.
+- Any change that can alter outcomes must bump `SIM_VERSION`. Keep old links
+  only when their original behavior has an explicit, tested compatibility path;
+  otherwise reject them rather than replaying the wrong result.
 
 **2. The headline matchup sits on a cliff.** Rooster damage is pinned at 4.3.
 In Open Battle, 1000 roosters v 100 raccoons flips between "almost always
@@ -218,6 +222,7 @@ The model data adds about 400 KB to the page, which is now about 1.36 MB
 | `node tests/regression.cjs --baseline-dir DIR` | six complete seeded battles vs another checkout |
 | `node tests/coop.cjs` | fences, breaches, repair, Rally, hen verdicts, defense replays |
 | `node tests/raid.cjs` | three waves, choices, predator tactics, reservations, full replay and balance samples |
+| `RAID_BASELINE_DIR=DIR node tests/raid.cjs` | additionally compare previous-version replays with a `2026-10-21.1` checkout |
 | `node tests/raid-controls.cjs` | arrival payment/delay/positions/reset, daily validation and input guards |
 | `node tests/targeting.cjs` | nearest-predator pursuit, fence routing, RNG isolation |
 | `node tests/finale.cjs` | final-casualty hooks, frozen outcome, reduced motion, seeking |

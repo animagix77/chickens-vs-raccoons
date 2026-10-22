@@ -956,7 +956,7 @@ if(GA_ID){
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList" tabindex="0" role="region" aria-label="How to play instructions">
       <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
-      <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. The wave banner previews the next approach. If the break ends before you choose, you receive supplies.</div></div>
+      <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. You can change your selection, including while paused. Your latest choice takes effect when the countdown ends. If you leave it unselected, you receive supplies. The wave banner previews the next approach.</div></div>
       <div class="rl hot"><div class="kx">Deploy</div><div class="tx">Choose a reinforcement, then <b>tap the field</b> to set its arrival point. Help takes a moment to arrive, so plan ahead. You can also select a named farm edge using the arrival controls.</div></div>
       <div class="rl"><div class="kx">Daily raid</div><div class="tx"><b>Today's raid</b> gives everyone the same starting challenge. After your run, <b>Challenge a friend</b> copies a fresh attempt at that raid; Copy link shares your recorded battle.</div></div>
       <div class="rl"><div class="kx">Other modes</div><div class="tx"><b>Coop defense</b> is a single custom raid. <b>Open battle</b> is the original army-versus-army simulator. Both remain available in the matchup settings.</div></div>
@@ -1003,14 +1003,14 @@ if(GA_ID){
     <div class="raidPrepCard">
       <div class="raidPrepHeader"><span class="fieldEyebrow">A moment to regroup</span></div>
       <h2 id="raidPrepTitle">The flock held.</h2>
-      <p id="raidPrepHint">The next wave is coming. Choose one supply reward before it arrives.</p>
+      <p id="raidPrepHint" aria-live="polite">Choose one reward for the next wave. You can change it until the countdown ends.</p>
       <div class="raidPrepTime"><span id="raidPrepTimer" role="timer">Next wave in 10s</span><button id="raidPrepPause" type="button">Pause choices</button></div>
       <div class="raidPrepChoices" aria-label="Choose one reward">
-        <button type="button" data-raid-choice="repair"><span class="rewardMark" aria-hidden="true">╬</span><span class="rewardName">Patch the run</span><span class="rewardDescription">Restore the weakest fence. Buy the hens more time.</span><span class="rewardAction">Choose repairs <span aria-hidden="true">↗</span></span></button>
-        <button type="button" data-raid-choice="recruit"><span class="rewardMark" aria-hidden="true">+6</span><span class="rewardName">Call the geese</span><span class="rewardDescription">Six stubborn defenders join your surviving flock.</span><span class="rewardAction">Choose recruits <span aria-hidden="true">↗</span></span></button>
-        <button type="button" data-raid-choice="save"><span class="rewardMark" aria-hidden="true">+</span><span class="rewardName">Stock the chest</span><span class="rewardDescription">Bank extra supplies for the reinforcement you need next.</span><span class="rewardAction">Choose supplies <span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="repair"><span class="rewardMark" aria-hidden="true">╬</span><span class="rewardName">Patch the run</span><span class="rewardDescription">Restore the weakest fence. Buy the hens more time.</span><span class="rewardAction"><span class="rewardActionLabel">Choose repairs</span><span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="recruit"><span class="rewardMark" aria-hidden="true">+6</span><span class="rewardName">Call the geese</span><span class="rewardDescription">Six stubborn defenders join your surviving flock.</span><span class="rewardAction"><span class="rewardActionLabel">Choose recruits</span><span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="save"><span class="rewardMark" aria-hidden="true">+</span><span class="rewardName">Stock the chest</span><span class="rewardDescription">Bank extra supplies for the reinforcement you need next.</span><span class="rewardAction"><span class="rewardActionLabel">Choose supplies</span><span aria-hidden="true">↗</span></span></button>
       </div>
-      <p class="raidPrepFoot">One reward per break. Supplies are saved automatically if time runs out.</p>
+      <p class="raidPrepFoot">Your latest choice takes effect at the next wave. Leave it unselected to receive supplies.</p>
     </div>
   </section>
 

@@ -956,7 +956,7 @@ if(GA_ID){
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList" tabindex="0" role="region" aria-label="How to play instructions">
       <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
-      <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. The wave banner previews the next approach. If the break ends before you choose, you receive supplies.</div></div>
+      <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. You can change your selection, including while paused. Your latest choice takes effect when the countdown ends. If you leave it unselected, you receive supplies. The wave banner previews the next approach.</div></div>
       <div class="rl hot"><div class="kx">Deploy</div><div class="tx">Choose a reinforcement, then <b>tap the field</b> to set its arrival point. Help takes a moment to arrive, so plan ahead. You can also select a named farm edge using the arrival controls.</div></div>
       <div class="rl"><div class="kx">Daily raid</div><div class="tx"><b>Today's raid</b> gives everyone the same starting challenge. After your run, <b>Challenge a friend</b> copies a fresh attempt at that raid; Copy link shares your recorded battle.</div></div>
       <div class="rl"><div class="kx">Other modes</div><div class="tx"><b>Coop defense</b> is a single custom raid. <b>Open battle</b> is the original army-versus-army simulator. Both remain available in the matchup settings.</div></div>
@@ -1003,14 +1003,14 @@ if(GA_ID){
     <div class="raidPrepCard">
       <div class="raidPrepHeader"><span class="fieldEyebrow">A moment to regroup</span></div>
       <h2 id="raidPrepTitle">The flock held.</h2>
-      <p id="raidPrepHint">The next wave is coming. Choose one supply reward before it arrives.</p>
+      <p id="raidPrepHint" aria-live="polite">Choose one reward for the next wave. You can change it until the countdown ends.</p>
       <div class="raidPrepTime"><span id="raidPrepTimer" role="timer">Next wave in 10s</span><button id="raidPrepPause" type="button">Pause choices</button></div>
       <div class="raidPrepChoices" aria-label="Choose one reward">
-        <button type="button" data-raid-choice="repair"><span class="rewardMark" aria-hidden="true">╬</span><span class="rewardName">Patch the run</span><span class="rewardDescription">Restore the weakest fence. Buy the hens more time.</span><span class="rewardAction">Choose repairs <span aria-hidden="true">↗</span></span></button>
-        <button type="button" data-raid-choice="recruit"><span class="rewardMark" aria-hidden="true">+6</span><span class="rewardName">Call the geese</span><span class="rewardDescription">Six stubborn defenders join your surviving flock.</span><span class="rewardAction">Choose recruits <span aria-hidden="true">↗</span></span></button>
-        <button type="button" data-raid-choice="save"><span class="rewardMark" aria-hidden="true">+</span><span class="rewardName">Stock the chest</span><span class="rewardDescription">Bank extra supplies for the reinforcement you need next.</span><span class="rewardAction">Choose supplies <span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="repair"><span class="rewardMark" aria-hidden="true">╬</span><span class="rewardName">Patch the run</span><span class="rewardDescription">Restore the weakest fence. Buy the hens more time.</span><span class="rewardAction"><span class="rewardActionLabel">Choose repairs</span><span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="recruit"><span class="rewardMark" aria-hidden="true">+6</span><span class="rewardName">Call the geese</span><span class="rewardDescription">Six stubborn defenders join your surviving flock.</span><span class="rewardAction"><span class="rewardActionLabel">Choose recruits</span><span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="save"><span class="rewardMark" aria-hidden="true">+</span><span class="rewardName">Stock the chest</span><span class="rewardDescription">Bank extra supplies for the reinforcement you need next.</span><span class="rewardAction"><span class="rewardActionLabel">Choose supplies</span><span aria-hidden="true">↗</span></span></button>
       </div>
-      <p class="raidPrepFoot">One reward per break. Supplies are saved automatically if time runs out.</p>
+      <p class="raidPrepFoot">Your latest choice takes effect at the next wave. Leave it unselected to receive supplies.</p>
     </div>
   </section>
 
@@ -4009,7 +4009,9 @@ function raidStep(dt){
     // The farm holds still while supplies and command cooldowns keep ticking.
     cmdStep(dt);RAID.prepLeft=Math.max(0,RAID.prepLeft-dt);
     if(RAID.prepLeft<=1e-7){
-      if(!RAID.choice)raidChoose('save');
+      if(raidLegacyChoices()){
+        if(!RAID.choice)raidChoose('save');
+      }else if(!raidApplyChoice(RAID.choice||'save'))raidApplyChoice('save');
       raidStartWave(RAID.wave+1);
     }
     return;
@@ -4038,8 +4040,21 @@ function raidRepairPanel(k,amount){
     }
   }
 }
+// Previous shared replays keep the immediate, locked reward they recorded.
+function raidLegacyChoices(){return typeof REPLAY!=='undefined'&&REPLAY.playback&&REPLAY.current&&REPLAY.current.sim==='2026-10-21.1';}
+function raidCanChoose(choice){
+  if(!RAID.active||RAID.phase!=='prep'||!['repair','recruit','save'].includes(choice)||(raidLegacyChoices()&&RAID.choice))return false;
+  if(choice==='recruit'&&N+raidReserved()+6+(typeof deploymentReserved==='function'?deploymentReserved():0)>MAXA)return false;
+  return true;
+}
 function raidChoose(choice){
-  if(!RAID.active||RAID.phase!=='prep'||RAID.choice||!['repair','recruit','save'].includes(choice))return false;
+  if(!raidCanChoose(choice)||RAID.choice===choice)return false;
+  if(raidLegacyChoices())return raidApplyChoice(choice);
+  // Only the selection changes; abandoned choices never spend RNG or grant rewards.
+  RAID.choice=choice;return true;
+}
+function raidApplyChoice(choice){
+  if(!RAID.active||RAID.phase!=='prep'||!['repair','recruit','save'].includes(choice)||RAID.choices.some(c=>c.wave===RAID.wave))return false;
   if(choice==='recruit'&&N+raidReserved()+6+(typeof deploymentReserved==='function'?deploymentReserved():0)>MAXA)return false;
   if(choice==='repair'){
     const panels=COOP.sections.map((s,k)=>({k,h:s.hp/s.maxHp})).sort((a,b)=>a.h-b.h||a.k-b.k);
@@ -6353,6 +6368,12 @@ function syncRaidSetup(){
   const foe=$('rosterFoe').closest('details');if(foe)foe.hidden=raid;
   if(enemySlider)enemySlider.classList.toggle('scriptedRoster',raid);
 }
+function raidSelectedChoice(){
+  if(!REPLAY.playback){
+    for(let i=REPLAY.pending.length-1;i>=0;i--)if(REPLAY.pending[i].type==='choice')return REPLAY.pending[i].k;
+  }
+  return RAID.choice;
+}
 function raidHud(){
   document.body.classList.toggle('raid',RAID.active);
   const active=RAID.active&&SEQ.phase!=='idle'&&!BATTLE.over;
@@ -6369,12 +6390,20 @@ function raidHud(){
     $('raidDirection').textContent=(prep?'Next attack: ':'Approach: ')+raidDirection(prep?RAID.nextApproach:RAID.approach);
     $('raidProgress').value=((RAID.wave-1)+(prep?1:Math.min(.95,(RAID.waveTime||0)/22)))/3*100;
     $('raidPrepTitle').textContent='Wave '+RAID.wave+' held';
-    $('raidPrepHint').textContent=RAID.choice?({repair:'Fence repairs complete.',recruit:'Six geese have joined your defense.',save:'18 supplies banked.'}[RAID.choice]):'Choose one reward. Your survivors stay for the next attack.';
+    const selected=raidSelectedChoice();
+    const rewardNames={repair:'fence repairs',recruit:'six geese',save:'18 supplies'};
+    const hint=REPLAY.playback?'Replaying your regroup choice.':selected?'Selected: '+rewardNames[selected]+'. Change it until the next wave starts.':'Choose one reward for the next wave. You can change it until the countdown ends.';
+    if($('raidPrepHint').textContent!==hint)$('raidPrepHint').textContent=hint;
+    const footer=$('raidPrep').querySelector('.raidPrepFoot'),footnote=REPLAY.playback?'Watching the choice recorded in this battle.':'Your latest choice takes effect at the next wave. Leave it unselected to receive supplies.';
+    if(footer&&footer.textContent!==footnote)footer.textContent=footnote;
     if($('raidPrepPause'))$('raidPrepPause').textContent=VIEW.paused?'Resume choices':'Pause choices';
-    $('raidPrepTimer').textContent=VIEW.paused?'Paused':REPLAY.playback?'Replaying your choice · '+Math.ceil(RAID.prepLeft)+'s':'Next wave in '+Math.ceil(RAID.prepLeft)+'s · no choice banks supplies';
+    $('raidPrepTimer').textContent=REPLAY.playback?(VIEW.paused?'Replay paused':'Replaying your choice · '+Math.ceil(RAID.prepLeft)+'s'):VIEW.paused?'Paused · you can still change your choice':'Next wave in '+Math.ceil(RAID.prepLeft)+'s';
     document.querySelectorAll('[data-raid-choice]').forEach(b=>{
-      b.disabled=!!RAID.choice||REPLAY.playback||VIEW.paused;
-      b.classList.toggle('chosen',b.dataset.raidChoice===RAID.choice);b.setAttribute('aria-pressed',String(b.dataset.raidChoice===RAID.choice));
+      const k=b.dataset.raidChoice,chosen=k===selected;
+      b.disabled=REPLAY.playback||!raidCanChoose(k);
+      b.classList.toggle('chosen',chosen);b.setAttribute('aria-pressed',String(chosen));
+      const label=b.querySelector('.rewardActionLabel'),action=chosen?'Selected':({repair:'Choose repairs',recruit:'Choose recruits',save:'Choose supplies'}[k]);
+      if(label&&label.textContent!==action)label.textContent=action;
     });
   }
   const placing=!!DEPLOYMENT.selected&&active&&!prep;
@@ -6428,7 +6457,7 @@ function renderRaidAwards(){
     const text=document.createElement('span');text.textContent=detail;item.append(title,text);box.appendChild(item);
   }
   if(CFG.challenge){
-    const score=raidScore(),key='com.judgedeanllc.chickens.daily.'+SIM_VERSION+'.'+CFG.challenge;
+    const score=raidScore(),key='com.judgedeanllc.chickens.daily.'+(REPLAY.current?.sim||SIM_VERSION)+'.'+CFG.challenge;
     let best=score;
     try{best=Math.max(score,Number(localStorage.getItem(key))||0);if(!REPLAY.playback)localStorage.setItem(key,String(best));}catch(e){}
     const note=document.createElement('p');note.className='dailyScore';
@@ -6446,7 +6475,9 @@ function initRaidUI(){
   if($('raidPrepPause'))$('raidPrepPause').addEventListener('click',()=>setPaused(!VIEW.paused));
   $('deployCancel').addEventListener('click',cancelDeployment);
   document.querySelectorAll('[data-raid-choice]').forEach(b=>b.addEventListener('click',()=>{
-    if(queueBattleAction('choice',b.dataset.raidChoice))track('wave_reward',{choice:b.dataset.raidChoice,wave:RAID.wave});
+    if(queueBattleAction('choice',b.dataset.raidChoice)){
+      raidHud();track('wave_reward',{choice:b.dataset.raidChoice,wave:RAID.wave});
+    }
   }));
   document.querySelectorAll('[data-deploy-sector]').forEach(b=>b.addEventListener('click',()=>commitDeployment(arrivalPoint(Number(b.dataset.deploySector)*Math.PI/4))));
   let down=null;
@@ -6514,7 +6545,7 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-10-21.1';
+const REPLAY_VERSION=2, SIM_VERSION='2026-10-22.1';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function rosterLimit(mode){return mode==='raid'?MAXA-RAID_WAVES.reduce((n,w)=>n+w.packets.reduce((m,p)=>m+p.n,0),0):MAXA;}
@@ -6532,7 +6563,7 @@ function validateRoster(rows,mode='battle'){
   return total;
 }
 function validateFight(f){
-  if(!f||f.v!==REPLAY_VERSION||f.sim!==SIM_VERSION) throw Error('This replay uses a different simulator version.');
+  if(!f||f.v!==REPLAY_VERSION||![SIM_VERSION,'2026-10-21.1'].includes(f.sim)) throw Error('This replay uses a different simulator version.');
   validateRoster(f.roster,f.mode);
   if(!['raid','defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
   if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
@@ -6621,13 +6652,23 @@ function resetReplayRuntime(){
   BATTLE.tick=0; VIEW.paused=false; REPLAY.seeking=false; REPLAY.seekTo=0;
 }
 function queueBattleAction(type,k,position=null){
-  if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback||(RAID.active&&RAID.phase==='prep'&&type!=='choice')) return false;
+  if(!BATTLE.running||BATTLE.over||(VIEW.paused&&type!=='choice')||REPLAY.playback||(RAID.active&&RAID.phase==='prep'&&type!=='choice')) return false;
+  if(type==='choice'){
+    if(!raidCanChoose(k))return false;
+    const pending=REPLAY.pending.filter(a=>a.type==='choice');
+    if((pending.length?pending[pending.length-1].k:RAID.choice)===k)return false;
+    const remaining=REPLAY.pending.filter(a=>a.type!=='choice');
+    // Only the last selection before a fixed tick needs recording. Choosing the
+    // already-applied selection again cancels an unprocessed change, even paused.
+    if(k!==RAID.choice&&(remaining.length>=32||REPLAY.current.actions.length+remaining.length>=512))return false;
+    REPLAY.pending=remaining;
+    if(k!==RAID.choice)REPLAY.pending.push({tick:BATTLE.tick+1,type,k});
+    return true;
+  }
   if(REPLAY.pending.length>=32||REPLAY.current.actions.length+REPLAY.pending.length>=512) return false;
   if(type==='deploy'){
     const d=DEPLOY.find(d=>d.k===k); if(!d||!canDeploy(d)) return false;
     if(RAID.active&&(!position||!Number.isFinite(position.x)||!Number.isFinite(position.z)))return false;
-  }else if(type==='choice'){
-    if(!RAID.active||RAID.phase!=='prep'||RAID.choice||!['repair','recruit','save'].includes(k))return false;
   }else if(type!=='command'||!cmdReady(k)) return false;
   if(REPLAY.pending.some(a=>a.type===type&&a.k===k))return false;
   REPLAY.pending.push({tick:BATTLE.tick+1,type,k,...(position?{x:position.x,z:position.z}:{})}); return true;

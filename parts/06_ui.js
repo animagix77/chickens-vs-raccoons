@@ -51,7 +51,7 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-10-21.1';
+const REPLAY_VERSION=2, SIM_VERSION='2026-10-22.1';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
 function rosterLimit(mode){return mode==='raid'?MAXA-RAID_WAVES.reduce((n,w)=>n+w.packets.reduce((m,p)=>m+p.n,0),0):MAXA;}
@@ -69,7 +69,7 @@ function validateRoster(rows,mode='battle'){
   return total;
 }
 function validateFight(f){
-  if(!f||f.v!==REPLAY_VERSION||f.sim!==SIM_VERSION) throw Error('This replay uses a different simulator version.');
+  if(!f||f.v!==REPLAY_VERSION||![SIM_VERSION,'2026-10-21.1'].includes(f.sim)) throw Error('This replay uses a different simulator version.');
   validateRoster(f.roster,f.mode);
   if(!['raid','defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
   if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
@@ -158,13 +158,23 @@ function resetReplayRuntime(){
   BATTLE.tick=0; VIEW.paused=false; REPLAY.seeking=false; REPLAY.seekTo=0;
 }
 function queueBattleAction(type,k,position=null){
-  if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback||(RAID.active&&RAID.phase==='prep'&&type!=='choice')) return false;
+  if(!BATTLE.running||BATTLE.over||(VIEW.paused&&type!=='choice')||REPLAY.playback||(RAID.active&&RAID.phase==='prep'&&type!=='choice')) return false;
+  if(type==='choice'){
+    if(!raidCanChoose(k))return false;
+    const pending=REPLAY.pending.filter(a=>a.type==='choice');
+    if((pending.length?pending[pending.length-1].k:RAID.choice)===k)return false;
+    const remaining=REPLAY.pending.filter(a=>a.type!=='choice');
+    // Only the last selection before a fixed tick needs recording. Choosing the
+    // already-applied selection again cancels an unprocessed change, even paused.
+    if(k!==RAID.choice&&(remaining.length>=32||REPLAY.current.actions.length+remaining.length>=512))return false;
+    REPLAY.pending=remaining;
+    if(k!==RAID.choice)REPLAY.pending.push({tick:BATTLE.tick+1,type,k});
+    return true;
+  }
   if(REPLAY.pending.length>=32||REPLAY.current.actions.length+REPLAY.pending.length>=512) return false;
   if(type==='deploy'){
     const d=DEPLOY.find(d=>d.k===k); if(!d||!canDeploy(d)) return false;
     if(RAID.active&&(!position||!Number.isFinite(position.x)||!Number.isFinite(position.z)))return false;
-  }else if(type==='choice'){
-    if(!RAID.active||RAID.phase!=='prep'||RAID.choice||!['repair','recruit','save'].includes(k))return false;
   }else if(type!=='command'||!cmdReady(k)) return false;
   if(REPLAY.pending.some(a=>a.type===type&&a.k===k))return false;
   REPLAY.pending.push({tick:BATTLE.tick+1,type,k,...(position?{x:position.x,z:position.z}:{})}); return true;

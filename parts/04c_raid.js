@@ -81,7 +81,9 @@ function raidStep(dt){
     // The farm holds still while supplies and command cooldowns keep ticking.
     cmdStep(dt);RAID.prepLeft=Math.max(0,RAID.prepLeft-dt);
     if(RAID.prepLeft<=1e-7){
-      if(!RAID.choice)raidChoose('save');
+      if(raidLegacyChoices()){
+        if(!RAID.choice)raidChoose('save');
+      }else if(!raidApplyChoice(RAID.choice||'save'))raidApplyChoice('save');
       raidStartWave(RAID.wave+1);
     }
     return;
@@ -110,8 +112,21 @@ function raidRepairPanel(k,amount){
     }
   }
 }
+// Previous shared replays keep the immediate, locked reward they recorded.
+function raidLegacyChoices(){return typeof REPLAY!=='undefined'&&REPLAY.playback&&REPLAY.current&&REPLAY.current.sim==='2026-10-21.1';}
+function raidCanChoose(choice){
+  if(!RAID.active||RAID.phase!=='prep'||!['repair','recruit','save'].includes(choice)||(raidLegacyChoices()&&RAID.choice))return false;
+  if(choice==='recruit'&&N+raidReserved()+6+(typeof deploymentReserved==='function'?deploymentReserved():0)>MAXA)return false;
+  return true;
+}
 function raidChoose(choice){
-  if(!RAID.active||RAID.phase!=='prep'||RAID.choice||!['repair','recruit','save'].includes(choice))return false;
+  if(!raidCanChoose(choice)||RAID.choice===choice)return false;
+  if(raidLegacyChoices())return raidApplyChoice(choice);
+  // Only the selection changes; abandoned choices never spend RNG or grant rewards.
+  RAID.choice=choice;return true;
+}
+function raidApplyChoice(choice){
+  if(!RAID.active||RAID.phase!=='prep'||!['repair','recruit','save'].includes(choice)||RAID.choices.some(c=>c.wave===RAID.wave))return false;
   if(choice==='recruit'&&N+raidReserved()+6+(typeof deploymentReserved==='function'?deploymentReserved():0)>MAXA)return false;
   if(choice==='repair'){
     const panels=COOP.sections.map((s,k)=>({k,h:s.hp/s.maxHp})).sort((a,b)=>a.h-b.h||a.k-b.k);

@@ -35,6 +35,12 @@ function syncRaidSetup(){
   const foe=$('rosterFoe').closest('details');if(foe)foe.hidden=raid;
   if(enemySlider)enemySlider.classList.toggle('scriptedRoster',raid);
 }
+function raidSelectedChoice(){
+  if(!REPLAY.playback){
+    for(let i=REPLAY.pending.length-1;i>=0;i--)if(REPLAY.pending[i].type==='choice')return REPLAY.pending[i].k;
+  }
+  return RAID.choice;
+}
 function raidHud(){
   document.body.classList.toggle('raid',RAID.active);
   const active=RAID.active&&SEQ.phase!=='idle'&&!BATTLE.over;
@@ -51,12 +57,20 @@ function raidHud(){
     $('raidDirection').textContent=(prep?'Next attack: ':'Approach: ')+raidDirection(prep?RAID.nextApproach:RAID.approach);
     $('raidProgress').value=((RAID.wave-1)+(prep?1:Math.min(.95,(RAID.waveTime||0)/22)))/3*100;
     $('raidPrepTitle').textContent='Wave '+RAID.wave+' held';
-    $('raidPrepHint').textContent=RAID.choice?({repair:'Fence repairs complete.',recruit:'Six geese have joined your defense.',save:'18 supplies banked.'}[RAID.choice]):'Choose one reward. Your survivors stay for the next attack.';
+    const selected=raidSelectedChoice();
+    const rewardNames={repair:'fence repairs',recruit:'six geese',save:'18 supplies'};
+    const hint=REPLAY.playback?'Replaying your regroup choice.':selected?'Selected: '+rewardNames[selected]+'. Change it until the next wave starts.':'Choose one reward for the next wave. You can change it until the countdown ends.';
+    if($('raidPrepHint').textContent!==hint)$('raidPrepHint').textContent=hint;
+    const footer=$('raidPrep').querySelector('.raidPrepFoot'),footnote=REPLAY.playback?'Watching the choice recorded in this battle.':'Your latest choice takes effect at the next wave. Leave it unselected to receive supplies.';
+    if(footer&&footer.textContent!==footnote)footer.textContent=footnote;
     if($('raidPrepPause'))$('raidPrepPause').textContent=VIEW.paused?'Resume choices':'Pause choices';
-    $('raidPrepTimer').textContent=VIEW.paused?'Paused':REPLAY.playback?'Replaying your choice · '+Math.ceil(RAID.prepLeft)+'s':'Next wave in '+Math.ceil(RAID.prepLeft)+'s · no choice banks supplies';
+    $('raidPrepTimer').textContent=REPLAY.playback?(VIEW.paused?'Replay paused':'Replaying your choice · '+Math.ceil(RAID.prepLeft)+'s'):VIEW.paused?'Paused · you can still change your choice':'Next wave in '+Math.ceil(RAID.prepLeft)+'s';
     document.querySelectorAll('[data-raid-choice]').forEach(b=>{
-      b.disabled=!!RAID.choice||REPLAY.playback||VIEW.paused;
-      b.classList.toggle('chosen',b.dataset.raidChoice===RAID.choice);b.setAttribute('aria-pressed',String(b.dataset.raidChoice===RAID.choice));
+      const k=b.dataset.raidChoice,chosen=k===selected;
+      b.disabled=REPLAY.playback||!raidCanChoose(k);
+      b.classList.toggle('chosen',chosen);b.setAttribute('aria-pressed',String(chosen));
+      const label=b.querySelector('.rewardActionLabel'),action=chosen?'Selected':({repair:'Choose repairs',recruit:'Choose recruits',save:'Choose supplies'}[k]);
+      if(label&&label.textContent!==action)label.textContent=action;
     });
   }
   const placing=!!DEPLOYMENT.selected&&active&&!prep;
@@ -110,7 +124,7 @@ function renderRaidAwards(){
     const text=document.createElement('span');text.textContent=detail;item.append(title,text);box.appendChild(item);
   }
   if(CFG.challenge){
-    const score=raidScore(),key='com.judgedeanllc.chickens.daily.'+SIM_VERSION+'.'+CFG.challenge;
+    const score=raidScore(),key='com.judgedeanllc.chickens.daily.'+(REPLAY.current?.sim||SIM_VERSION)+'.'+CFG.challenge;
     let best=score;
     try{best=Math.max(score,Number(localStorage.getItem(key))||0);if(!REPLAY.playback)localStorage.setItem(key,String(best));}catch(e){}
     const note=document.createElement('p');note.className='dailyScore';
@@ -128,7 +142,9 @@ function initRaidUI(){
   if($('raidPrepPause'))$('raidPrepPause').addEventListener('click',()=>setPaused(!VIEW.paused));
   $('deployCancel').addEventListener('click',cancelDeployment);
   document.querySelectorAll('[data-raid-choice]').forEach(b=>b.addEventListener('click',()=>{
-    if(queueBattleAction('choice',b.dataset.raidChoice))track('wave_reward',{choice:b.dataset.raidChoice,wave:RAID.wave});
+    if(queueBattleAction('choice',b.dataset.raidChoice)){
+      raidHud();track('wave_reward',{choice:b.dataset.raidChoice,wave:RAID.wave});
+    }
   }));
   document.querySelectorAll('[data-deploy-sector]').forEach(b=>b.addEventListener('click',()=>commitDeployment(arrivalPoint(Number(b.dataset.deploySector)*Math.PI/4))));
   let down=null;

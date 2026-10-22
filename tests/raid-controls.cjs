@@ -40,4 +40,40 @@ assert.equal(r.eval("JSON.stringify(rosterList())"),'[{"k":"rooster","n":260}]')
 assert.equal(r.eval("validateFight({...configFight(),challenge:null,roster:[{k:'rooster',n:4000},{k:'goose',n:125}]}).roster[0].n"),4000,'large valid custom raids can be shared');
 assert.throws(()=>r.eval("validateRoster([{k:'rooster',n:MAXA}], 'raid')"),/reserved/,'setup reserves all future predators');
 assert.throws(()=>r.eval("validateFight({...configFight(),challenge:null,roster:[{k:'rooster',n:MAXA}]})"),/reserved/,'replay uses the same capacity rule');
+assert.equal(r.eval("validateFight({...configFight(),sim:'2026-10-21.1'}).sim"),'2026-10-21.1','previous raid links keep their recorded rules');
+assert.throws(()=>r.eval("validateFight({...configFight(),sim:'unsupported'})"),/different simulator/);
 console.log('PASS raid arrival payment/delay/coordinates/reset, fixed-frame recorded replay, daily seed/roster/date validation, pause/playback guards');
+
+// A paused countdown is a safe place to reconsider; inputs still take effect on
+// a fixed tick so the eventual choice can be replayed without wall-clock timing.
+r.eval("bootTest([{k:'rooster',n:260}],77,[],'raid');RAID.phase='prep';RAID.prepLeft=8;VIEW.paused=true");
+const pausedState=r.eval('JSON.stringify({tick:BATTLE.tick,time:RAID.prepLeft,n:N,pts:CMD.pts,sections:COOP.sections})');
+assert.equal(r.eval("queueBattleAction('choice','repair')"),true);
+assert.equal(r.eval("queueBattleAction('choice','recruit')"),true);
+assert.equal(r.eval("queueBattleAction('choice','save')"),true);
+assert.equal(r.eval("queueBattleAction('choice','save')"),false,'same selection is a no-op');
+assert.equal(r.eval('REPLAY.pending.length'),1,'rapid changes coalesce before a simulation tick');
+assert.equal(r.eval('REPLAY.pending[0].k'),'save');
+assert.equal(r.eval('REPLAY.current.actions.length'),0,'paused edits are not prematurely recorded');
+r.eval('tickTest()');
+assert.equal(r.eval('JSON.stringify({tick:BATTLE.tick,time:RAID.prepLeft,n:N,pts:CMD.pts,sections:COOP.sections})'),pausedState,'paused selections cannot change the timer or grant rewards');
+r.eval('VIEW.paused=false;tickTest()');
+assert.equal(r.eval('RAID.choice'),'save');
+assert.equal(r.eval('REPLAY.current.actions.length'),1);
+assert.equal(r.eval('RAID.choices.length'),0,'selected reward is not committed before zero');
+assert.equal(r.eval("queueBattleAction('choice','recruit')"),true);
+assert.equal(r.eval("queueBattleAction('choice','save')"),true,'returning to current selection cancels the pending change');
+assert.equal(r.eval('REPLAY.pending.length'),0);
+r.eval('tickTest()');assert.equal(r.eval('REPLAY.current.actions.length'),1,'cancelled changes cannot cause a replay no-op failure');
+r.eval('COOP.sections[0].hp=20;COOP.sections[1].hp=40;RAID.prepLeft=1/60');
+assert.equal(r.eval("queueBattleAction('choice','repair')"),true);
+r.eval('tickTest()');
+assert.equal(r.eval('RAID.wave'),2);
+assert.equal(r.eval('RAID.choices.length'),1);
+assert.equal(r.eval('RAID.choices[0].choice'),'repair','the last eligible tick wins');
+assert.equal(r.eval('COOP.sections[0].hp'),260);assert.equal(r.eval('COOP.sections[1].hp'),280);
+assert.equal(r.eval("TALE.bought.goose||0"),0,'abandoned recruits never spawn');
+assert.equal(r.eval("queueBattleAction('choice','save')"),false,'the next wave closes editing');
+r.eval("bootTest([{k:'rooster',n:260}],77,[],'raid')");
+assert.equal(r.eval('RAID.choice'),null);assert.equal(r.eval('REPLAY.pending.length'),0,'new fights clear pending selections');
+console.log('PASS editable regroup choices, paused staging, rapid changes/cancellation, final-tick commit, single reward and reset');

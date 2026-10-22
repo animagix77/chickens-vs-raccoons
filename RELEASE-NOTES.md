@@ -1,3 +1,12 @@
+# Change regroup choices until the countdown ends — October 22, 2026
+
+- Regroup cards now select a pending reward. Switch between repairs, recruits and supplies until the countdown expires, including while paused. Only the final choice takes effect when the next wave begins; no selection still grants supplies.
+- The current card stays highlighted and reads Selected. Updated instructions explain when the reward takes effect. Alternatives remain available, subject to recruit capacity.
+- Rapid clicks before the next simulation tick collapse into the last choice. Returning to the already recorded selection cancels a pending change. Paused changes do not advance time or apply rewards and are recorded on resume.
+- New battles use simulation version `2026-10-22.1`. Existing `2026-10-21.1` replay links preserve their original immediate reward timing and results. Personal bests remain separated by the recorded simulation version.
+
+Validation: targeted controls checks cover paused edits, rapid changes, cancellation, the final eligible tick, one final reward and reset. Raid tests cover deferred rewards, abandoned-choice state/RNG identity, complete revised-choice replays, and prior-version playback against the preceding release.
+
 # Save the Coop: three waves and a richer farm — October 21, 2026
 
 Developed by Judge Dean LLC.
