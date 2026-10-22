@@ -10,7 +10,7 @@ Developed by **Judge Dean LLC**. The game runs from one HTML file with Three.js 
 
 ## October 2026 update
 
-**Save the Coop** is the new default: defend two hens through three escalating waves of raccoons, flanking foxes, and a final bear. Between waves, choose a fence repair, six geese, or extra supplies. Change your choice until the countdown ends, including while paused; only the final selection takes effect as the next wave starts. Surviving defenders stay with you. There is no timed victory: stop every wave to win, and keep fighting after a breach or the first hen is lost.
+**Save the Coop** is the new default: defend two hens through three escalating waves of raccoons, flanking foxes, and bears in the final wave. Larger starting flocks attract larger raids. Setup shows the exact count and species in each wave before you begin; the plan then stays fixed, so reinforcements do not bring extra predators. Between waves, choose a fence repair, six geese, or extra supplies. Change your choice until the countdown ends, including while paused; only the final selection takes effect as the next wave starts. Surviving defenders stay with you. There is no timed victory: stop every wave to win, and keep fighting after a breach or the first hen is lost.
 
 Choose where reinforcements arrive by clicking the battlefield or selecting a compass direction. Supplies are charged when ordered and the squad arrives after 1.8 simulated seconds. The bear marks its intended fence strike before attacking. Every accepted choice, arrival position, and command is included in the replay.
 

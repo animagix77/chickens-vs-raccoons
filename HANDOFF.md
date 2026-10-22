@@ -8,7 +8,7 @@ and animated in Blender and exported into the page.
 **Repo:** https://github.com/animagix77/chickens-vs-raccoons (GitHub Pages serves `main`)
 **Working folder:** `LaCie ssd/vibe_coding/chics vs coons`
 **Developer:** Judge Dean LLC
-**Simulation version:** `2026-10-22.1` (`SIM_VERSION` in `parts/06_ui.js`)
+**Simulation version:** `2026-10-22.2` (`SIM_VERSION` in `parts/06_ui.js`)
 
 Last updated 2026-10-22. For what changed and when, see `RELEASE-NOTES.md`
 (newest first). This file covers how the project works and how to work on it.
@@ -34,6 +34,9 @@ is broken.
 
 - **Three modes.** *Save the Coop* is the default: three escalating waves with
   eight-second breaks to repair two panels, recruit six geese, or bank 18 supplies.
+  Wave sizes scale with the initial defender count, with exact species and counts
+  previewed in setup. Later reinforcements and casualties never change the plan.
+  The 260-rooster daily roster retains its original 45-predator schedule.
   Selections remain editable until the timer ends, including while paused; only
   the final choice grants a reward. Paused edits enter the action log on resume.
   Defenders persist between waves. Foxes flank; the final bear warns before its
@@ -49,7 +52,9 @@ is broken.
 - **Replays.** Battle links record the seed, the roster and every command.
   Results show up to 12 highlight moments, and you can seek to any of them.
   `2026-10-21.1` links use their original immediate, locked regroup rewards;
-  new battles defer the reward until the next wave. Other old versions are rejected.
+  later battles defer the reward until the next wave. Both `2026-10-21.1` and
+  `2026-10-22.1` links retain their fixed 45-predator schedule and original starting
+  capacity. Other old versions are rejected.
 - **Final moment.** A true elimination plays a slow-motion push-in on the last
   casualty before the result card (`parts/11_finale.js`). Reduced Motion gets a
   short steady hold instead.
@@ -200,6 +205,11 @@ The model data adds about 400 KB to the page, which is now about 1.36 MB
 
 - **Agents are a structure of arrays** (`A.x`, `A.hp`, `A.st`…, capacity
   `MAXA` = 5200). `A.st` is 0 fighting, 1 panicking, 2 dead.
+- **Raid counts** use `raidPlanFor(startFarm, sim)`: a minimum count of 40,
+  anchored at 260 defenders. Raccoons use the count ratio, foxes its 0.65 power,
+  and bears its square root capped at four, with each packet rounded separately.
+  The plan never consumes randomness. Starting capacity reserves the entire raid
+  and 80 reinforcement slots; dead animal IDs are not reclaimed.
 - **A fresh `InstancedMesh` has `count === max`.** `SkinSquad` starts at
   `count = 0`, and `setDetailLive()` calls `renderAgents()` right after a
   rebuild. Keep both, or one frame will show thousands of garbage instances.
@@ -222,6 +232,8 @@ The model data adds about 400 KB to the page, which is now about 1.36 MB
 | `node tests/regression.cjs --baseline-dir DIR` | six complete seeded battles vs another checkout |
 | `node tests/coop.cjs` | fences, breaches, repair, Rally, hen verdicts, defense replays |
 | `node tests/raid.cjs` | three waves, choices, predator tactics, reservations, full replay and balance samples |
+| `node tests/raid-scaling.cjs` | monotonic wave scaling, frozen starting count, full-wave reservations and versioned replays |
+| `RAID_SCALING_BASELINE_DIR=DIR node tests/raid-scaling.cjs` | additionally compare a full old replay with a `2026-10-22.1` checkout |
 | `RAID_BASELINE_DIR=DIR node tests/raid.cjs` | additionally compare previous-version replays with a `2026-10-21.1` checkout |
 | `node tests/raid-controls.cjs` | arrival payment/delay/positions/reset, daily validation and input guards |
 | `node tests/targeting.cjs` | nearest-predator pursuit, fence routing, RNG isolation |

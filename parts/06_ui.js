@@ -51,11 +51,22 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-10-22.1';
+const REPLAY_VERSION=2, SIM_VERSION='2026-10-22.2';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
-function rosterLimit(mode){return mode==='raid'?MAXA-RAID_WAVES.reduce((n,w)=>n+w.packets.reduce((m,p)=>m+p.n,0),0):MAXA;}
-function validateRoster(rows,mode='battle'){
+function rosterLimit(mode,sim=SIM_VERSION){
+  if(mode!=='raid')return MAXA;
+  // Reserve the full scaled raid plus room for reinforcements. Previous replays
+  // keep their original capacity limit as well as their original wave sizes.
+  const spare=['2026-10-21.1','2026-10-22.1'].includes(sim)?0:80;
+  let low=0,high=MAXA;
+  while(low<high){
+    const count=Math.ceil((low+high)/2);
+    if(count+raidPlanTotal(count,sim)+spare<=MAXA)low=count;else high=count-1;
+  }
+  return low;
+}
+function validateRoster(rows,mode='battle',sim=SIM_VERSION){
   if(!Array.isArray(rows)||!rows.length||rows.length>UNITS.length) throw Error('Choose at least one animal.');
   let total=0; const seen=new Set();
   for(const r of rows){
@@ -63,14 +74,14 @@ function validateRoster(rows,mode='battle'){
       throw Error('Invalid army roster.');
     seen.add(r.k); total+=r.n;
   }
-  const limit=rosterLimit(mode);
+  const limit=rosterLimit(mode,sim);
   if(mode==='raid'&&rows.some(r=>UNITS[UI_[r.k]].team!==0))throw Error('Choose farm defenders; the raid supplies its predators.');
   if(total>limit) throw Error('The field holds '+limit.toLocaleString()+' starting animals'+(mode==='raid'?' with space reserved for all three waves':'')+'. Remove '+(total-limit).toLocaleString()+' before starting.');
   return total;
 }
 function validateFight(f){
-  if(!f||f.v!==REPLAY_VERSION||![SIM_VERSION,'2026-10-21.1'].includes(f.sim)) throw Error('This replay uses a different simulator version.');
-  validateRoster(f.roster,f.mode);
+  if(!f||f.v!==REPLAY_VERSION||![SIM_VERSION,'2026-10-21.1','2026-10-22.1'].includes(f.sim)) throw Error('This replay uses a different simulator version.');
+  validateRoster(f.roster,f.mode,f.sim);
   if(!['raid','defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
   if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
   if(f.challenge&&( !validDailyDate(f.challenge)||f.mode!=='raid'||f.arena!=='field'||f.seed!==dailySeed(f.challenge)||JSON.stringify(f.roster)!==JSON.stringify([{k:'rooster',n:260}])))throw Error('Invalid daily challenge.');
@@ -514,7 +525,7 @@ function startBattle(options={}){
   const saved=options.replay?(REPLAY.last||REPLAY.current):seedHeld?REPLAY.loaded:null;
   if(options.replay&&!saved) return notifyBattle('Finish a battle to replay it.');
   if(saved) applyFightConfig(saved);
-  try{ validateRoster(rosterList(),CFG.mode); }catch(e){ return notifyBattle(e.message); }
+  try{ validateRoster(rosterList(),CFG.mode,saved?.sim||SIM_VERSION); }catch(e){ return notifyBattle(e.message); }
   resetReplayRuntime();
   if($('replaySeek'))$('replaySeek').hidden=true;
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
@@ -559,7 +570,7 @@ function standby(){
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
   seedSim(CFG.seed);                 // standby is a preview of the fight you'd get
   callReset();
-  try{ validateRoster(rosterList(),CFG.mode); spawnRoster(rosterList(),CFG.arena==='coop'); }
+  try{ validateRoster(rosterList(),CFG.mode,REPLAY.loaded?.sim||SIM_VERSION); spawnRoster(rosterList(),CFG.arena==='coop'); }
   catch(e){ notifyBattle(e.message); }
   if(typeof highlightReset==='function')highlightReset();
   SEQ.phase='idle'; SEQ.t=0;
@@ -674,7 +685,7 @@ function syncSliders(){
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
     preview.textContent=total.toLocaleString()+' animals · '+rows.map(r=>r.n+' '+UNITS[UI_[r.k]].label).join(', ');
-    const limit=rosterLimit(CFG.mode);
+    const limit=rosterLimit(CFG.mode,REPLAY.loaded?.sim||SIM_VERSION);
     if(total>limit) preview.textContent+=' · Over capacity: remove '+(total-limit);
     $('go').disabled=total>limit; $('go').setAttribute('aria-disabled',String(total>limit));
   }

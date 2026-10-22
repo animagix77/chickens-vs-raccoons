@@ -41,6 +41,17 @@ assert.equal(r.eval("validateFight({...configFight(),challenge:null,roster:[{k:'
 assert.throws(()=>r.eval("validateRoster([{k:'rooster',n:MAXA}], 'raid')"),/reserved/,'setup reserves all future predators');
 assert.throws(()=>r.eval("validateFight({...configFight(),challenge:null,roster:[{k:'rooster',n:MAXA}]})"),/reserved/,'replay uses the same capacity rule');
 assert.equal(r.eval("validateFight({...configFight(),sim:'2026-10-21.1'}).sim"),'2026-10-21.1','previous raid links keep their recorded rules');
+assert.equal(r.eval("validateFight({...configFight(),sim:'2026-10-22.1'}).sim"),'2026-10-22.1','editable-choice replays keep their recorded wave sizes');
+for(const sim of ['2026-10-21.1','2026-10-22.1']){
+  assert.equal(r.eval(`validateFight({...configFight(),sim:'${sim}',challenge:null,roster:[{k:'rooster',n:5155}]}).roster[0].n`),5155,'legacy capacity is retained');
+}
+const raidLimit=r.eval("rosterLimit('raid')");
+assert.ok(raidLimit>=4125,'large supported flocks retain room for their scaled raid');
+assert.ok(r.eval(`raidPlanTotal(${raidLimit})+${raidLimit}+80<=MAXA`),'current limit includes all waves and reinforcement space');
+assert.ok(r.eval(`raidPlanTotal(${raidLimit+1})+${raidLimit+1}+80>MAXA`),'the next starting unit exceeds the planned capacity');
+assert.equal(r.eval(`validateRoster([{k:'rooster',n:${raidLimit}}],'raid')`),raidLimit);
+assert.throws(()=>r.eval(`validateRoster([{k:'rooster',n:${raidLimit+1}}],'raid')`),/reserved/);
+assert.equal(r.eval("rosterLimit('battle')"),r.eval('MAXA'),'Open Battle capacity is unchanged');
 assert.throws(()=>r.eval("validateFight({...configFight(),sim:'unsupported'})"),/different simulator/);
 console.log('PASS raid arrival payment/delay/coordinates/reset, fixed-frame recorded replay, daily seed/roster/date validation, pause/playback guards');
 

@@ -747,8 +747,18 @@ if(GA_ID){
   #dailyChallenge small{display:block;font-size:10px;font-weight:400;color:#d2d3bc;margin-top:4px}
   .dailyIcon{display:grid;place-items:center;width:30px;height:30px;border:1px solid #ebce8060;border-radius:50%;font-size:22px}
   #dailyBadge{padding:8px 10px;background:#789b681f;border:1px solid #bed4a84a;border-radius:7px;color:#e1f0ce;font-size:11px;margin:-5px 0 12px;line-height:1.5}
-  .row.scriptedRoster{display:none}.raidRosterNote{display:none;margin:0 0 15px;padding:10px 12px;border-left:2px solid #d6bb74;background:#dfc67e0b;color:#d8dfcb;font-size:11px;line-height:1.6}
-  body.raidMode .raidRosterNote{display:block}.raidRosterNote strong{display:block;color:#f6dfaa;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+  .row.scriptedRoster{display:none}.raidRosterNote{display:none;margin:0 0 15px;padding:12px;border:1px solid #d6bb7440;border-radius:10px;background:#dfc67e0b;color:#d8dfcb;font-size:11px;line-height:1.5}
+  body.raidMode .raidRosterNote{display:block}.raidForecastHeading{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:7px}
+  .raidForecastHeading strong{color:#f6dfaa;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+  #raidForecastKind{font-size:9px;color:#c5d8b7;border:1px solid #b6cc9b42;border-radius:4px;padding:2px 5px;white-space:nowrap}
+  #raidStartingFarm{margin:0 0 9px;color:#e9e4d1;font-size:11px;font-variant-numeric:tabular-nums}
+  .raidWavePreview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .raidWavePreview>div{padding:8px 7px;border:1px solid #e7d7a327;border-radius:6px;background:#10281c65;min-width:0}
+  .raidWavePreview span{display:block;color:#c2cbb6;font-size:9px;letter-spacing:.06em;text-transform:uppercase}
+  .raidWavePreview b{display:block;color:#ffe4a3;font-size:22px;line-height:1.3;font-variant-numeric:tabular-nums}
+  .raidWavePreview small{display:block;color:#d8dfcc;font-size:10px;line-height:1.5;margin-top:3px}
+  #raidForecastTotal{margin:9px 0 0;font-size:12px;font-weight:700;color:#f4e6bf;font-variant-numeric:tabular-nums}
+  #raidScalingHint{margin:7px 0 0;color:#c6d1bd;font-size:11px;line-height:1.55}
   #go,#rulesGo,#playNow{background:linear-gradient(180deg,#f8cd79,#e7ac45);color:#232214;border:1px solid #ffe7a9;
     box-shadow:0 4px 0 #876626,0 10px 24px #f0ba4e21;letter-spacing:.1em}
   #go{min-height:48px}#go:hover,#rulesGo:hover,#playNow:hover{filter:brightness(1.08)}
@@ -955,7 +965,7 @@ if(GA_ID){
     <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList" tabindex="0" role="region" aria-label="How to play instructions">
-      <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
+      <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Larger starting flocks attract larger raids; the setup forecast shows each wave. Enemy numbers are set at the start, so reinforcements do not increase them. Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
       <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. You can change your selection, including while paused. Your latest choice takes effect when the countdown ends. If you leave it unselected, you receive supplies. The wave banner previews the next approach.</div></div>
       <div class="rl hot"><div class="kx">Deploy</div><div class="tx">Choose a reinforcement, then <b>tap the field</b> to set its arrival point. Help takes a moment to arrive, so plan ahead. You can also select a named farm edge using the arrival controls.</div></div>
       <div class="rl"><div class="kx">Daily raid</div><div class="tx"><b>Today's raid</b> gives everyone the same starting challenge. After your run, <b>Challenge a friend</b> copies a fresh attempt at that raid; Copy link shares your recorded battle.</div></div>
@@ -1125,7 +1135,17 @@ if(GA_ID){
       <label for="sB">Raccoons <b id="vB">24</b></label>
       <input type="range" id="sB" min="0" max="600" step="1" value="24">
     </div>
-    <p class="raidRosterNote"><strong>Three attacks from the treeline</strong>Raccoons test the fence. Foxes find the flank. A bear leads the final charge. The predators are set for each wave.</p>
+    <section id="raidRosterNote" class="raidRosterNote" aria-label="Enemy wave forecast">
+      <div class="raidForecastHeading"><strong>Raid forecast</strong><span id="raidForecastKind">Scaled raid</span></div>
+      <p id="raidStartingFarm">Starting flock</p>
+      <div class="raidWavePreview" aria-label="Predators in each wave">
+        <div><span>Wave 1</span><b id="raidForecastCount1">—</b><small id="raidForecastUnits1">Fence raiders</small></div>
+        <div><span>Wave 2</span><b id="raidForecastCount2">—</b><small id="raidForecastUnits2">Fox flank</small></div>
+        <div><span>Wave 3</span><b id="raidForecastCount3">—</b><small id="raidForecastUnits3">Bear charge</small></div>
+      </div>
+      <p id="raidForecastTotal">Three waves</p>
+      <p id="raidScalingHint">Larger flocks attract larger raids. Set at the start; reinforcements do not increase enemy waves.</p>
+    </section>
     <div class="row">
       <label>Bird type</label>
       <div class="seg" id="segBird">
@@ -3942,6 +3962,25 @@ const RAID_WAVES=[
     {at:0,k:'coon',n:8,flank:-.45},{at:6,k:'fox',n:2,flank:Math.PI},
     {at:15,k:'bear',n:1,flank:0}]}
 ];
+// Plans are pure previews: count the initial farm, never later recruits or losses.
+// Earlier links retain their exact packets and random draw order.
+function raidPlanFor(count,sim=SIM_VERSION){
+  const legacy=sim==='2026-10-21.1'||sim==='2026-10-22.1';
+  const factor=Math.max(40,Number.isFinite(count)?count:40)/260;
+  return RAID_WAVES.map(w=>({label:w.label,packets:w.packets.map(p=>({...p,
+    // Raccoons sustain the battle; slower fox scaling avoids overwhelming the hens.
+    n:legacy?p.n:p.k==='bear'?Math.min(4,Math.max(1,Math.round(Math.sqrt(factor)))):Math.max(1,Math.round(p.n*Math.pow(factor,p.k==='fox'?.65:1)))
+  }))}));
+}
+function raidPlanTotal(count,sim=SIM_VERSION){return raidPlanFor(count,sim).reduce((n,w)=>n+w.packets.reduce((m,p)=>m+p.n,0),0);}
+function raidPlanVersion(){
+  if(typeof REPLAY!=='undefined'){
+    if(REPLAY.playback&&REPLAY.current)return REPLAY.current.sim;
+    if(REPLAY.loaded)return REPLAY.loaded.sim;
+  }
+  return SIM_VERSION;
+}
+function raidCurrentPlan(){return raidPlanFor(RAID.startFarm,raidPlanVersion());}
 function raidAngle(wave){return ((((CFG.seed>>>0)%8)+.5)*TAU/8+(wave-1)*2.39996323)%TAU;}
 function raidReset(){
   RAID.active=CFG.mode==='raid';RAID.wave=0;RAID.phase='complete';RAID.waveLabel='';
@@ -3953,9 +3992,9 @@ function raidReset(){
 // Grow only the new species' instance reservation; surviving animals keep their IDs.
 function raidReserved(){
   if(!RAID.active||RAID.phase==='complete')return 0;
-  let total=RAID.pendingRemaining;
-  for(let wave=RAID.wave;wave<RAID_WAVES.length;wave++)
-    for(const packet of RAID_WAVES[wave].packets)total+=packet.n;
+  const plan=raidCurrentPlan();let total=RAID.pendingRemaining;
+  for(let wave=RAID.wave;wave<plan.length;wave++)
+    for(const packet of plan[wave].packets)total+=packet.n;
   return total;
 }
 function raidReserve(kind,count){
@@ -3969,7 +4008,7 @@ function raidReserve(kind,count){
   if(!SQUADS[ui])buildOneSquad(kind);
 }
 function raidSpawn(kind,count,angle,nearCoop=false){
-  // A fixed raid leaves ample capacity, but rejected packets must never be partial.
+  // Reserved arrivals must never spawn a partial packet if capacity is exhausted.
   if(!Number.isInteger(count)||count<1||N+count>MAXA)return false;
   const u=UNITS[UI_[kind]];raidReserve(kind,count);
   for(let n=0;n<count;n++){
@@ -3984,7 +4023,7 @@ function raidSpawn(kind,count,angle,nearCoop=false){
 function raidStartWave(wave){
   RAID.wave=wave;RAID.phase='combat';RAID.waveTime=0;RAID.prepLeft=0;RAID.choice=null;
   RAID.approach=raidAngle(wave);RAID.nextApproach=raidAngle(Math.min(3,wave+1));
-  const plan=RAID_WAVES[wave-1];RAID.waveLabel=plan.label;
+  const plan=raidCurrentPlan()[wave-1];RAID.waveLabel=plan.label;
   RAID.pending=plan.packets.map(p=>({...p}));RAID.pendingRemaining=RAID.pending.reduce((n,p)=>n+p.n,0);
   RAID.threats=[];RAID.bearWind.fill(0);RAID.bearSection.fill(-1);
   coopEvent('wave','Wave '+wave+' · '+plan.label,Math.cos(RAID.approach)*ARENA_R*.9,Math.sin(RAID.approach)*ARENA_R*.9);
@@ -6357,16 +6396,34 @@ function pointerArrival(event){
   if(!raidRay.ray.intersectPlane(raidPlane,raidHit))return null;
   return arrivalPoint(Math.atan2(raidHit.z,raidHit.x));
 }
+function syncRaidForecast(){
+  const count=rosterList().filter(r=>UNITS[UI_[r.k]].team===0).reduce((n,r)=>n+r.n,0);
+  const version=REPLAY.loaded?.sim||SIM_VERSION,plan=raidPlanFor(count,version),recorded=!!REPLAY.loaded;
+  $('raidForecastKind').textContent=recorded?'Recorded raid':'Scaled raid';
+  $('raidStartingFarm').textContent=count.toLocaleString()+' starting defenders';
+  plan.forEach((wave,index)=>{
+    const units=new Map();let total=0;
+    wave.packets.forEach(p=>{total+=p.n;units.set(p.k,(units.get(p.k)||0)+p.n);});
+    $('raidForecastCount'+(index+1)).textContent=total.toLocaleString();
+    $('raidForecastUnits'+(index+1)).textContent=[...units].map(([k,n])=>{
+      const labels={coon:['raccoon','raccoons'],fox:['fox','foxes'],bear:['bear','bears']};
+      return n.toLocaleString()+' '+(labels[k]?labels[k][n===1?0:1]:UNITS[UI_[k]].label.toLowerCase());
+    }).join(' · ');
+  });
+  $('raidForecastTotal').textContent=raidPlanTotal(count,version).toLocaleString()+' predators across three waves';
+  $('raidScalingHint').textContent=recorded?'This recorded raid keeps its original wave sizes. Reinforcements do not increase enemy waves.':'Larger flocks attract larger raids. Set at the start; reinforcements do not increase enemy waves.';
+}
 function syncRaidSetup(){
   const raid=CFG.mode==='raid';document.body.classList.toggle('raidMode',raid);
   $('dailyBadge').textContent=CFG.challenge?'Daily raid · '+CFG.challenge+' · UTC':'Three waves. Two hens. One farm.';
   $('dailyBadge').hidden=!raid;
   $('go').textContent=raid?'Save the Coop':'Fight';
-  // Scripted predators have a fixed roster, visible in the wave preview.
+  // Forecast the enemies from the starting farm before the raid locks its plan.
   const enemySlider=$('sB').closest('.row')||$('sB').parentElement;
   $('sB').disabled=raid;$('sB').setAttribute('aria-label',raid?'Predators are set by the three waves':'Raccoons');
   const foe=$('rosterFoe').closest('details');if(foe)foe.hidden=raid;
   if(enemySlider)enemySlider.classList.toggle('scriptedRoster',raid);
+  if(raid)syncRaidForecast();
 }
 function raidSelectedChoice(){
   if(!REPLAY.playback){
@@ -6545,11 +6602,22 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-10-22.1';
+const REPLAY_VERSION=2, SIM_VERSION='2026-10-22.2';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
-function rosterLimit(mode){return mode==='raid'?MAXA-RAID_WAVES.reduce((n,w)=>n+w.packets.reduce((m,p)=>m+p.n,0),0):MAXA;}
-function validateRoster(rows,mode='battle'){
+function rosterLimit(mode,sim=SIM_VERSION){
+  if(mode!=='raid')return MAXA;
+  // Reserve the full scaled raid plus room for reinforcements. Previous replays
+  // keep their original capacity limit as well as their original wave sizes.
+  const spare=['2026-10-21.1','2026-10-22.1'].includes(sim)?0:80;
+  let low=0,high=MAXA;
+  while(low<high){
+    const count=Math.ceil((low+high)/2);
+    if(count+raidPlanTotal(count,sim)+spare<=MAXA)low=count;else high=count-1;
+  }
+  return low;
+}
+function validateRoster(rows,mode='battle',sim=SIM_VERSION){
   if(!Array.isArray(rows)||!rows.length||rows.length>UNITS.length) throw Error('Choose at least one animal.');
   let total=0; const seen=new Set();
   for(const r of rows){
@@ -6557,14 +6625,14 @@ function validateRoster(rows,mode='battle'){
       throw Error('Invalid army roster.');
     seen.add(r.k); total+=r.n;
   }
-  const limit=rosterLimit(mode);
+  const limit=rosterLimit(mode,sim);
   if(mode==='raid'&&rows.some(r=>UNITS[UI_[r.k]].team!==0))throw Error('Choose farm defenders; the raid supplies its predators.');
   if(total>limit) throw Error('The field holds '+limit.toLocaleString()+' starting animals'+(mode==='raid'?' with space reserved for all three waves':'')+'. Remove '+(total-limit).toLocaleString()+' before starting.');
   return total;
 }
 function validateFight(f){
-  if(!f||f.v!==REPLAY_VERSION||![SIM_VERSION,'2026-10-21.1'].includes(f.sim)) throw Error('This replay uses a different simulator version.');
-  validateRoster(f.roster,f.mode);
+  if(!f||f.v!==REPLAY_VERSION||![SIM_VERSION,'2026-10-21.1','2026-10-22.1'].includes(f.sim)) throw Error('This replay uses a different simulator version.');
+  validateRoster(f.roster,f.mode,f.sim);
   if(!['raid','defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
   if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
   if(f.challenge&&( !validDailyDate(f.challenge)||f.mode!=='raid'||f.arena!=='field'||f.seed!==dailySeed(f.challenge)||JSON.stringify(f.roster)!==JSON.stringify([{k:'rooster',n:260}])))throw Error('Invalid daily challenge.');
@@ -7008,7 +7076,7 @@ function startBattle(options={}){
   const saved=options.replay?(REPLAY.last||REPLAY.current):seedHeld?REPLAY.loaded:null;
   if(options.replay&&!saved) return notifyBattle('Finish a battle to replay it.');
   if(saved) applyFightConfig(saved);
-  try{ validateRoster(rosterList(),CFG.mode); }catch(e){ return notifyBattle(e.message); }
+  try{ validateRoster(rosterList(),CFG.mode,saved?.sim||SIM_VERSION); }catch(e){ return notifyBattle(e.message); }
   resetReplayRuntime();
   if($('replaySeek'))$('replaySeek').hidden=true;
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
@@ -7053,7 +7121,7 @@ function standby(){
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
   seedSim(CFG.seed);                 // standby is a preview of the fight you'd get
   callReset();
-  try{ validateRoster(rosterList(),CFG.mode); spawnRoster(rosterList(),CFG.arena==='coop'); }
+  try{ validateRoster(rosterList(),CFG.mode,REPLAY.loaded?.sim||SIM_VERSION); spawnRoster(rosterList(),CFG.arena==='coop'); }
   catch(e){ notifyBattle(e.message); }
   if(typeof highlightReset==='function')highlightReset();
   SEQ.phase='idle'; SEQ.t=0;
@@ -7168,7 +7236,7 @@ function syncSliders(){
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
     preview.textContent=total.toLocaleString()+' animals · '+rows.map(r=>r.n+' '+UNITS[UI_[r.k]].label).join(', ');
-    const limit=rosterLimit(CFG.mode);
+    const limit=rosterLimit(CFG.mode,REPLAY.loaded?.sim||SIM_VERSION);
     if(total>limit) preview.textContent+=' · Over capacity: remove '+(total-limit);
     $('go').disabled=total>limit; $('go').setAttribute('aria-disabled',String(total>limit));
   }

@@ -24,16 +24,34 @@ function pointerArrival(event){
   if(!raidRay.ray.intersectPlane(raidPlane,raidHit))return null;
   return arrivalPoint(Math.atan2(raidHit.z,raidHit.x));
 }
+function syncRaidForecast(){
+  const count=rosterList().filter(r=>UNITS[UI_[r.k]].team===0).reduce((n,r)=>n+r.n,0);
+  const version=REPLAY.loaded?.sim||SIM_VERSION,plan=raidPlanFor(count,version),recorded=!!REPLAY.loaded;
+  $('raidForecastKind').textContent=recorded?'Recorded raid':'Scaled raid';
+  $('raidStartingFarm').textContent=count.toLocaleString()+' starting defenders';
+  plan.forEach((wave,index)=>{
+    const units=new Map();let total=0;
+    wave.packets.forEach(p=>{total+=p.n;units.set(p.k,(units.get(p.k)||0)+p.n);});
+    $('raidForecastCount'+(index+1)).textContent=total.toLocaleString();
+    $('raidForecastUnits'+(index+1)).textContent=[...units].map(([k,n])=>{
+      const labels={coon:['raccoon','raccoons'],fox:['fox','foxes'],bear:['bear','bears']};
+      return n.toLocaleString()+' '+(labels[k]?labels[k][n===1?0:1]:UNITS[UI_[k]].label.toLowerCase());
+    }).join(' · ');
+  });
+  $('raidForecastTotal').textContent=raidPlanTotal(count,version).toLocaleString()+' predators across three waves';
+  $('raidScalingHint').textContent=recorded?'This recorded raid keeps its original wave sizes. Reinforcements do not increase enemy waves.':'Larger flocks attract larger raids. Set at the start; reinforcements do not increase enemy waves.';
+}
 function syncRaidSetup(){
   const raid=CFG.mode==='raid';document.body.classList.toggle('raidMode',raid);
   $('dailyBadge').textContent=CFG.challenge?'Daily raid · '+CFG.challenge+' · UTC':'Three waves. Two hens. One farm.';
   $('dailyBadge').hidden=!raid;
   $('go').textContent=raid?'Save the Coop':'Fight';
-  // Scripted predators have a fixed roster, visible in the wave preview.
+  // Forecast the enemies from the starting farm before the raid locks its plan.
   const enemySlider=$('sB').closest('.row')||$('sB').parentElement;
   $('sB').disabled=raid;$('sB').setAttribute('aria-label',raid?'Predators are set by the three waves':'Raccoons');
   const foe=$('rosterFoe').closest('details');if(foe)foe.hidden=raid;
   if(enemySlider)enemySlider.classList.toggle('scriptedRoster',raid);
+  if(raid)syncRaidForecast();
 }
 function raidSelectedChoice(){
   if(!REPLAY.playback){

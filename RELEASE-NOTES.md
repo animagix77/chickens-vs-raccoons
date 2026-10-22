@@ -1,3 +1,14 @@
+# Save the Coop scales with the starting flock — October 22, 2026
+
+- Predator counts now grow with the initial farm. The 260-defender starting roster still faces 45 predators; 1,000 defenders face 163, and 4,000 face 624 across three waves. Raccoons scale proportionally, foxes grow more gently, and bears increase to at most four. Individual animal stats, wave timing and approach directions stay unchanged.
+- Setup previews each wave's exact size and species, updating with the roster. The plan is fixed when the battle starts: casualties and later reinforcements do not retune the enemies. Recorded links display their original forecast.
+- Capacity validation reserves every scheduled predator and at least 80 additional animal slots for reinforcements. Old replay links retain their original starting capacity.
+- New battles use simulation version `2026-10-22.2`. Versions `2026-10-21.1` and `2026-10-22.1` keep their original fixed 45-predator schedules and regroup behavior. The fixed 260-rooster daily raid keeps its existing wave counts.
+
+Balance was sampled with automated command policies, not exhaustively calibrated across seeds or mixed rosters. At 4,000 roosters on night seed 2345927591, an unattended run lost both hens after 37.7 simulated seconds; active use of commands and recruits saved both hens in 135.8 seconds with 2,293 defenders remaining. A daytime seed 3 run with active commands lost in wave two. Large numbers now require attention to the coop; surviving defenders alone do not guarantee victory.
+
+Validation: scaling checks cover monotonic packet counts, unchanged timing/flanks/stats, frozen starting count, all future-wave reservations, reset, and complete replay equality at 1/2/4 fixed ticks per frame. Both older replay versions matched their released engines. Controls and raid suites passed; all six Open Battle baseline scenarios remained identical. Actual browser checks verified the changing forecasts, old-link forecasts, and reachable controls at 390×844 and 844×390.
+
 # Change regroup choices until the countdown ends — October 22, 2026
 
 - Regroup cards now select a pending reward. Switch between repairs, recruits and supplies until the countdown expires, including while paused. Only the final choice takes effect when the next wave begins; no selection still grants supplies.

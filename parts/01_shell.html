@@ -747,8 +747,18 @@ if(GA_ID){
   #dailyChallenge small{display:block;font-size:10px;font-weight:400;color:#d2d3bc;margin-top:4px}
   .dailyIcon{display:grid;place-items:center;width:30px;height:30px;border:1px solid #ebce8060;border-radius:50%;font-size:22px}
   #dailyBadge{padding:8px 10px;background:#789b681f;border:1px solid #bed4a84a;border-radius:7px;color:#e1f0ce;font-size:11px;margin:-5px 0 12px;line-height:1.5}
-  .row.scriptedRoster{display:none}.raidRosterNote{display:none;margin:0 0 15px;padding:10px 12px;border-left:2px solid #d6bb74;background:#dfc67e0b;color:#d8dfcb;font-size:11px;line-height:1.6}
-  body.raidMode .raidRosterNote{display:block}.raidRosterNote strong{display:block;color:#f6dfaa;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+  .row.scriptedRoster{display:none}.raidRosterNote{display:none;margin:0 0 15px;padding:12px;border:1px solid #d6bb7440;border-radius:10px;background:#dfc67e0b;color:#d8dfcb;font-size:11px;line-height:1.5}
+  body.raidMode .raidRosterNote{display:block}.raidForecastHeading{display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:7px}
+  .raidForecastHeading strong{color:#f6dfaa;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+  #raidForecastKind{font-size:9px;color:#c5d8b7;border:1px solid #b6cc9b42;border-radius:4px;padding:2px 5px;white-space:nowrap}
+  #raidStartingFarm{margin:0 0 9px;color:#e9e4d1;font-size:11px;font-variant-numeric:tabular-nums}
+  .raidWavePreview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .raidWavePreview>div{padding:8px 7px;border:1px solid #e7d7a327;border-radius:6px;background:#10281c65;min-width:0}
+  .raidWavePreview span{display:block;color:#c2cbb6;font-size:9px;letter-spacing:.06em;text-transform:uppercase}
+  .raidWavePreview b{display:block;color:#ffe4a3;font-size:22px;line-height:1.3;font-variant-numeric:tabular-nums}
+  .raidWavePreview small{display:block;color:#d8dfcc;font-size:10px;line-height:1.5;margin-top:3px}
+  #raidForecastTotal{margin:9px 0 0;font-size:12px;font-weight:700;color:#f4e6bf;font-variant-numeric:tabular-nums}
+  #raidScalingHint{margin:7px 0 0;color:#c6d1bd;font-size:11px;line-height:1.55}
   #go,#rulesGo,#playNow{background:linear-gradient(180deg,#f8cd79,#e7ac45);color:#232214;border:1px solid #ffe7a9;
     box-shadow:0 4px 0 #876626,0 10px 24px #f0ba4e21;letter-spacing:.1em}
   #go{min-height:48px}#go:hover,#rulesGo:hover,#playNow:hover{filter:brightness(1.08)}
@@ -955,7 +965,7 @@ if(GA_ID){
     <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList" tabindex="0" role="region" aria-label="How to play instructions">
-      <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
+      <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Larger starting flocks attract larger raids; the setup forecast shows each wave. Enemy numbers are set at the start, so reinforcements do not increase them. Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
       <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. You can change your selection, including while paused. Your latest choice takes effect when the countdown ends. If you leave it unselected, you receive supplies. The wave banner previews the next approach.</div></div>
       <div class="rl hot"><div class="kx">Deploy</div><div class="tx">Choose a reinforcement, then <b>tap the field</b> to set its arrival point. Help takes a moment to arrive, so plan ahead. You can also select a named farm edge using the arrival controls.</div></div>
       <div class="rl"><div class="kx">Daily raid</div><div class="tx"><b>Today's raid</b> gives everyone the same starting challenge. After your run, <b>Challenge a friend</b> copies a fresh attempt at that raid; Copy link shares your recorded battle.</div></div>
@@ -1125,7 +1135,17 @@ if(GA_ID){
       <label for="sB">Raccoons <b id="vB">24</b></label>
       <input type="range" id="sB" min="0" max="600" step="1" value="24">
     </div>
-    <p class="raidRosterNote"><strong>Three attacks from the treeline</strong>Raccoons test the fence. Foxes find the flank. A bear leads the final charge. The predators are set for each wave.</p>
+    <section id="raidRosterNote" class="raidRosterNote" aria-label="Enemy wave forecast">
+      <div class="raidForecastHeading"><strong>Raid forecast</strong><span id="raidForecastKind">Scaled raid</span></div>
+      <p id="raidStartingFarm">Starting flock</p>
+      <div class="raidWavePreview" aria-label="Predators in each wave">
+        <div><span>Wave 1</span><b id="raidForecastCount1">—</b><small id="raidForecastUnits1">Fence raiders</small></div>
+        <div><span>Wave 2</span><b id="raidForecastCount2">—</b><small id="raidForecastUnits2">Fox flank</small></div>
+        <div><span>Wave 3</span><b id="raidForecastCount3">—</b><small id="raidForecastUnits3">Bear charge</small></div>
+      </div>
+      <p id="raidForecastTotal">Three waves</p>
+      <p id="raidScalingHint">Larger flocks attract larger raids. Set at the start; reinforcements do not increase enemy waves.</p>
+    </section>
     <div class="row">
       <label>Bird type</label>
       <div class="seg" id="segBird">

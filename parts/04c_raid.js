@@ -14,6 +14,25 @@ const RAID_WAVES=[
     {at:0,k:'coon',n:8,flank:-.45},{at:6,k:'fox',n:2,flank:Math.PI},
     {at:15,k:'bear',n:1,flank:0}]}
 ];
+// Plans are pure previews: count the initial farm, never later recruits or losses.
+// Earlier links retain their exact packets and random draw order.
+function raidPlanFor(count,sim=SIM_VERSION){
+  const legacy=sim==='2026-10-21.1'||sim==='2026-10-22.1';
+  const factor=Math.max(40,Number.isFinite(count)?count:40)/260;
+  return RAID_WAVES.map(w=>({label:w.label,packets:w.packets.map(p=>({...p,
+    // Raccoons sustain the battle; slower fox scaling avoids overwhelming the hens.
+    n:legacy?p.n:p.k==='bear'?Math.min(4,Math.max(1,Math.round(Math.sqrt(factor)))):Math.max(1,Math.round(p.n*Math.pow(factor,p.k==='fox'?.65:1)))
+  }))}));
+}
+function raidPlanTotal(count,sim=SIM_VERSION){return raidPlanFor(count,sim).reduce((n,w)=>n+w.packets.reduce((m,p)=>m+p.n,0),0);}
+function raidPlanVersion(){
+  if(typeof REPLAY!=='undefined'){
+    if(REPLAY.playback&&REPLAY.current)return REPLAY.current.sim;
+    if(REPLAY.loaded)return REPLAY.loaded.sim;
+  }
+  return SIM_VERSION;
+}
+function raidCurrentPlan(){return raidPlanFor(RAID.startFarm,raidPlanVersion());}
 function raidAngle(wave){return ((((CFG.seed>>>0)%8)+.5)*TAU/8+(wave-1)*2.39996323)%TAU;}
 function raidReset(){
   RAID.active=CFG.mode==='raid';RAID.wave=0;RAID.phase='complete';RAID.waveLabel='';
@@ -25,9 +44,9 @@ function raidReset(){
 // Grow only the new species' instance reservation; surviving animals keep their IDs.
 function raidReserved(){
   if(!RAID.active||RAID.phase==='complete')return 0;
-  let total=RAID.pendingRemaining;
-  for(let wave=RAID.wave;wave<RAID_WAVES.length;wave++)
-    for(const packet of RAID_WAVES[wave].packets)total+=packet.n;
+  const plan=raidCurrentPlan();let total=RAID.pendingRemaining;
+  for(let wave=RAID.wave;wave<plan.length;wave++)
+    for(const packet of plan[wave].packets)total+=packet.n;
   return total;
 }
 function raidReserve(kind,count){
@@ -41,7 +60,7 @@ function raidReserve(kind,count){
   if(!SQUADS[ui])buildOneSquad(kind);
 }
 function raidSpawn(kind,count,angle,nearCoop=false){
-  // A fixed raid leaves ample capacity, but rejected packets must never be partial.
+  // Reserved arrivals must never spawn a partial packet if capacity is exhausted.
   if(!Number.isInteger(count)||count<1||N+count>MAXA)return false;
   const u=UNITS[UI_[kind]];raidReserve(kind,count);
   for(let n=0;n<count;n++){
@@ -56,7 +75,7 @@ function raidSpawn(kind,count,angle,nearCoop=false){
 function raidStartWave(wave){
   RAID.wave=wave;RAID.phase='combat';RAID.waveTime=0;RAID.prepLeft=0;RAID.choice=null;
   RAID.approach=raidAngle(wave);RAID.nextApproach=raidAngle(Math.min(3,wave+1));
-  const plan=RAID_WAVES[wave-1];RAID.waveLabel=plan.label;
+  const plan=raidCurrentPlan()[wave-1];RAID.waveLabel=plan.label;
   RAID.pending=plan.packets.map(p=>({...p}));RAID.pendingRemaining=RAID.pending.reduce((n,p)=>n+p.n,0);
   RAID.threats=[];RAID.bearWind.fill(0);RAID.bearSection.fill(-1);
   coopEvent('wave','Wave '+wave+' · '+plan.label,Math.cos(RAID.approach)*ARENA_R*.9,Math.sin(RAID.approach)*ARENA_R*.9);
