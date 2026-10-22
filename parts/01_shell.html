@@ -8,11 +8,11 @@
      platform scraped off the page — usually the tail of the title. These are
      the tags every messaging app and social site actually reads. Absolute URLs
      are required; a relative image path is ignored by every scraper. -->
-<meta name="description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator. Pick your flock, call in the farm, and find out.">
+<meta name="description" content="Save two hens through three predator waves. Place reinforcements, repair the run, and challenge a friend in this 3D farm defense game.">
 <link rel="canonical" href="https://chickensvraccoons.com/">
 <meta property="og:site_name" content="Chickens vs Raccoons">
 <meta property="og:title" content="Chickens vs Raccoons">
-<meta property="og:description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator. Pick your flock, call in the farm, and find out.">
+<meta property="og:description" content="Save two hens through three predator waves. Place reinforcements, repair the run, and challenge a friend in this 3D farm defense game.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chickensvraccoons.com/">
 <meta property="og:image" content="https://chickensvraccoons.com/assets/img/share.jpg">
@@ -23,7 +23,8 @@
 <meta name="twitter:title" content="Chickens vs Raccoons">
 <meta name="twitter:description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator.">
 <meta name="twitter:image" content="https://chickensvraccoons.com/assets/img/share.jpg">
-<meta name="theme-color" content="#08070a">
+<meta name="theme-color" content="#14241e">
+<meta name="author" content="Judge Dean LLC">
 <meta name="apple-mobile-web-app-title" content="Chickens vs Raccoons">
 <!-- ---------- visitor counting ----------
      Put your GA4 Measurement ID in GA_ID below and analytics turns itself on.
@@ -62,7 +63,7 @@ if(GA_ID){
   #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#08070a}
   /* NOTE: never transition width/height here — the WebGL canvas is sized in JS and
      would stretch for the length of the animation. Snap the box, fade the corners. */
-  #frame{position:relative;width:100%;height:100%;overflow:hidden;background:#0b0a0e;
+  #frame{position:relative;width:100%;height:100%;overflow:hidden;overflow:clip;background:#0b0a0e;
     transition:border-radius .35s,box-shadow .35s}
   body.reel #frame{border-radius:14px;box-shadow:0 0 0 1px #ffffff14,0 30px 90px #000a}
   canvas{display:block;width:100%;height:100%}
@@ -722,6 +723,151 @@ if(GA_ID){
   #finaleLabel{padding:9px 16px;border-radius:9px;background:#100d16cc;color:#fff2d8;font-size:clamp(16px,2.2vw,22px);font-weight:750;letter-spacing:.03em;white-space:nowrap}
   #finaleSkip{min-height:44px;padding:10px 18px;border:1px solid #ffffff50;border-radius:9px;background:#17121fee;color:#f7efdf;font:600 12px system-ui;cursor:pointer}
   #finaleSkip:hover{background:#302638}body.narrow #finaleBanner{bottom:24px}
+
+  /* Save the Coop interface · Judge Dean LLC */
+  :root{--forest:#14271f;--forest-deep:#0d1915;--honey:#f4c66b;--parchment:#fff1d2;--line:#d6c59b30}
+  #scoreboard{background:linear-gradient(180deg,#0e1b18ba,transparent)}
+  #scoreboard .team .nm{color:#fff6de;opacity:.9;text-shadow:0 1px 6px #000}
+  #clock .s{opacity:.9;color:#e5dac3;font-size:10px}
+  #panel{background:linear-gradient(155deg,#1b2a22f7,#101c18f2);border:1px solid var(--line);border-top-color:#ead3a160;
+    box-shadow:0 22px 65px #050d0a8a,inset 0 1px 0 #fff3; border-radius:18px}
+  #panel h1{opacity:1;color:var(--parchment);letter-spacing:.055em}
+  #panel h1 span{opacity:.65;color:#bfceb9}
+  .row label{color:#dce4d2;opacity:1}
+  .seg button,.mini button{border-color:#d7e3c929;background:#f4ebcf08;color:#d7dfcd}
+  .seg button.on{background:#f4e7c8;color:#17271e;border-color:#fff0cb;box-shadow:0 2px 8px #0002}
+  #segMode{gap:5px}#segMode button{line-height:1.3;min-height:44px;padding:8px 5px;font-size:10px;text-wrap:balance}
+  #segMode [data-v="raid"].on{background:linear-gradient(135deg,#ffe2a2,#e7b95d);border-color:#ffe5ab}
+  #objectiveHint{color:#e2decc;font-size:12px;line-height:1.55;margin:10px 0 12px}
+  #dailyChallenge{width:100%;display:flex;align-items:center;gap:10px;min-height:58px;margin:0 0 14px;padding:10px 12px;
+    background:linear-gradient(110deg,#c6a4551a,#e1bf6310);border:1px solid #e2c7835c;border-radius:10px;color:#f8e6ba;
+    font-family:inherit;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+  #dailyChallenge:hover{background:#e5c27526;border-color:#f3d485a6}
+  #dailyChallenge>span:nth-child(2){flex:1}#dailyChallenge strong{display:block;font-size:13px;letter-spacing:.02em}
+  #dailyChallenge small{display:block;font-size:10px;font-weight:400;color:#d2d3bc;margin-top:4px}
+  .dailyIcon{display:grid;place-items:center;width:30px;height:30px;border:1px solid #ebce8060;border-radius:50%;font-size:22px}
+  #dailyBadge{padding:8px 10px;background:#789b681f;border:1px solid #bed4a84a;border-radius:7px;color:#e1f0ce;font-size:11px;margin:-5px 0 12px;line-height:1.5}
+  .row.scriptedRoster{display:none}.raidRosterNote{display:none;margin:0 0 15px;padding:10px 12px;border-left:2px solid #d6bb74;background:#dfc67e0b;color:#d8dfcb;font-size:11px;line-height:1.6}
+  body.raidMode .raidRosterNote{display:block}.raidRosterNote strong{display:block;color:#f6dfaa;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+  #go,#rulesGo,#playNow{background:linear-gradient(180deg,#f8cd79,#e7ac45);color:#232214;border:1px solid #ffe7a9;
+    box-shadow:0 4px 0 #876626,0 10px 24px #f0ba4e21;letter-spacing:.1em}
+  #go{min-height:48px}#go:hover,#rulesGo:hover,#playNow:hover{filter:brightness(1.08)}
+  #go:active,#playNow:active{box-shadow:0 1px 0 #876626;transform:translateY(3px)}
+  #rosterPreview{background:#07130e42;border-color:#d8c99e26;color:#e0e4cf}
+  #settingsPanel{background:#14251f;border-color:var(--line)}
+  #tools>button,#tools select,#settings>summary{background:#13231eee;border-color:#d4dfc72d;color:#edf0df}
+  .dep.ok,.cmd.ready{background:#192f25ec;border-color:#a1c19455;box-shadow:inset 0 1px 0 #fff1}
+  .dep.ok:hover,.cmd.ready:hover{background:#2c4735f2}
+  .cmd.live{background:#4b421ce8;border-color:#ffda89;box-shadow:0 0 20px #ffda8926}
+  #cmdpts{background:#322e18ed;border-color:#e6c77966}
+  #coopObjective{background:#14291fee;border-color:#b6d29352;box-shadow:0 5px 18px #0002}
+  #coopObjective.danger{background:#4b2520ef;border-color:#f5ab8370}
+  #coopObjective strong{color:#ffe3a5}
+  #raidHud{display:flex;gap:10px;align-items:center;width:420px;max-width:calc(100% - 24px);margin:7px auto 0;
+    padding:9px 12px;background:linear-gradient(110deg,#132820f2,#14221cef);border:1px solid #d8c9984a;border-radius:12px;
+    box-shadow:0 6px 22px #0003;color:#f5ecd5;font-variant-numeric:tabular-nums}
+  .raidWaveSeal{display:flex;align-items:center;justify-content:center;flex:0 0 72px;height:36px;border-radius:8px;
+    background:#edd09217;border:1px solid #ebcf8c88;color:#ffe3a1;font-size:11px;font-weight:800;white-space:nowrap}
+  .raidHudMain{flex:1;min-width:0}.raidHudHeading{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  #raidTitle{font-size:12px;color:#fff0ce;line-height:1.2}
+  #raidDirection{font-size:10px;color:#ebc780;white-space:nowrap}
+  #raidStatus{display:block;font-size:10px;color:#dae3ce;line-height:1.3}
+  #raidProgress{display:block;appearance:none;-webkit-appearance:none;width:100%;height:4px;border:0;border-radius:3px;overflow:hidden;margin:7px 0 6px;background:#ffffff16}
+  #raidProgress::-webkit-progress-bar{background:#ffffff16}#raidProgress::-webkit-progress-value{background:linear-gradient(90deg,#91ba85,#efce87);border-radius:3px}
+  #raidProgress::-moz-progress-bar{background:#d7cd86;border-radius:3px}
+  body.hideui #raidHud{display:none!important}
+  body.finishing #raidHud,body.finished #raidHud{visibility:hidden}
+  .fieldEyebrow{display:block;font-size:10px;font-weight:750;letter-spacing:.18em;text-transform:uppercase;color:#d4bd87;line-height:1.4}
+  #raidPrep{position:absolute;inset:0;z-index:27;padding:24px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,#07130c52,#07130cd9);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);pointer-events:auto}
+  .raidPrepCard{width:min(760px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;padding:28px;
+    border:1px solid #dec99770;border-radius:20px;background:linear-gradient(145deg,#20362bec,#10251ef5);color:#fbf0d7;
+    box-shadow:0 28px 90px #0009,inset 0 1px 0 #fff2;scrollbar-width:thin;scrollbar-color:#d6bd7c66 transparent;
+    -webkit-mask-image:linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+    mask-image:linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
+  .raidPrepHeader{display:flex;justify-content:space-between;gap:16px;align-items:center}
+  .raidPrepTime{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:0 0 18px;padding:10px 12px;border:1px solid #c3d4ac26;border-radius:9px;background:#071b1140}
+  #raidPrepTimer{flex:1;font-size:12px;line-height:1.5;color:#fbe5ae;font-weight:600;font-variant-numeric:tabular-nums}
+  #raidPrepPause{flex:0 0 auto;min-height:44px;border:1px solid #e7d59f60;border-radius:7px;color:#f7e8c7;background:#dcc38512;padding:8px 12px;font:700 11px var(--ui);cursor:pointer}
+  #raidPrepPause:hover{background:#dcc38529}#raidPrepPause:disabled{opacity:.55;cursor:default}
+  .dailyScore{flex-basis:100%;font-size:11px;line-height:1.7;color:#e5d3a3;margin:5px 0 0}
+  #raidPrepTitle{font-family:Georgia,'Times New Roman',serif;font-size:clamp(28px,4.5vw,42px);font-weight:400;letter-spacing:-.025em;margin:14px 0 10px;line-height:1.15;color:#fff0cd}
+  #raidPrepHint{font-size:14px;line-height:1.6;color:#dce6d1;margin:0 0 22px;max-width:52ch}
+  .raidPrepChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .raidPrepChoices button{display:flex;flex-direction:column;align-items:flex-start;gap:12px;text-align:left;min-height:216px;padding:19px 16px;
+    border-radius:12px;border:1px solid #d8cc9c55;background:linear-gradient(145deg,#f7edce,#e5d9ba);font-family:inherit;color:#23362b;
+    cursor:pointer;box-shadow:0 5px 0 #07190e66,0 9px 20px #0002;transition:transform .15s,box-shadow .15s}
+  .raidPrepChoices button:hover:not(:disabled){transform:translateY(-4px);box-shadow:0 8px 0 #07190e66,0 15px 25px #0004}
+  .raidPrepChoices button:disabled{opacity:.5;cursor:default}.raidPrepChoices button[aria-pressed="true"],.raidPrepChoices button.selected,.raidPrepChoices button.chosen{opacity:1;border-color:#ffe7a0;box-shadow:0 0 0 3px #ffe7a04d}
+  body.paused .raidPrepChoices button:disabled{opacity:.9}
+  .rewardMark{display:flex;align-items:center;justify-content:center;width:39px;height:39px;border:1px solid #283f3640;border-radius:50%;font-size:20px;font-weight:800;color:#3a5940;background:#5268450c}
+  .rewardName{font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.2}.rewardDescription{font-size:12px;line-height:1.55;color:#4d5948;flex:1}
+  .rewardAction{display:flex;width:100%;justify-content:space-between;font-size:10px;font-weight:800;letter-spacing:.04em;padding-top:10px;border-top:1px solid #263f3426;text-transform:uppercase}
+  .raidPrepFoot{font-size:11px;line-height:1.5;color:#c7d3bc;margin:20px 0 0;text-align:center}
+  #deployPlacement{position:absolute;z-index:26;left:16px;bottom:270px;width:310px;max-width:calc(100% - 32px);padding:14px 16px;border-radius:13px;
+    background:linear-gradient(140deg,#203b2af7,#10271ff5);border:1px solid #eed38b9c;box-shadow:0 12px 34px #0007;color:#f7ebd0;pointer-events:auto}
+  .placementTop{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  #deployCancel{background:none;border:1px solid #e4dfc436;border-radius:7px;color:#eee6d0;font-family:inherit;min-height:36px;padding:7px 10px;cursor:pointer;font-size:11px}
+  #deployPlacementText{font-size:13px;line-height:1.5;margin:9px 0 7px}
+  .arrivalOptions summary{font-size:11px;color:#d9e5cc;min-height:32px;display:list-item;padding-top:5px;cursor:pointer}
+  .arrivalCompass{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:7px}
+  .arrivalCenter{display:grid;place-items:center;color:#e5d3a4;font-size:9px;letter-spacing:.12em}
+  .arrivalCompass button{min-height:44px;border:1px solid #d9dfc243;border-radius:7px;background:#e4ead211;color:#faf1d8;font:700 11px var(--ui);cursor:pointer}
+  .arrivalCompass button:hover{background:#edcf792c;border-color:#edcf79}
+  #raidAwards{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;width:min(590px,92%);margin-top:18px}
+  #raidAwards>div,#raidAwards>article{padding:12px 15px;flex:1;min-width:140px;border:1px solid #dfc88c48;border-radius:10px;background:#172f25e6;font-size:12px;line-height:1.5;color:#e7ead7}
+  #raidAwards strong,#raidAwards b{display:block;color:#ffe1a0;font-size:12px;letter-spacing:.02em}
+  #raidAwards small,#raidAwards .raidAward span{display:block;color:#cad5bf;margin-top:4px;font-size:11px}
+  #challengeShare{border-color:#ddc17b88!important;background:#e6bc581a!important;color:#ffe3a4!important}
+  #card.result{background:radial-gradient(ellipse at 50% 30%,#183124cd,#07130ff2)}
+  #card .kick{opacity:.9;color:#e0c68c}#card .sub{opacity:.9;line-height:1.6;letter-spacing:.08em}
+  #cardTale{background:#13251dd9;border-color:#cdd1af29}#cardBtns button{background:#1c3328ed;color:#e6ead7;border-color:#c6d2ab47}
+  #cardBtns button.prime{background:linear-gradient(180deg,#f3cf86,#d9ae5a);color:#1b2b20;border:1px solid #fbe4aa;box-shadow:0 4px 0 #79602b,0 10px 24px #0003}
+  #story{background:radial-gradient(ellipse at 50% 30%,#233b2ae8,#081710fa);padding:26px 7vw;justify-content:safe center}
+  #story .storyBrand{color:#c5cead;font-size:9px;margin-bottom:13px}
+  #story .storyTitle{margin:0 0 18px;color:#fff0d3;font:400 clamp(30px,6vmin,50px)/.98 Georgia,'Times New Roman',serif;letter-spacing:-.045em}
+  #story .storyTitle em{color:#efca81;font-weight:400}
+  #storyArt{width:min(24vh,180px);margin-bottom:16px;border:1px solid #e8d39850;box-shadow:0 15px 40px #0005}
+  #story p{color:#e0e6d1;font-size:14px;line-height:1.6;margin-bottom:8px;max-width:31em}
+  #story p.last{color:#f5e7c7;margin-top:2px}
+  #story .rule{margin:10px 0 12px}
+  #playNow{flex:0 0 auto;display:flex;gap:40px;align-items:center;justify-content:space-between;min-height:52px;padding:14px 22px;border-radius:10px;font:800 14px var(--ui);min-width:215px;margin-top:14px;cursor:pointer}
+  #playNow span{font-size:20px}.storyGameNote{font-size:10px;color:#cbd7bb;line-height:1.5;letter-spacing:.025em;margin-top:12px}
+  .storySecondary{display:flex;gap:16px;flex-shrink:0;align-items:center;justify-content:center;margin-top:7px}
+  #storyGo,#storySkip{margin:0;min-height:44px;padding:8px 4px;border:0;background:none;box-shadow:none;color:#dae1cd;font-size:10px;letter-spacing:.04em;text-transform:none}
+  #storyGo:hover,#storySkip:hover{color:#ffe2a1}#storyGo:active{box-shadow:none;transform:none}
+  @media(max-width:650px){
+    #raidHud{width:calc(100% - 24px);padding:7px 10px;gap:8px;margin-top:5px}
+    .raidWaveSeal{width:64px;height:32px;flex-basis:64px;font-size:10px}.raidHudHeading{gap:4px}
+    #raidTitle{font-size:11px}#raidDirection,#raidStatus{font-size:9px}#raidProgress{margin:5px 0;height:3px}
+    #raidPrep{padding:14px}.raidPrepCard{padding:22px 18px;border-radius:16px}#raidPrepTitle{font-size:32px}
+    #raidPrepHint{font-size:13px;margin-bottom:17px}.raidPrepChoices{grid-template-columns:1fr;gap:9px}
+    .raidPrepChoices button{display:grid;grid-template-columns:40px 1fr;gap:4px 12px;min-height:111px;padding:14px}
+    .rewardMark{grid-row:1/4;margin-top:3px}.rewardName{font-size:15px}.rewardDescription{font-size:12px;line-height:1.45}
+    .rewardAction{font-size:9px;padding-top:7px;margin-top:4px}.raidPrepFoot{margin-top:16px;font-size:10px}
+    #deployPlacement{left:12px;bottom:205px;width:calc(100% - 24px);max-width:none;padding:10px 13px}
+    #deployCancel{min-height:44px}#deployPlacementText{font-size:12px;margin:5px 0}.arrivalOptions summary{min-height:35px}
+    #story .storyTitle{font-size:37px;margin-bottom:13px}body.narrow #storyArt{width:min(21vh,170px);margin-bottom:14px}
+    #story p{font-size:13px;line-height:1.55}#story .storyBrand{margin-bottom:10px}
+    #dailyChallenge{min-height:58px}#raidAwards{gap:7px}#raidAwards>div,#raidAwards>article{padding:10px 12px}
+    body.narrow #coopObjective{max-width:calc(100% - 24px);width:calc(100% - 24px)}
+    body.narrow .coopSummary{gap:8px;justify-content:space-between;font-size:9px}
+  }
+  @media(max-height:500px) and (min-width:651px){
+    #raidPrep{padding:12px}.raidPrepCard{padding:18px 23px;border-radius:13px}#raidPrepTitle{font-size:28px;margin:7px 0}
+    #raidPrepHint{font-size:12px;margin-bottom:12px}.raidPrepChoices button{min-height:140px;padding:12px;gap:7px}
+    .rewardMark{width:25px;height:25px;font-size:14px}.rewardName{font-size:14px}.rewardDescription{font-size:11px}
+    .rewardAction{font-size:9px;padding-top:6px}.raidPrepFoot{margin-top:12px;font-size:10px}
+    #raidHud{position:absolute;top:8px;left:16px;transform:none;margin:0;width:340px;padding:6px 9px}
+    #raidHud .raidWaveSeal{height:32px;flex-basis:64px;font-size:10px}#raidTitle{font-size:10px}#raidDirection,#raidStatus{font-size:9px}
+    body.raid #clock{visibility:hidden}body.raid #bar,body.raid #battleReadout{display:none}
+    body.raid #coopObjective{position:absolute;left:50%;top:67px;transform:translateX(-50%);margin:0;width:340px}
+    #deployPlacement{left:auto;right:12px;bottom:64px;width:278px}
+    #story .storyTitle{font-size:28px;margin-bottom:8px}#story .storyBrand{margin-bottom:7px}#storyArt{display:none!important}
+    #story p{font-size:12px;line-height:1.4;margin-bottom:4px}#story .rule{margin:7px 0}#playNow{min-height:44px;margin-top:7px;padding:10px 17px}
+    .storyGameNote{margin-top:8px}.storySecondary{margin-top:1px}
+  }
+
 </style>
 </head>
 <body>
@@ -739,6 +885,13 @@ if(GA_ID){
   <div id="coopObjective" hidden><div class="coopSummary"><strong id="coopHens">2 / 2 hens safe</strong><span id="coopFence">Fence intact</span><span id="coopStatus">Protect the hens</span></div>
     <div class="henHealthRow"><div class="henHealth"><label for="henHealth0">Hen 1</label><progress id="henHealth0" max="100" value="100" aria-valuetext="100 percent health"></progress><output id="henHealthText0">100%</output></div><div class="henHealth"><label for="henHealth1">Hen 2</label><progress id="henHealth1" max="100" value="100" aria-valuetext="100 percent health"></progress><output id="henHealthText1">100%</output></div></div>
   </div>
+  <section id="raidHud" aria-label="Raid progress" hidden>
+    <div class="raidWaveSeal" id="raidWave">1 / 3</div>
+    <div class="raidHudMain"><div class="raidHudHeading"><strong id="raidTitle">The treeline stirs</strong><span id="raidDirection">East approach</span></div>
+      <progress id="raidProgress" max="100" value="0" aria-label="Raid progress"></progress>
+      <span id="raidStatus">Protect the hens. Hold the run.</span>
+    </div>
+  </section>
   </div>
   <div id="replaySeek" role="status" aria-live="polite" hidden>Finding highlight…</div>
 
@@ -758,6 +911,7 @@ if(GA_ID){
     <div id="count"></div>
     <div class="sub" id="cardSub"></div>
     <div id="cardTale"></div>
+    <div id="raidAwards" aria-label="Farm honors" hidden></div>
     <div id="cardTrib">for Eenie &amp; Moe</div>
     <div id="callBar">
       <div class="ck">Call it</div>
@@ -773,6 +927,7 @@ if(GA_ID){
       <button id="replay">Replay battle</button>
       <button id="setup">Change matchup</button>
       <button id="share">Copy link</button>
+      <button id="challengeShare" hidden>Challenge a friend</button>
     </div>
     <div id="endCta">
       <div class="line">Enjoyed the carnage?</div>
@@ -800,15 +955,18 @@ if(GA_ID){
     <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList" tabindex="0" role="region" aria-label="How to play instructions">
-      <div class="rl hot"><div class="kx">Protect</div><div class="tx">In <b>Defend the coop</b>, two hens shelter inside a roofed run. Predators must break a fence section to enter. A breach does not end the raid: call reinforcements and fight off the intruders. Stop all predators to win; lose both hens and the raid is over.</div></div>
+      <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
+      <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. The wave banner previews the next approach. If the break ends before you choose, you receive supplies.</div></div>
+      <div class="rl hot"><div class="kx">Deploy</div><div class="tx">Choose a reinforcement, then <b>tap the field</b> to set its arrival point. Help takes a moment to arrive, so plan ahead. You can also select a named farm edge using the arrival controls.</div></div>
+      <div class="rl"><div class="kx">Daily raid</div><div class="tx"><b>Today's raid</b> gives everyone the same starting challenge. After your run, <b>Challenge a friend</b> copies a fresh attempt at that raid; Copy link shares your recorded battle.</div></div>
+      <div class="rl"><div class="kx">Other modes</div><div class="tx"><b>Coop defense</b> is a single custom raid. <b>Open battle</b> is the original army-versus-army simulator. Both remain available in the matchup settings.</div></div>
       <div class="rl hot"><div class="kx">4 &nbsp;Repair</div><div class="tx">Repair half of the weakest fence section, even after a breach. It recharges in <b>20 seconds</b>. The status above the field shows the weakest fence and how many hens remain.</div></div>
       <div class="rl hot"><div class="kx">5 &nbsp;Rally</div><div class="tx">For <b>8 seconds</b>, defenders within 24 metres of the coop regroup at the weakest fence or pursue intruders inside. They still fight enemies in reach. Recharges in <b>22 seconds</b>. Each hen’s health bar shows how much time you have to rescue her.</div></div>
       <div class="rl"><div class="kx">Replay</div><div class="tx">After the battle, choose a timestamp under <b>Moments to replay</b> to watch from three seconds before that event.</div></div>
       <div class="rl hot"><div class="kx">War chest</div><div class="tx">
-        Points build the whole fight. Spend them on the chips along the bottom to
-        call animals in <b>mid-battle</b> — guinea fowl are cheap noise, a bull costs
-        most of what you'll ever hold. You get four or five packets a match, so
-        what you skip matters as much as what you buy.</div></div>
+        Points build during combat. Spend them on the animals along the bottom to
+        call help <b>mid-battle</b>. Geese shove enemies, dogs intercept quickly,
+        and a bull breaks through a crowd. Saving up changes what you can call next.</div></div>
       <div class="rl hot"><div class="kx">1 &nbsp;Horn</div><div class="tx">
         Everything on your side swings <b>35% faster and hits 15% harder</b> for six
         seconds. Tempo. Use it when the lines are already locked and you want to
@@ -841,17 +999,45 @@ if(GA_ID){
     <button id="rulesGo">Got it</button>
   </div>
 
+  <section id="raidPrep" role="dialog" aria-modal="true" aria-labelledby="raidPrepTitle" aria-describedby="raidPrepHint" tabindex="-1" hidden>
+    <div class="raidPrepCard">
+      <div class="raidPrepHeader"><span class="fieldEyebrow">A moment to regroup</span></div>
+      <h2 id="raidPrepTitle">The flock held.</h2>
+      <p id="raidPrepHint">The next wave is coming. Choose one supply reward before it arrives.</p>
+      <div class="raidPrepTime"><span id="raidPrepTimer" role="timer">Next wave in 10s</span><button id="raidPrepPause" type="button">Pause choices</button></div>
+      <div class="raidPrepChoices" aria-label="Choose one reward">
+        <button type="button" data-raid-choice="repair"><span class="rewardMark" aria-hidden="true">╬</span><span class="rewardName">Patch the run</span><span class="rewardDescription">Restore the weakest fence. Buy the hens more time.</span><span class="rewardAction">Choose repairs <span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="recruit"><span class="rewardMark" aria-hidden="true">+6</span><span class="rewardName">Call the geese</span><span class="rewardDescription">Six stubborn defenders join your surviving flock.</span><span class="rewardAction">Choose recruits <span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="save"><span class="rewardMark" aria-hidden="true">+</span><span class="rewardName">Stock the chest</span><span class="rewardDescription">Bank extra supplies for the reinforcement you need next.</span><span class="rewardAction">Choose supplies <span aria-hidden="true">↗</span></span></button>
+      </div>
+      <p class="raidPrepFoot">One reward per break. Supplies are saved automatically if time runs out.</p>
+    </div>
+  </section>
+
+  <section id="deployPlacement" aria-label="Reinforcement arrival point" hidden>
+    <div class="placementTop"><span class="fieldEyebrow">Help is on the way</span><button id="deployCancel" type="button" aria-label="Cancel reinforcement placement">Cancel</button></div>
+    <p id="deployPlacementText" role="status">Tap the field to choose an arrival point.</p>
+    <details class="arrivalOptions"><summary>Or choose a farm edge</summary><div class="arrivalCompass" aria-label="Arrival direction">
+      <button type="button" data-deploy-sector="5" aria-label="Arrive from northwest">NW</button><button type="button" data-deploy-sector="6" aria-label="Arrive from north">N</button><button type="button" data-deploy-sector="7" aria-label="Arrive from northeast">NE</button>
+      <button type="button" data-deploy-sector="4" aria-label="Arrive from west">W</button><span class="arrivalCenter" aria-hidden="true">COOP</span><button type="button" data-deploy-sector="0" aria-label="Arrive from east">E</button>
+      <button type="button" data-deploy-sector="3" aria-label="Arrive from southwest">SW</button><button type="button" data-deploy-sector="2" aria-label="Arrive from south">S</button><button type="button" data-deploy-sector="1" aria-label="Arrive from southeast">SE</button>
+    </div></details>
+  </section>
+
   <div id="finaleBanner" hidden><div id="finaleLabel" role="status">Final moment</div><button id="finaleSkip">Show results</button></div>
 
   <div id="story" role="dialog" aria-modal="true" aria-label="Why this battle exists" tabindex="-1">
+    <span class="fieldEyebrow storyBrand">Judge Dean LLC presents</span>
+    <h1 class="storyTitle">Small flock.<br><em>Big trouble.</em></h1>
     <img id="storyArt" alt="Eenie and Moe">
     <p>A family of raccoons raided the coop in the middle of the night.</p>
     <p class="last">Eenie and Moe didn't make it.</p>
     <div class="rule"></div>
     <p>So this is a simulator built to answer the question that comes after it:
        how many chickens would it have taken?</p>
-    <button id="storyGo">Find out</button>
-    <button id="storySkip">Skip the lot</button>
+    <button id="playNow" type="button">Play now <span aria-hidden="true">→</span></button>
+    <span class="storyGameNote">Two hens. Three waves. One very angry farm.</span>
+    <div class="storySecondary"><button id="storyGo">How to play</button><button id="storySkip">Choose a matchup</button></div>
   </div>
 
   <!-- The long version, opened from 'Why this exists'. The welcome card has to
@@ -926,9 +1112,11 @@ if(GA_ID){
   <div id="panel">
     <h1>Chickens vs Raccoons <span id="fps">v1.0</span></h1>
     <div class="row"><label>Objective</label><div class="seg" id="segMode">
-      <button data-v="defense" class="on">Defend the coop</button><button data-v="battle">Open battle</button>
+      <button data-v="raid" data-mode="raid" class="on">Save the Coop</button><button data-v="defense" data-mode="defense">Coop defense</button><button data-v="battle" data-mode="battle">Open battle</button>
     </div></div>
-    <p id="objectiveHint">Protect the hens inside the run.</p>
+    <p id="objectiveHint">Hold the run through three waves. Protect the hens, call the farm, and make every rescue count.</p>
+    <button id="dailyChallenge" type="button"><span class="dailyIcon" aria-hidden="true">☀</span><span><strong>Today's raid</strong><small>The same challenge for everyone</small></span><span aria-hidden="true">↗</span></button>
+    <div id="dailyBadge" hidden></div>
     <div class="row">
       <label for="sA">Birds <b id="vA">260</b></label>
       <input type="range" id="sA" min="0" max="4000" step="1" value="260">
@@ -937,6 +1125,7 @@ if(GA_ID){
       <label for="sB">Raccoons <b id="vB">24</b></label>
       <input type="range" id="sB" min="0" max="600" step="1" value="24">
     </div>
+    <p class="raidRosterNote"><strong>Three attacks from the treeline</strong>Raccoons test the fence. Foxes find the flank. A bear leads the final charge. The predators are set for each wave.</p>
     <div class="row">
       <label>Bird type</label>
       <div class="seg" id="segBird">

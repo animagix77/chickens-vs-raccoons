@@ -9,6 +9,8 @@ const HIGHLIGHT_RULES={
   fencehit:{priority:90,limit:1},breach:{priority:105,limit:2},
   henlost:{priority:105,limit:2},moralebreak:{priority:90,limit:1},
   loss25:{priority:55,limit:1},loss50:{priority:65,limit:1},loss75:{priority:75,limit:1},
+  wave:{priority:80,limit:3},waveclear:{priority:80,limit:2},
+  flank:{priority:75,limit:1},boss:{priority:110,limit:1},warning:{priority:85,limit:1},supply:{priority:40,limit:2},
   deploy:{priority:40,limit:2},command:{priority:35,limit:2},final:{priority:120,limit:1}
 };
 function highlightTimestamp(tick){

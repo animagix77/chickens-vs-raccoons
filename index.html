@@ -8,11 +8,11 @@
      platform scraped off the page — usually the tail of the title. These are
      the tags every messaging app and social site actually reads. Absolute URLs
      are required; a relative image path is ignored by every scraper. -->
-<meta name="description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator. Pick your flock, call in the farm, and find out.">
+<meta name="description" content="Save two hens through three predator waves. Place reinforcements, repair the run, and challenge a friend in this 3D farm defense game.">
 <link rel="canonical" href="https://chickensvraccoons.com/">
 <meta property="og:site_name" content="Chickens vs Raccoons">
 <meta property="og:title" content="Chickens vs Raccoons">
-<meta property="og:description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator. Pick your flock, call in the farm, and find out.">
+<meta property="og:description" content="Save two hens through three predator waves. Place reinforcements, repair the run, and challenge a friend in this 3D farm defense game.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://chickensvraccoons.com/">
 <meta property="og:image" content="https://chickensvraccoons.com/assets/img/share.jpg">
@@ -23,7 +23,8 @@
 <meta name="twitter:title" content="Chickens vs Raccoons">
 <meta name="twitter:description" content="How many chickens would it take to beat a raccoon? A real-time 3D battle simulator.">
 <meta name="twitter:image" content="https://chickensvraccoons.com/assets/img/share.jpg">
-<meta name="theme-color" content="#08070a">
+<meta name="theme-color" content="#14241e">
+<meta name="author" content="Judge Dean LLC">
 <meta name="apple-mobile-web-app-title" content="Chickens vs Raccoons">
 <!-- ---------- visitor counting ----------
      Put your GA4 Measurement ID in GA_ID below and analytics turns itself on.
@@ -62,7 +63,7 @@ if(GA_ID){
   #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#08070a}
   /* NOTE: never transition width/height here — the WebGL canvas is sized in JS and
      would stretch for the length of the animation. Snap the box, fade the corners. */
-  #frame{position:relative;width:100%;height:100%;overflow:hidden;background:#0b0a0e;
+  #frame{position:relative;width:100%;height:100%;overflow:hidden;overflow:clip;background:#0b0a0e;
     transition:border-radius .35s,box-shadow .35s}
   body.reel #frame{border-radius:14px;box-shadow:0 0 0 1px #ffffff14,0 30px 90px #000a}
   canvas{display:block;width:100%;height:100%}
@@ -722,6 +723,151 @@ if(GA_ID){
   #finaleLabel{padding:9px 16px;border-radius:9px;background:#100d16cc;color:#fff2d8;font-size:clamp(16px,2.2vw,22px);font-weight:750;letter-spacing:.03em;white-space:nowrap}
   #finaleSkip{min-height:44px;padding:10px 18px;border:1px solid #ffffff50;border-radius:9px;background:#17121fee;color:#f7efdf;font:600 12px system-ui;cursor:pointer}
   #finaleSkip:hover{background:#302638}body.narrow #finaleBanner{bottom:24px}
+
+  /* Save the Coop interface · Judge Dean LLC */
+  :root{--forest:#14271f;--forest-deep:#0d1915;--honey:#f4c66b;--parchment:#fff1d2;--line:#d6c59b30}
+  #scoreboard{background:linear-gradient(180deg,#0e1b18ba,transparent)}
+  #scoreboard .team .nm{color:#fff6de;opacity:.9;text-shadow:0 1px 6px #000}
+  #clock .s{opacity:.9;color:#e5dac3;font-size:10px}
+  #panel{background:linear-gradient(155deg,#1b2a22f7,#101c18f2);border:1px solid var(--line);border-top-color:#ead3a160;
+    box-shadow:0 22px 65px #050d0a8a,inset 0 1px 0 #fff3; border-radius:18px}
+  #panel h1{opacity:1;color:var(--parchment);letter-spacing:.055em}
+  #panel h1 span{opacity:.65;color:#bfceb9}
+  .row label{color:#dce4d2;opacity:1}
+  .seg button,.mini button{border-color:#d7e3c929;background:#f4ebcf08;color:#d7dfcd}
+  .seg button.on{background:#f4e7c8;color:#17271e;border-color:#fff0cb;box-shadow:0 2px 8px #0002}
+  #segMode{gap:5px}#segMode button{line-height:1.3;min-height:44px;padding:8px 5px;font-size:10px;text-wrap:balance}
+  #segMode [data-v="raid"].on{background:linear-gradient(135deg,#ffe2a2,#e7b95d);border-color:#ffe5ab}
+  #objectiveHint{color:#e2decc;font-size:12px;line-height:1.55;margin:10px 0 12px}
+  #dailyChallenge{width:100%;display:flex;align-items:center;gap:10px;min-height:58px;margin:0 0 14px;padding:10px 12px;
+    background:linear-gradient(110deg,#c6a4551a,#e1bf6310);border:1px solid #e2c7835c;border-radius:10px;color:#f8e6ba;
+    font-family:inherit;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+  #dailyChallenge:hover{background:#e5c27526;border-color:#f3d485a6}
+  #dailyChallenge>span:nth-child(2){flex:1}#dailyChallenge strong{display:block;font-size:13px;letter-spacing:.02em}
+  #dailyChallenge small{display:block;font-size:10px;font-weight:400;color:#d2d3bc;margin-top:4px}
+  .dailyIcon{display:grid;place-items:center;width:30px;height:30px;border:1px solid #ebce8060;border-radius:50%;font-size:22px}
+  #dailyBadge{padding:8px 10px;background:#789b681f;border:1px solid #bed4a84a;border-radius:7px;color:#e1f0ce;font-size:11px;margin:-5px 0 12px;line-height:1.5}
+  .row.scriptedRoster{display:none}.raidRosterNote{display:none;margin:0 0 15px;padding:10px 12px;border-left:2px solid #d6bb74;background:#dfc67e0b;color:#d8dfcb;font-size:11px;line-height:1.6}
+  body.raidMode .raidRosterNote{display:block}.raidRosterNote strong{display:block;color:#f6dfaa;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+  #go,#rulesGo,#playNow{background:linear-gradient(180deg,#f8cd79,#e7ac45);color:#232214;border:1px solid #ffe7a9;
+    box-shadow:0 4px 0 #876626,0 10px 24px #f0ba4e21;letter-spacing:.1em}
+  #go{min-height:48px}#go:hover,#rulesGo:hover,#playNow:hover{filter:brightness(1.08)}
+  #go:active,#playNow:active{box-shadow:0 1px 0 #876626;transform:translateY(3px)}
+  #rosterPreview{background:#07130e42;border-color:#d8c99e26;color:#e0e4cf}
+  #settingsPanel{background:#14251f;border-color:var(--line)}
+  #tools>button,#tools select,#settings>summary{background:#13231eee;border-color:#d4dfc72d;color:#edf0df}
+  .dep.ok,.cmd.ready{background:#192f25ec;border-color:#a1c19455;box-shadow:inset 0 1px 0 #fff1}
+  .dep.ok:hover,.cmd.ready:hover{background:#2c4735f2}
+  .cmd.live{background:#4b421ce8;border-color:#ffda89;box-shadow:0 0 20px #ffda8926}
+  #cmdpts{background:#322e18ed;border-color:#e6c77966}
+  #coopObjective{background:#14291fee;border-color:#b6d29352;box-shadow:0 5px 18px #0002}
+  #coopObjective.danger{background:#4b2520ef;border-color:#f5ab8370}
+  #coopObjective strong{color:#ffe3a5}
+  #raidHud{display:flex;gap:10px;align-items:center;width:420px;max-width:calc(100% - 24px);margin:7px auto 0;
+    padding:9px 12px;background:linear-gradient(110deg,#132820f2,#14221cef);border:1px solid #d8c9984a;border-radius:12px;
+    box-shadow:0 6px 22px #0003;color:#f5ecd5;font-variant-numeric:tabular-nums}
+  .raidWaveSeal{display:flex;align-items:center;justify-content:center;flex:0 0 72px;height:36px;border-radius:8px;
+    background:#edd09217;border:1px solid #ebcf8c88;color:#ffe3a1;font-size:11px;font-weight:800;white-space:nowrap}
+  .raidHudMain{flex:1;min-width:0}.raidHudHeading{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  #raidTitle{font-size:12px;color:#fff0ce;line-height:1.2}
+  #raidDirection{font-size:10px;color:#ebc780;white-space:nowrap}
+  #raidStatus{display:block;font-size:10px;color:#dae3ce;line-height:1.3}
+  #raidProgress{display:block;appearance:none;-webkit-appearance:none;width:100%;height:4px;border:0;border-radius:3px;overflow:hidden;margin:7px 0 6px;background:#ffffff16}
+  #raidProgress::-webkit-progress-bar{background:#ffffff16}#raidProgress::-webkit-progress-value{background:linear-gradient(90deg,#91ba85,#efce87);border-radius:3px}
+  #raidProgress::-moz-progress-bar{background:#d7cd86;border-radius:3px}
+  body.hideui #raidHud{display:none!important}
+  body.finishing #raidHud,body.finished #raidHud{visibility:hidden}
+  .fieldEyebrow{display:block;font-size:10px;font-weight:750;letter-spacing:.18em;text-transform:uppercase;color:#d4bd87;line-height:1.4}
+  #raidPrep{position:absolute;inset:0;z-index:27;padding:24px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at center,#07130c52,#07130cd9);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);pointer-events:auto}
+  .raidPrepCard{width:min(760px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;padding:28px;
+    border:1px solid #dec99770;border-radius:20px;background:linear-gradient(145deg,#20362bec,#10251ef5);color:#fbf0d7;
+    box-shadow:0 28px 90px #0009,inset 0 1px 0 #fff2;scrollbar-width:thin;scrollbar-color:#d6bd7c66 transparent;
+    -webkit-mask-image:linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+    mask-image:linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
+  .raidPrepHeader{display:flex;justify-content:space-between;gap:16px;align-items:center}
+  .raidPrepTime{display:flex;gap:12px;align-items:center;justify-content:space-between;margin:0 0 18px;padding:10px 12px;border:1px solid #c3d4ac26;border-radius:9px;background:#071b1140}
+  #raidPrepTimer{flex:1;font-size:12px;line-height:1.5;color:#fbe5ae;font-weight:600;font-variant-numeric:tabular-nums}
+  #raidPrepPause{flex:0 0 auto;min-height:44px;border:1px solid #e7d59f60;border-radius:7px;color:#f7e8c7;background:#dcc38512;padding:8px 12px;font:700 11px var(--ui);cursor:pointer}
+  #raidPrepPause:hover{background:#dcc38529}#raidPrepPause:disabled{opacity:.55;cursor:default}
+  .dailyScore{flex-basis:100%;font-size:11px;line-height:1.7;color:#e5d3a3;margin:5px 0 0}
+  #raidPrepTitle{font-family:Georgia,'Times New Roman',serif;font-size:clamp(28px,4.5vw,42px);font-weight:400;letter-spacing:-.025em;margin:14px 0 10px;line-height:1.15;color:#fff0cd}
+  #raidPrepHint{font-size:14px;line-height:1.6;color:#dce6d1;margin:0 0 22px;max-width:52ch}
+  .raidPrepChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  .raidPrepChoices button{display:flex;flex-direction:column;align-items:flex-start;gap:12px;text-align:left;min-height:216px;padding:19px 16px;
+    border-radius:12px;border:1px solid #d8cc9c55;background:linear-gradient(145deg,#f7edce,#e5d9ba);font-family:inherit;color:#23362b;
+    cursor:pointer;box-shadow:0 5px 0 #07190e66,0 9px 20px #0002;transition:transform .15s,box-shadow .15s}
+  .raidPrepChoices button:hover:not(:disabled){transform:translateY(-4px);box-shadow:0 8px 0 #07190e66,0 15px 25px #0004}
+  .raidPrepChoices button:disabled{opacity:.5;cursor:default}.raidPrepChoices button[aria-pressed="true"],.raidPrepChoices button.selected,.raidPrepChoices button.chosen{opacity:1;border-color:#ffe7a0;box-shadow:0 0 0 3px #ffe7a04d}
+  body.paused .raidPrepChoices button:disabled{opacity:.9}
+  .rewardMark{display:flex;align-items:center;justify-content:center;width:39px;height:39px;border:1px solid #283f3640;border-radius:50%;font-size:20px;font-weight:800;color:#3a5940;background:#5268450c}
+  .rewardName{font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1.2}.rewardDescription{font-size:12px;line-height:1.55;color:#4d5948;flex:1}
+  .rewardAction{display:flex;width:100%;justify-content:space-between;font-size:10px;font-weight:800;letter-spacing:.04em;padding-top:10px;border-top:1px solid #263f3426;text-transform:uppercase}
+  .raidPrepFoot{font-size:11px;line-height:1.5;color:#c7d3bc;margin:20px 0 0;text-align:center}
+  #deployPlacement{position:absolute;z-index:26;left:16px;bottom:270px;width:310px;max-width:calc(100% - 32px);padding:14px 16px;border-radius:13px;
+    background:linear-gradient(140deg,#203b2af7,#10271ff5);border:1px solid #eed38b9c;box-shadow:0 12px 34px #0007;color:#f7ebd0;pointer-events:auto}
+  .placementTop{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  #deployCancel{background:none;border:1px solid #e4dfc436;border-radius:7px;color:#eee6d0;font-family:inherit;min-height:36px;padding:7px 10px;cursor:pointer;font-size:11px}
+  #deployPlacementText{font-size:13px;line-height:1.5;margin:9px 0 7px}
+  .arrivalOptions summary{font-size:11px;color:#d9e5cc;min-height:32px;display:list-item;padding-top:5px;cursor:pointer}
+  .arrivalCompass{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:7px}
+  .arrivalCenter{display:grid;place-items:center;color:#e5d3a4;font-size:9px;letter-spacing:.12em}
+  .arrivalCompass button{min-height:44px;border:1px solid #d9dfc243;border-radius:7px;background:#e4ead211;color:#faf1d8;font:700 11px var(--ui);cursor:pointer}
+  .arrivalCompass button:hover{background:#edcf792c;border-color:#edcf79}
+  #raidAwards{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;width:min(590px,92%);margin-top:18px}
+  #raidAwards>div,#raidAwards>article{padding:12px 15px;flex:1;min-width:140px;border:1px solid #dfc88c48;border-radius:10px;background:#172f25e6;font-size:12px;line-height:1.5;color:#e7ead7}
+  #raidAwards strong,#raidAwards b{display:block;color:#ffe1a0;font-size:12px;letter-spacing:.02em}
+  #raidAwards small,#raidAwards .raidAward span{display:block;color:#cad5bf;margin-top:4px;font-size:11px}
+  #challengeShare{border-color:#ddc17b88!important;background:#e6bc581a!important;color:#ffe3a4!important}
+  #card.result{background:radial-gradient(ellipse at 50% 30%,#183124cd,#07130ff2)}
+  #card .kick{opacity:.9;color:#e0c68c}#card .sub{opacity:.9;line-height:1.6;letter-spacing:.08em}
+  #cardTale{background:#13251dd9;border-color:#cdd1af29}#cardBtns button{background:#1c3328ed;color:#e6ead7;border-color:#c6d2ab47}
+  #cardBtns button.prime{background:linear-gradient(180deg,#f3cf86,#d9ae5a);color:#1b2b20;border:1px solid #fbe4aa;box-shadow:0 4px 0 #79602b,0 10px 24px #0003}
+  #story{background:radial-gradient(ellipse at 50% 30%,#233b2ae8,#081710fa);padding:26px 7vw;justify-content:safe center}
+  #story .storyBrand{color:#c5cead;font-size:9px;margin-bottom:13px}
+  #story .storyTitle{margin:0 0 18px;color:#fff0d3;font:400 clamp(30px,6vmin,50px)/.98 Georgia,'Times New Roman',serif;letter-spacing:-.045em}
+  #story .storyTitle em{color:#efca81;font-weight:400}
+  #storyArt{width:min(24vh,180px);margin-bottom:16px;border:1px solid #e8d39850;box-shadow:0 15px 40px #0005}
+  #story p{color:#e0e6d1;font-size:14px;line-height:1.6;margin-bottom:8px;max-width:31em}
+  #story p.last{color:#f5e7c7;margin-top:2px}
+  #story .rule{margin:10px 0 12px}
+  #playNow{flex:0 0 auto;display:flex;gap:40px;align-items:center;justify-content:space-between;min-height:52px;padding:14px 22px;border-radius:10px;font:800 14px var(--ui);min-width:215px;margin-top:14px;cursor:pointer}
+  #playNow span{font-size:20px}.storyGameNote{font-size:10px;color:#cbd7bb;line-height:1.5;letter-spacing:.025em;margin-top:12px}
+  .storySecondary{display:flex;gap:16px;flex-shrink:0;align-items:center;justify-content:center;margin-top:7px}
+  #storyGo,#storySkip{margin:0;min-height:44px;padding:8px 4px;border:0;background:none;box-shadow:none;color:#dae1cd;font-size:10px;letter-spacing:.04em;text-transform:none}
+  #storyGo:hover,#storySkip:hover{color:#ffe2a1}#storyGo:active{box-shadow:none;transform:none}
+  @media(max-width:650px){
+    #raidHud{width:calc(100% - 24px);padding:7px 10px;gap:8px;margin-top:5px}
+    .raidWaveSeal{width:64px;height:32px;flex-basis:64px;font-size:10px}.raidHudHeading{gap:4px}
+    #raidTitle{font-size:11px}#raidDirection,#raidStatus{font-size:9px}#raidProgress{margin:5px 0;height:3px}
+    #raidPrep{padding:14px}.raidPrepCard{padding:22px 18px;border-radius:16px}#raidPrepTitle{font-size:32px}
+    #raidPrepHint{font-size:13px;margin-bottom:17px}.raidPrepChoices{grid-template-columns:1fr;gap:9px}
+    .raidPrepChoices button{display:grid;grid-template-columns:40px 1fr;gap:4px 12px;min-height:111px;padding:14px}
+    .rewardMark{grid-row:1/4;margin-top:3px}.rewardName{font-size:15px}.rewardDescription{font-size:12px;line-height:1.45}
+    .rewardAction{font-size:9px;padding-top:7px;margin-top:4px}.raidPrepFoot{margin-top:16px;font-size:10px}
+    #deployPlacement{left:12px;bottom:205px;width:calc(100% - 24px);max-width:none;padding:10px 13px}
+    #deployCancel{min-height:44px}#deployPlacementText{font-size:12px;margin:5px 0}.arrivalOptions summary{min-height:35px}
+    #story .storyTitle{font-size:37px;margin-bottom:13px}body.narrow #storyArt{width:min(21vh,170px);margin-bottom:14px}
+    #story p{font-size:13px;line-height:1.55}#story .storyBrand{margin-bottom:10px}
+    #dailyChallenge{min-height:58px}#raidAwards{gap:7px}#raidAwards>div,#raidAwards>article{padding:10px 12px}
+    body.narrow #coopObjective{max-width:calc(100% - 24px);width:calc(100% - 24px)}
+    body.narrow .coopSummary{gap:8px;justify-content:space-between;font-size:9px}
+  }
+  @media(max-height:500px) and (min-width:651px){
+    #raidPrep{padding:12px}.raidPrepCard{padding:18px 23px;border-radius:13px}#raidPrepTitle{font-size:28px;margin:7px 0}
+    #raidPrepHint{font-size:12px;margin-bottom:12px}.raidPrepChoices button{min-height:140px;padding:12px;gap:7px}
+    .rewardMark{width:25px;height:25px;font-size:14px}.rewardName{font-size:14px}.rewardDescription{font-size:11px}
+    .rewardAction{font-size:9px;padding-top:6px}.raidPrepFoot{margin-top:12px;font-size:10px}
+    #raidHud{position:absolute;top:8px;left:16px;transform:none;margin:0;width:340px;padding:6px 9px}
+    #raidHud .raidWaveSeal{height:32px;flex-basis:64px;font-size:10px}#raidTitle{font-size:10px}#raidDirection,#raidStatus{font-size:9px}
+    body.raid #clock{visibility:hidden}body.raid #bar,body.raid #battleReadout{display:none}
+    body.raid #coopObjective{position:absolute;left:50%;top:67px;transform:translateX(-50%);margin:0;width:340px}
+    #deployPlacement{left:auto;right:12px;bottom:64px;width:278px}
+    #story .storyTitle{font-size:28px;margin-bottom:8px}#story .storyBrand{margin-bottom:7px}#storyArt{display:none!important}
+    #story p{font-size:12px;line-height:1.4;margin-bottom:4px}#story .rule{margin:7px 0}#playNow{min-height:44px;margin-top:7px;padding:10px 17px}
+    .storyGameNote{margin-top:8px}.storySecondary{margin-top:1px}
+  }
+
 </style>
 </head>
 <body>
@@ -739,6 +885,13 @@ if(GA_ID){
   <div id="coopObjective" hidden><div class="coopSummary"><strong id="coopHens">2 / 2 hens safe</strong><span id="coopFence">Fence intact</span><span id="coopStatus">Protect the hens</span></div>
     <div class="henHealthRow"><div class="henHealth"><label for="henHealth0">Hen 1</label><progress id="henHealth0" max="100" value="100" aria-valuetext="100 percent health"></progress><output id="henHealthText0">100%</output></div><div class="henHealth"><label for="henHealth1">Hen 2</label><progress id="henHealth1" max="100" value="100" aria-valuetext="100 percent health"></progress><output id="henHealthText1">100%</output></div></div>
   </div>
+  <section id="raidHud" aria-label="Raid progress" hidden>
+    <div class="raidWaveSeal" id="raidWave">1 / 3</div>
+    <div class="raidHudMain"><div class="raidHudHeading"><strong id="raidTitle">The treeline stirs</strong><span id="raidDirection">East approach</span></div>
+      <progress id="raidProgress" max="100" value="0" aria-label="Raid progress"></progress>
+      <span id="raidStatus">Protect the hens. Hold the run.</span>
+    </div>
+  </section>
   </div>
   <div id="replaySeek" role="status" aria-live="polite" hidden>Finding highlight…</div>
 
@@ -758,6 +911,7 @@ if(GA_ID){
     <div id="count"></div>
     <div class="sub" id="cardSub"></div>
     <div id="cardTale"></div>
+    <div id="raidAwards" aria-label="Farm honors" hidden></div>
     <div id="cardTrib">for Eenie &amp; Moe</div>
     <div id="callBar">
       <div class="ck">Call it</div>
@@ -773,6 +927,7 @@ if(GA_ID){
       <button id="replay">Replay battle</button>
       <button id="setup">Change matchup</button>
       <button id="share">Copy link</button>
+      <button id="challengeShare" hidden>Challenge a friend</button>
     </div>
     <div id="endCta">
       <div class="line">Enjoyed the carnage?</div>
@@ -800,15 +955,18 @@ if(GA_ID){
     <h2 id="rulesTitle">How this works</h2>
     <p class="sub">You don't just watch it. You run the farm while it happens.</p>
     <div id="rulesList" tabindex="0" role="region" aria-label="How to play instructions">
-      <div class="rl hot"><div class="kx">Protect</div><div class="tx">In <b>Defend the coop</b>, two hens shelter inside a roofed run. Predators must break a fence section to enter. A breach does not end the raid: call reinforcements and fight off the intruders. Stop all predators to win; lose both hens and the raid is over.</div></div>
+      <div class="rl hot"><div class="kx">Save the coop</div><div class="tx">Two hens. <b>Three waves.</b> Stop every scheduled predator in the final wave to win. A breach is a rescue opportunity: the run ends only when <b>both hens are lost</b>. Your surviving defenders and damaged fences carry into the next wave.</div></div>
+      <div class="rl hot"><div class="kx">Regroup</div><div class="tx">Between waves, choose <b>one reward</b>: repair the run, recruit six geese, or add supplies to the war chest. The wave banner previews the next approach. If the break ends before you choose, you receive supplies.</div></div>
+      <div class="rl hot"><div class="kx">Deploy</div><div class="tx">Choose a reinforcement, then <b>tap the field</b> to set its arrival point. Help takes a moment to arrive, so plan ahead. You can also select a named farm edge using the arrival controls.</div></div>
+      <div class="rl"><div class="kx">Daily raid</div><div class="tx"><b>Today's raid</b> gives everyone the same starting challenge. After your run, <b>Challenge a friend</b> copies a fresh attempt at that raid; Copy link shares your recorded battle.</div></div>
+      <div class="rl"><div class="kx">Other modes</div><div class="tx"><b>Coop defense</b> is a single custom raid. <b>Open battle</b> is the original army-versus-army simulator. Both remain available in the matchup settings.</div></div>
       <div class="rl hot"><div class="kx">4 &nbsp;Repair</div><div class="tx">Repair half of the weakest fence section, even after a breach. It recharges in <b>20 seconds</b>. The status above the field shows the weakest fence and how many hens remain.</div></div>
       <div class="rl hot"><div class="kx">5 &nbsp;Rally</div><div class="tx">For <b>8 seconds</b>, defenders within 24 metres of the coop regroup at the weakest fence or pursue intruders inside. They still fight enemies in reach. Recharges in <b>22 seconds</b>. Each hen’s health bar shows how much time you have to rescue her.</div></div>
       <div class="rl"><div class="kx">Replay</div><div class="tx">After the battle, choose a timestamp under <b>Moments to replay</b> to watch from three seconds before that event.</div></div>
       <div class="rl hot"><div class="kx">War chest</div><div class="tx">
-        Points build the whole fight. Spend them on the chips along the bottom to
-        call animals in <b>mid-battle</b> — guinea fowl are cheap noise, a bull costs
-        most of what you'll ever hold. You get four or five packets a match, so
-        what you skip matters as much as what you buy.</div></div>
+        Points build during combat. Spend them on the animals along the bottom to
+        call help <b>mid-battle</b>. Geese shove enemies, dogs intercept quickly,
+        and a bull breaks through a crowd. Saving up changes what you can call next.</div></div>
       <div class="rl hot"><div class="kx">1 &nbsp;Horn</div><div class="tx">
         Everything on your side swings <b>35% faster and hits 15% harder</b> for six
         seconds. Tempo. Use it when the lines are already locked and you want to
@@ -841,17 +999,45 @@ if(GA_ID){
     <button id="rulesGo">Got it</button>
   </div>
 
+  <section id="raidPrep" role="dialog" aria-modal="true" aria-labelledby="raidPrepTitle" aria-describedby="raidPrepHint" tabindex="-1" hidden>
+    <div class="raidPrepCard">
+      <div class="raidPrepHeader"><span class="fieldEyebrow">A moment to regroup</span></div>
+      <h2 id="raidPrepTitle">The flock held.</h2>
+      <p id="raidPrepHint">The next wave is coming. Choose one supply reward before it arrives.</p>
+      <div class="raidPrepTime"><span id="raidPrepTimer" role="timer">Next wave in 10s</span><button id="raidPrepPause" type="button">Pause choices</button></div>
+      <div class="raidPrepChoices" aria-label="Choose one reward">
+        <button type="button" data-raid-choice="repair"><span class="rewardMark" aria-hidden="true">╬</span><span class="rewardName">Patch the run</span><span class="rewardDescription">Restore the weakest fence. Buy the hens more time.</span><span class="rewardAction">Choose repairs <span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="recruit"><span class="rewardMark" aria-hidden="true">+6</span><span class="rewardName">Call the geese</span><span class="rewardDescription">Six stubborn defenders join your surviving flock.</span><span class="rewardAction">Choose recruits <span aria-hidden="true">↗</span></span></button>
+        <button type="button" data-raid-choice="save"><span class="rewardMark" aria-hidden="true">+</span><span class="rewardName">Stock the chest</span><span class="rewardDescription">Bank extra supplies for the reinforcement you need next.</span><span class="rewardAction">Choose supplies <span aria-hidden="true">↗</span></span></button>
+      </div>
+      <p class="raidPrepFoot">One reward per break. Supplies are saved automatically if time runs out.</p>
+    </div>
+  </section>
+
+  <section id="deployPlacement" aria-label="Reinforcement arrival point" hidden>
+    <div class="placementTop"><span class="fieldEyebrow">Help is on the way</span><button id="deployCancel" type="button" aria-label="Cancel reinforcement placement">Cancel</button></div>
+    <p id="deployPlacementText" role="status">Tap the field to choose an arrival point.</p>
+    <details class="arrivalOptions"><summary>Or choose a farm edge</summary><div class="arrivalCompass" aria-label="Arrival direction">
+      <button type="button" data-deploy-sector="5" aria-label="Arrive from northwest">NW</button><button type="button" data-deploy-sector="6" aria-label="Arrive from north">N</button><button type="button" data-deploy-sector="7" aria-label="Arrive from northeast">NE</button>
+      <button type="button" data-deploy-sector="4" aria-label="Arrive from west">W</button><span class="arrivalCenter" aria-hidden="true">COOP</span><button type="button" data-deploy-sector="0" aria-label="Arrive from east">E</button>
+      <button type="button" data-deploy-sector="3" aria-label="Arrive from southwest">SW</button><button type="button" data-deploy-sector="2" aria-label="Arrive from south">S</button><button type="button" data-deploy-sector="1" aria-label="Arrive from southeast">SE</button>
+    </div></details>
+  </section>
+
   <div id="finaleBanner" hidden><div id="finaleLabel" role="status">Final moment</div><button id="finaleSkip">Show results</button></div>
 
   <div id="story" role="dialog" aria-modal="true" aria-label="Why this battle exists" tabindex="-1">
+    <span class="fieldEyebrow storyBrand">Judge Dean LLC presents</span>
+    <h1 class="storyTitle">Small flock.<br><em>Big trouble.</em></h1>
     <img id="storyArt" alt="Eenie and Moe">
     <p>A family of raccoons raided the coop in the middle of the night.</p>
     <p class="last">Eenie and Moe didn't make it.</p>
     <div class="rule"></div>
     <p>So this is a simulator built to answer the question that comes after it:
        how many chickens would it have taken?</p>
-    <button id="storyGo">Find out</button>
-    <button id="storySkip">Skip the lot</button>
+    <button id="playNow" type="button">Play now <span aria-hidden="true">→</span></button>
+    <span class="storyGameNote">Two hens. Three waves. One very angry farm.</span>
+    <div class="storySecondary"><button id="storyGo">How to play</button><button id="storySkip">Choose a matchup</button></div>
   </div>
 
   <!-- The long version, opened from 'Why this exists'. The welcome card has to
@@ -926,9 +1112,11 @@ if(GA_ID){
   <div id="panel">
     <h1>Chickens vs Raccoons <span id="fps">v1.0</span></h1>
     <div class="row"><label>Objective</label><div class="seg" id="segMode">
-      <button data-v="defense" class="on">Defend the coop</button><button data-v="battle">Open battle</button>
+      <button data-v="raid" data-mode="raid" class="on">Save the Coop</button><button data-v="defense" data-mode="defense">Coop defense</button><button data-v="battle" data-mode="battle">Open battle</button>
     </div></div>
-    <p id="objectiveHint">Protect the hens inside the run.</p>
+    <p id="objectiveHint">Hold the run through three waves. Protect the hens, call the farm, and make every rescue count.</p>
+    <button id="dailyChallenge" type="button"><span class="dailyIcon" aria-hidden="true">☀</span><span><strong>Today's raid</strong><small>The same challenge for everyone</small></span><span aria-hidden="true">↗</span></button>
+    <div id="dailyBadge" hidden></div>
     <div class="row">
       <label for="sA">Birds <b id="vA">260</b></label>
       <input type="range" id="sA" min="0" max="4000" step="1" value="260">
@@ -937,6 +1125,7 @@ if(GA_ID){
       <label for="sB">Raccoons <b id="vB">24</b></label>
       <input type="range" id="sB" min="0" max="600" step="1" value="24">
     </div>
+    <p class="raidRosterNote"><strong>Three attacks from the treeline</strong>Raccoons test the fence. Foxes find the flank. A bear leads the final charge. The predators are set for each wave.</p>
     <div class="row">
       <label>Bird type</label>
       <div class="seg" id="segBird">
@@ -1397,7 +1586,7 @@ const MODELS={"rigs":{"bird":{"bones":["body","neck","head","wing.L","wingtip.L"
 
 
 /* ============================================================
-   ARENA
+   ARENA — visual direction by Judge Dean LLC
    ============================================================ */
 let arenaGroup=null, ARENA_R=30, NIGHT=false;
 
@@ -1483,29 +1672,44 @@ function buildArena(R,night){
   const tMesh=new THREE.Mesh(tGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1.0}));
   tMesh.receiveShadow=true; g.add(tMesh);
 
-  // the trodden pan itself
-  const groundGeo=new THREE.CircleGeometry(R+12,72); groundGeo.rotateX(-Math.PI/2);
-  const gm=new THREE.Mesh(groundGeo,new THREE.MeshStandardMaterial({
-    color:new THREE.Color(night?0x3d2f20:0x6f6047).convertSRGBToLinear(),roughness:1.0}));
-  gm.position.y=0.004; gm.receiveShadow=true; g.add(gm);
-
-  const patch=new THREE.CircleGeometry(R*0.74,56); patch.rotateX(-Math.PI/2);
-  const pm=new THREE.Mesh(patch,new THREE.MeshStandardMaterial({
-    color:new THREE.Color(night?0x4a3826:0x827152).convertSRGBToLinear(),roughness:1.0}));
-  pm.position.y=0.009; pm.receiveShadow=true; g.add(pm);
+  /* A worn yard with soft soil/pasture transitions. Vertex colour keeps the
+     surface self-contained and avoids texture fetches or transparent decals. */
+  const groundGeo=new THREE.RingGeometry(0,R+12,96,18); groundGeo.rotateX(-Math.PI/2);
+  const groundPos=groundGeo.attributes.position,groundColors=new Float32Array(groundPos.count*3);
+  const soilLight=new THREE.Color(night?'#55442e':'#a58b62').convertSRGBToLinear();
+  const soilDark=new THREE.Color(night?'#302b20':'#7f7150').convertSRGBToLinear();
+  const pasture=new THREE.Color(night?'#293720':'#637c40').convertSRGBToLinear();
+  for(let i=0;i<groundPos.count;i++){
+    const x=groundPos.getX(i),z=groundPos.getZ(i),r=Math.hypot(x,z);
+    const grain=vnoise(x*.36,z*.36),broad=vnoise(x*.10+18,z*.10-9);
+    const worn=clamp(.40+grain*.24+broad*.40,0,1);
+    const edge=clamp((r-R*.79)/(R*.26)+broad*.40-.16,0,1);
+    // A clear trodden ring leaves the coop and fighting silhouettes readable.
+    const lane=1-clamp(Math.abs(r-10.3)/2.2,0,1);
+    const outerBlend=clamp((r-R-7)/5,0,1),terrainMix=clamp(.5+(vnoise(x*.09,z*.09)-.5)*.6,0,1);
+    for(let c=0;c<3;c++){
+      const key=['r','g','b'][c];
+      const dirt=lerp(soilDark[key],soilLight[key],Math.max(worn,lane*.87));
+      const yard=lerp(dirt,pasture[key],edge*.87),country=lerp(cGrass[key],cDry[key],terrainMix);
+      groundColors[i*3+c]=lerp(yard,country,outerBlend);
+    }
+  }
+  groundGeo.setAttribute('color',new THREE.BufferAttribute(groundColors,3));
+  const gm=new THREE.Mesh(groundGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}));
+  gm.position.y=.009;gm.receiveShadow=true;g.add(gm);
 
   /* ---- scatter: grass tufts or straw ---- */
   const bits=[];
   const N=Math.min(2600,(R*R*0.9)|0);
   for(let i=0;i<N;i++){
-    const a=Math.random()*TAU, r=Math.sqrt(Math.random())*(R+11);
+    const a=VR()*TAU, r=Math.sqrt(VR())*(R+11);
     const x=Math.cos(a)*r, z=Math.sin(a)*r;
     if(night){
-      bits.push(P(G.box,i%3?'#a8862f':'#8d6f26', x,0.02,z, 0,Math.random()*TAU,0, rnd(.03,.06),.02,rnd(.25,.6)));
+      bits.push(P(G.box,i%3?'#a8862f':'#8d6f26', x,0.02,z, 0,VR()*TAU,0, rnd(.03,.06),.02,rnd(.25,.6)));
     }else{
       const inner=r<R*0.75;
-      bits.push(P(G.cone,inner?(i%4?'#6d6234':'#7d7040'):(i%3?'#4e6b32':'#5d7a3a'),
-        x,rnd(.05,.14),z, rnd(-.2,.2),Math.random()*TAU,rnd(-.2,.2), rnd(.05,.12),rnd(.18,.42),rnd(.05,.12)));
+      bits.push(P(G.cone,inner?(i%4?'#8e8354':'#aa9967'):(i%3?'#547640':'#719149'),
+        x,rnd(.05,.14),z, rnd(-.2,.2),VR()*TAU,rnd(-.2,.2), rnd(.05,.12),rnd(.18,.42),rnd(.05,.12)));
     }
   }
   if(bits.length){
@@ -1548,7 +1752,23 @@ function buildArena(R,night){
     // barn, silo, water trough, bales
     const by=terrainY(-R*1.35,-R*1.05,R);
     props.push(P(G.box,'#7a2a22', -R*1.35,by+4.2,-R*1.05, 0,.5,0, 13,8.4,9));
-    props.push(P(G.box,'#4a1c16', -R*1.35,by+8.9,-R*1.05, 0,.5,0, 13.6,1.6,9.4));
+    // Pitched roof, white trim and siding give the background barn a silhouette.
+    const barnX=-R*1.35,barnZ=-R*1.05,ba=.5;
+    function barnPart(color,x,y,z,rx,rz,sx,sy,sz){
+      props.push(P(G.box,color,barnX+Math.cos(ba)*x+Math.sin(ba)*z,by+y,barnZ-Math.sin(ba)*x+Math.cos(ba)*z,rx,ba,rz,sx,sy,sz));
+    }
+    for(const side of [-1,1]){
+      barnPart('#3c4542',0,9.05,side*2.42,side*.38,0,13.9,.27,5.38);
+      barnPart('#d8c6a0',side*6.52,4.25,4.55,0,0,.24,8.5,.16);
+    }
+    barnPart('#d8c6a0',0,8.32,4.55,0,0,13.2,.22,.16);
+    barnPart('#59605a',0,10.05,0,0,0,14,.20,.30);
+    for(let j=-5;j<=5;j++)barnPart(j%2?'#8d3e2c':'#853629',j,4.2,4.53,0,0,.065,8.1,.07);
+    for(const x of [-3.9,3.9]){
+      barnPart('#b6c4b1',x,5.45,4.57,0,0,1.5,1.55,.13);
+      barnPart('#d9d0ad',x,5.45,4.66,0,0,.10,1.68,.12);
+      barnPart('#d9d0ad',x,5.45,4.66,0,0,1.68,.10,.12);
+    }
     props.push(P(G.box,'#2e120e', -R*1.35+3.2,by+2.2,-R*1.05+4.3, 0,.5,0, 2.6,4.4,.3));
     const sy=terrainY(R*1.25,-R*0.9,R);
     props.push(P(G.cyl,'#8a9aa8', R*1.25,sy+3.2,-R*0.9, 0,0,0, 2.4,6.4,2.4));
@@ -1557,23 +1777,30 @@ function buildArena(R,night){
     props.push(P(G.box,'#5a5f66', R*0.55,.28,-R*0.72, 0,.7,0, 3.2,.55,.9));
     props.push(P(G.box,'#3f444a', R*0.55,.48,-R*0.72, 0,.7,0, 2.9,.12,.7));
     for(let i=0;i<14;i++){
-      const a=Math.random()*TAU, r=R+rnd(3,26);
+      const a=VR()*TAU, r=R+rnd(3,26);
       const x=Math.cos(a)*r, z=Math.sin(a)*r;
-      props.push(P(G.box,'#c4aa24', x,terrainY(x,z,R)+.5,z, 0,Math.random()*TAU,0, 1.5,1.0,1.0));
+      props.push(P(G.box,'#bda060', x,terrainY(x,z,R)+.5,z, 0,VR()*TAU,0, 1.5,1.0,1.0));
     }
+  }
+  /* Small stones and discarded straw mark the yard without introducing
+     visual walls or new collision obstacles. All pieces merge into one draw. */
+  for(let i=0;i<90;i++){
+    const a=i*2.39996323,r=R*(.72+.22*h2(i,7));
+    const x=Math.cos(a)*r,z=Math.sin(a)*r;
+    props.push(P(G.sphLo,i%3?'#9d987e':'#b4ad90',x,.025,z,0,a,0,.09+h2(i,5)*.14,.055,.08+h2(i,2)*.10));
   }
   /* ---- treeline: a broken hedgerow band sitting on the terrain ---- */
   const trees=[];
   const TN=night?70:150;
   for(let i=0;i<TN;i++){
-    const a=Math.random()*TAU, rr=R+rnd(24,R*2.4);
+    const a=VR()*TAU, rr=R+rnd(24,R*2.4);
     const x=Math.cos(a)*rr, z=Math.sin(a)*rr;
     const y=terrainY(x,z,R);
     const hgt=rnd(4.5,11), wid=hgt*rnd(0.26,0.40);
     trees.push(P(G.cyl,night?'#1a1410':'#3d2c1c', x,y+hgt*0.22,z, 0,0,0, hgt*.045,hgt*.45,hgt*.045));
     const cCol=night?(i%3?'#141f18':'#101a14'):(i%3?'#2f4a24':'#3a5a2b');
-    trees.push(P(G.cone,cCol, x,y+hgt*0.55,z, 0,Math.random()*TAU,0, wid,hgt*.55,wid));
-    trees.push(P(G.cone,cCol, x,y+hgt*0.82,z, 0,Math.random()*TAU,0, wid*.72,hgt*.42,wid*.72));
+    trees.push(P(G.cone,cCol, x,y+hgt*0.55,z, 0,VR()*TAU,0, wid,hgt*.55,wid));
+    trees.push(P(G.cone,cCol, x,y+hgt*0.82,z, 0,VR()*TAU,0, wid*.72,hgt*.42,wid*.72));
   }
   const tm=new THREE.Mesh(mergeAll(trees),MAT); tm.castShadow=!night; g.add(tm);
   const pmn=new THREE.Mesh(mergeAll(props),MAT); pmn.castShadow=true; pmn.receiveShadow=true; g.add(pmn);
@@ -1688,11 +1915,11 @@ function spawnFeathers(x,y,z,n,force){
   for(let i=0;i<n;i++){
     const k=fHead++%FEATHER_MAX;
     F.x[k]=x; F.y[k]=y+rnd(-.1,.3); F.z[k]=z;
-    const a=Math.random()*TAU, sp=rnd(.35,1.7)*force;
+    const a=VR()*TAU, sp=rnd(.35,1.7)*force;
     F.vx[k]=Math.cos(a)*sp; F.vz[k]=Math.sin(a)*sp;
     F.vy[k]=rnd(1.7,3.6)*force;          // kicked up, not launched
-    F.rx[k]=Math.random()*TAU; F.ry[k]=Math.random()*TAU;
-    F.ph[k]=Math.random()*TAU;
+    F.rx[k]=VR()*TAU; F.ry[k]=VR()*TAU;
+    F.ph[k]=VR()*TAU;
     F.sp[k]=rnd(-5,5); F.life[k]=rnd(2.6,4.6); F.g[k]=0;
   }
 }
@@ -1723,7 +1950,7 @@ function stepParticles(dt){
       F.x[i]+=F.vx[i]*dt; F.y[i]+=F.vy[i]*dt; F.z[i]+=F.vz[i]*dt;
       if(F.y[i]<0.022){
         F.y[i]=0.022; F.g[i]=1; F.vx[i]=F.vy[i]=F.vz[i]=0;
-        F.rx[i]=Math.PI/2*(Math.random()<.5?1:-1)+rnd(-.25,.25);   // flat on the dirt
+        F.rx[i]=Math.PI/2*(VR()<.5?1:-1)+rnd(-.25,.25);   // flat on the dirt
         if(F.life[i]>2.6) F.life[i]=2.6;
       }
       F.rx[i]+=F.sp[i]*dt; F.ry[i]+=F.sp[i]*0.5*dt;
@@ -1763,9 +1990,9 @@ const STAIN_MAX=3400;
 function splatGeo(seed){
   const bits=[];
   for(let i=0;i<6;i++){
-    const a=Math.random()*TAU, r=Math.random()*0.55;
+    const a=VR()*TAU, r=VR()*0.55;
     const c=new THREE.CircleGeometry(rnd(.22,.5),7); c.rotateX(-Math.PI/2);
-    bits.push(P(c,'#000000', Math.cos(a)*r,0,Math.sin(a)*r, 0,Math.random()*TAU,0, 1,1,rnd(.7,1.3)));
+    bits.push(P(c,'#000000', Math.cos(a)*r,0,Math.sin(a)*r, 0,VR()*TAU,0, 1,1,rnd(.7,1.3)));
   }
   return mergeAll(bits);
 }
@@ -1784,7 +2011,7 @@ function addStain(x,z,scale){
   if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   if(!GORE) return;
   const v=stainHead%3, i=stainW[v]%STAIN_MAX;
-  _v.set(x,0.014+v*0.0012,z); _e.set(0,Math.random()*TAU,0); _q.setFromEuler(_e);
+  _v.set(x,0.014+v*0.0012,z); _e.set(0,VR()*TAU,0); _q.setFromEuler(_e);
   const s=scale*rnd(.75,1.35);
   _s.set(s,1,s*rnd(.8,1.25));
   _m2.compose(_v,_q,_s);
@@ -1813,7 +2040,7 @@ function spawnBlood(x,y,z,n,force,dx,dz){
   for(let i=0;i<n;i++){
     const k=dHead++%DROP_MAX;
     D.x[k]=x; D.y[k]=y+rnd(-.1,.2); D.z[k]=z;
-    const a=Math.random()*TAU, sp=rnd(.6,2.5)*force;
+    const a=VR()*TAU, sp=rnd(.6,2.5)*force;
     D.vx[k]=Math.cos(a)*sp+(dx||0)*rnd(.8,2.6)*force;
     D.vz[k]=Math.sin(a)*sp+(dz||0)*rnd(.8,2.6)*force;
     D.vy[k]=rnd(1.1,3.3)*force;
@@ -1856,7 +2083,7 @@ function stepGore(dt){
     D.x[i]+=D.vx[i]*dt; D.y[i]+=D.vy[i]*dt; D.z[i]+=D.vz[i]*dt;
     if(D.y[i]<=0.02){                       // it landed — most drops leave a mark
       D.life[i]=0;
-      if(Math.random()<0.30) addStain(D.x[i],D.z[i],D.sc[i]*rnd(.13,.30));
+      if(VR()<0.30) addStain(D.x[i],D.z[i],D.sc[i]*rnd(.13,.30));
       continue;
     }
     if(n<DROP_MAX){
@@ -2675,9 +2902,36 @@ const DEPLOY=[
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
 function cmdReady(k){ if(k==='rally'&&!(typeof COOP!=='undefined'&&COOP.active))return false;if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
-function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
-function applyDeploy(d){
-  if(!canDeploy(d)) return false;
+// Judge Dean LLC — recorded arrival orders and per-animal rescue awards.
+const DEPLOYMENT={selected:null,hover:null,pending:[]};
+const RAID_AWARDS={breachKills:new Uint16Array(MAXA),joinedAt:new Float32Array(MAXA)};
+function resetDeployment(){
+  DEPLOYMENT.selected=null;DEPLOYMENT.hover=null;DEPLOYMENT.pending=[];
+  RAID_AWARDS.breachKills.fill(0);RAID_AWARDS.joinedAt.fill(0);
+}
+function deploymentReserved(){return DEPLOYMENT.pending.reduce((n,p)=>n+p.n,0);}
+function deploymentStep(dt){
+  for(let i=DEPLOYMENT.pending.length-1;i>=0;i--){
+    const order=DEPLOYMENT.pending[i];order.remaining=Math.max(0,order.remaining-dt);
+    if(order.remaining<=1e-8){
+      DEPLOYMENT.pending.splice(i,1);
+      applyDeploy(DEPLOY.find(d=>d.k===order.k),order,true);
+    }
+  }
+}
+function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+deploymentReserved()+(typeof raidReserved==='function'?raidReserved():0)+d.n<=MAXA; }
+function applyDeploy(d,position=null,prepaid=false){
+  if(prepaid){if(!d||!BATTLE.running||BATTLE.over||N+d.n>MAXA)return false;}
+  else if(!canDeploy(d))return false;
+  if(position&&!prepaid){
+    if(!RAID.active||!Number.isFinite(position.x)||!Number.isFinite(position.z))return false;
+    const radius=Math.hypot(position.x,position.z);
+    if(radius<ARENA_R*.80||radius>ARENA_R*.96)return false;
+    CMD.pts-=d.cost;TALE.spent+=d.cost;
+    DEPLOYMENT.pending.push({k:d.k,n:d.n,x:position.x,z:position.z,remaining:1.8,total:1.8});
+    if(typeof highlightEvent==='function')highlightEvent('deploy','Incoming '+d.n+' '+UNITS[UI_[d.k]].label,position.x,position.z,BATTLE.tick+1);
+    return true;
+  }
   const u=UNITS[UI_[d.k]];
   /* a mid-fight fidelity upgrade only rebuilds what is on the field, so the
      squad for a packet nobody has called in yet may be standing down. Build it
@@ -2696,13 +2950,14 @@ function applyDeploy(d){
   }
   if(!SQUADS[u.i]) buildOneSquad(d.k);
   if(!SQUADS[u.i]) return false;
-  CMD.pts-=d.cost; TALE.spent+=d.cost;
+  if(!prepaid){CMD.pts-=d.cost; TALE.spent+=d.cost;}
   TALE.bought[d.k]=(TALE.bought[d.k]||0)+d.n;
-  const base=Math.atan2(TC.az,TC.ax)||-1.57;
+  const base=position?Math.atan2(position.z,position.x):Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
     const a=base+srnd(-0.30,0.30), r=ARENA_R*srnd(0.86,0.95);
     const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*VARIANTS[d.k])|0);
     A.yaw[j]=Math.atan2(-A.x[j],-A.z[j]);
+    RAID_AWARDS.joinedAt[j]=BATTLE.t;
     aliveA++; initA++;
     spawnPuff(A.x[j],0.2,A.z[j],0.3);
   }
@@ -2942,7 +3197,9 @@ function spawnRoster(list,night){
   TC.lead[0]=TC.lead[1]=0;
   BATTLE.conSeen=0; BATTLE.conAge=9; BATTLE.conN=0;
   enemyCentroids();
-  cmdReset();
+  cmdReset();resetDeployment();
+  if(typeof raidReset==='function')raidReset();
+  if(typeof buildRaidView==='function')buildRaidView();
 }
 function addAgent(x,z,kindIdx,vr){
   if(N>=MAXA) return -1;
@@ -3467,6 +3724,7 @@ function hurt(j,dmg,by,crit){
     if(TALE.bought[bk]) TALE.boughtKills[bk]=(TALE.boughtKills[bk]||0)+1; }
   if(A.team[j]===0) aliveA--; else aliveB--;
   if(typeof rememberFinalDeath==='function')rememberFinalDeath(j);
+  if(by>=0&&A.team[by]===0&&COOP.active&&COOP.breaches>0&&Math.abs(Math.hypot(A.x[j],A.z[j])-COOP.radius)<4)RAID_AWARDS.breachKills[by]++;
   A.kills[by]++; BATTLE.totalKills++; BATTLE.deathsWindow++; recentKills+=1;
   const hy=0.5+(A.fy[j]||0);
   spawnFeathers(A.x[j],hy,A.z[j],u.build==='bird'?4:2,1.3);
@@ -3497,7 +3755,7 @@ const COOP={active:false,radius:7.5,sections:[],hens:[],breaches:0,firstHit:fals
   entered:false,intruders:0,insideX:0,insideZ:0,reason:'',pressure:new Uint8Array(8)};
 const COOP_SIDES=['East','Southeast','South','Southwest','West','Northwest','North','Northeast'];
 function coopReset(){
-  COOP.active=typeof CFG!=='undefined'&&CFG.mode==='defense';
+  COOP.active=typeof CFG!=='undefined'&&(CFG.mode==='defense'||CFG.mode==='raid');
   COOP.sections=Array.from({length:8},()=>({hp:480,maxHp:480,hit:0}));
   COOP.hens=[{x:-1.4,z:1.4,hp:100,maxHp:100},{x:1.4,z:1.4,hp:100,maxHp:100}];
   COOP.breaches=0;COOP.firstHit=false;COOP.entered=false;COOP.intruders=0;COOP.insideX=0;COOP.insideZ=0;COOP.reason='';COOP.pressure.fill(0);
@@ -3559,7 +3817,11 @@ function coopHeading(i,tg){
   const rally=u.team===0&&CMD.rally>0&&r<=24;
   const engage=rally&&tg>=0?u.reach+UNITS[A.kind[tg]].rad*.5:u.team===0?12:3;
   const enemyNear=tg>=0&&(A.x[tg]-x)**2+(A.z[tg]-z)**2<=engage*engage;
-  if(enemyNear&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
+  const raidPredator=typeof RAID!=='undefined'&&RAID.active&&u.team===1;
+  // Raid foxes exploit openings; bears commit to the fence before brawling inside.
+  const breachRunner=raidPredator&&u.k==='fox'&&coopNearestBreach(i)>=0;
+  const fenceBear=raidPredator&&u.k==='bear'&&!inside;
+  if(enemyNear&&!breachRunner&&!fenceBear&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
   if(u.team===1){
     if(inside){
       if(!COOP.entered){COOP.entered=true;coopEvent('intruder','A predator entered the run',x,z);}
@@ -3576,7 +3838,8 @@ function coopHeading(i,tg){
     const approach=COOP.radius+(intact?u.rad*.5+.5:-1.2);
     const tx=Math.cos(a)*approach,tz=Math.sin(a)*approach;
     if(intact&&Math.hypot(tx-x,tz-z)<1.1){
-      if(COOP.pressure[k]<3){COOP.pressure[k]++;coopStrike(i,s,false);}
+      if(fenceBear)raidBearStrike(i,k);
+      else if(COOP.pressure[k]<3){COOP.pressure[k]++;coopStrike(i,s,false);}
       return {x:-x,z:-z,stop:true};
     }
     // Go around the outside instead of attempting to walk through another panel.
@@ -3660,6 +3923,168 @@ function coopHud(){
   $('coopFence').textContent=COOP.breaches?COOP.breaches+' fence breach'+(COOP.breaches===1?'':'es'):'Weakest fence '+Math.ceil(weakest*100)+'%';
   $('coopStatus').textContent=BATTLE.over?COOP.reason:COOP.intruders?'Predators inside!':COOP.breaches?'Defend the hens!':CMD.rally>0?'Rally active · '+Math.ceil(CMD.rally)+'s':'Protect the hens';
   el.classList.toggle('danger',COOP.breaches>0||weakest<.3);
+}
+
+
+/* Judge Dean LLC — three-wave Save the Coop scenario.
+   All arrivals, choices and warnings advance on fixed simulation ticks. */
+const RAID={active:false,wave:0,phase:'complete',waveLabel:'',waveTime:0,
+  prepLeft:0,choice:null,approach:0,nextApproach:0,pending:[],pendingRemaining:0,
+  threats:[],choices:[],startFarm:0,bearWind:new Float32Array(MAXA),
+  bearSection:new Int8Array(MAXA),bearReady:new Float64Array(MAXA)};
+const RAID_WAVES=[
+  {label:'The fence raiders',packets:[
+    {at:0,k:'coon',n:8,flank:0},{at:6,k:'coon',n:6,flank:.55},{at:14,k:'coon',n:4,flank:-.5}]},
+  {label:'Foxes on the flank',packets:[
+    {at:0,k:'coon',n:6,flank:0},{at:6,k:'fox',n:2,flank:Math.PI},
+    {at:11,k:'coon',n:6,flank:.5},{at:15,k:'fox',n:2,flank:-2.4}]},
+  {label:'The bear at the gate',packets:[
+    {at:0,k:'coon',n:8,flank:-.45},{at:6,k:'fox',n:2,flank:Math.PI},
+    {at:15,k:'bear',n:1,flank:0}]}
+];
+function raidAngle(wave){return ((((CFG.seed>>>0)%8)+.5)*TAU/8+(wave-1)*2.39996323)%TAU;}
+function raidReset(){
+  RAID.active=CFG.mode==='raid';RAID.wave=0;RAID.phase='complete';RAID.waveLabel='';
+  RAID.waveTime=0;RAID.prepLeft=0;RAID.choice=null;RAID.pending=[];RAID.pendingRemaining=0;
+  RAID.approach=RAID.nextApproach=0;RAID.threats=[];RAID.choices=[];RAID.startFarm=aliveA;
+  RAID.bearWind.fill(0);RAID.bearSection.fill(-1);RAID.bearReady.fill(0);
+  if(RAID.active)raidStartWave(1);
+}
+// Grow only the new species' instance reservation; surviving animals keep their IDs.
+function raidReserved(){
+  if(!RAID.active||RAID.phase==='complete')return 0;
+  let total=RAID.pendingRemaining;
+  for(let wave=RAID.wave;wave<RAID_WAVES.length;wave++)
+    for(const packet of RAID_WAVES[wave].packets)total+=packet.n;
+  return total;
+}
+function raidReserve(kind,count){
+  const ui=UI_[kind];let existing=0;
+  for(let i=0;i<N;i++)if(A.kind[i]===ui)existing++;
+  const needed=existing+count;
+  if(needed>(SQUAD_NEED[kind]||0)){
+    SQUAD_NEED[kind]=Math.min(MAXA,Math.max(needed,(SQUAD_NEED[kind]||8)*2));
+    if(SQUADS[ui])SQUADS[ui].dispose();SQUADS[ui]=null;
+  }
+  if(!SQUADS[ui])buildOneSquad(kind);
+}
+function raidSpawn(kind,count,angle,nearCoop=false){
+  // A fixed raid leaves ample capacity, but rejected packets must never be partial.
+  if(!Number.isInteger(count)||count<1||N+count>MAXA)return false;
+  const u=UNITS[UI_[kind]];raidReserve(kind,count);
+  for(let n=0;n<count;n++){
+    const a=angle+srnd(-.24,.24),r=nearCoop?COOP.radius+srnd(2,3.3):ARENA_R*srnd(.87,.94);
+    const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*VARIANTS[kind])|0);
+    A.yaw[j]=Math.atan2(-A.x[j],-A.z[j]);
+    if(u.team===0){aliveA++;initA++;}else{aliveB++;initB++;}
+  }
+  if(!ROSTER_USED.includes(kind))ROSTER_USED.push(kind);
+  return true;
+}
+function raidStartWave(wave){
+  RAID.wave=wave;RAID.phase='combat';RAID.waveTime=0;RAID.prepLeft=0;RAID.choice=null;
+  RAID.approach=raidAngle(wave);RAID.nextApproach=raidAngle(Math.min(3,wave+1));
+  const plan=RAID_WAVES[wave-1];RAID.waveLabel=plan.label;
+  RAID.pending=plan.packets.map(p=>({...p}));RAID.pendingRemaining=RAID.pending.reduce((n,p)=>n+p.n,0);
+  RAID.threats=[];RAID.bearWind.fill(0);RAID.bearSection.fill(-1);
+  coopEvent('wave','Wave '+wave+' · '+plan.label,Math.cos(RAID.approach)*ARENA_R*.9,Math.sin(RAID.approach)*ARENA_R*.9);
+  raidSpawnDue();
+}
+function raidSpawnDue(){
+  while(RAID.pending.length&&RAID.pending[0].at<=RAID.waveTime+1e-7){
+    const p=RAID.pending.shift();
+    // Do not silently win when a malformed/custom roster has filled the field.
+    if(!raidSpawn(p.k,p.n,RAID.approach+p.flank)){
+      COOP.reason='The field is full. Start a smaller raid.';RAID.phase='complete';
+      verdict('coons',COOP.reason);return;
+    }
+    RAID.pendingRemaining-=p.n;
+    if(p.k==='fox')coopEvent('flank','Foxes are flanking the run',Math.cos(RAID.approach+p.flank)*ARENA_R*.9,Math.sin(RAID.approach+p.flank)*ARENA_R*.9);
+    if(p.k==='bear')coopEvent('boss','The bear has arrived',Math.cos(RAID.approach)*ARENA_R*.9,Math.sin(RAID.approach)*ARENA_R*.9);
+  }
+}
+function raidStep(dt){
+  if(!RAID.active||BATTLE.over)return;
+  if(RAID.phase==='prep'){
+    // The farm holds still while supplies and command cooldowns keep ticking.
+    cmdStep(dt);RAID.prepLeft=Math.max(0,RAID.prepLeft-dt);
+    if(RAID.prepLeft<=1e-7){
+      if(!RAID.choice)raidChoose('save');
+      raidStartWave(RAID.wave+1);
+    }
+    return;
+  }
+  if(RAID.phase!=='combat')return;
+  RAID.waveTime+=dt;raidSpawnDue();
+  // Cancel wind-ups if the bear dies, leaves the panel, or the panel is breached.
+  RAID.threats=[];
+  for(let i=0;i<N;i++)if(RAID.bearSection[i]>=0){
+    const k=RAID.bearSection[i],a=(k+.5)*TAU/8;
+    const tx=Math.cos(a)*(COOP.radius+1.7),tz=Math.sin(a)*(COOP.radius+1.7);
+    if(A.st[i]===2||COOP.sections[k].hp<=0||Math.hypot(A.x[i]-tx,A.z[i]-tz)>2.1){
+      RAID.bearWind[i]=0;RAID.bearSection[i]=-1;continue;
+    }
+    RAID.bearWind[i]=Math.min(1.8,RAID.bearWind[i]+dt);
+    RAID.threats.push({unit:i,section:k,x:Math.cos(a)*COOP.radius,z:Math.sin(a)*COOP.radius,radius:2.8,progress:RAID.bearWind[i]/1.8,kind:'bear'});
+  }
+}
+function raidRepairPanel(k,amount){
+  const s=COOP.sections[k],wasOpen=s.hp<=0;s.hp=Math.min(s.maxHp,s.hp+amount);s.hit=.25;
+  if(wasOpen&&s.hp>0)COOP.breaches=Math.max(0,COOP.breaches-1);
+  for(let i=0;i<N;i++)if(A.st[i]!==2){
+    const r=Math.hypot(A.x[i],A.z[i]);
+    if(r<COOP.radius+1&&r>COOP.radius-1&&coopSector(A.x[i],A.z[i])===k){
+      const a=Math.atan2(A.z[i],A.x[i]);A.x[i]=Math.cos(a)*(COOP.radius+1);A.z[i]=Math.sin(a)*(COOP.radius+1);
+    }
+  }
+}
+function raidChoose(choice){
+  if(!RAID.active||RAID.phase!=='prep'||RAID.choice||!['repair','recruit','save'].includes(choice))return false;
+  if(choice==='recruit'&&N+raidReserved()+6+(typeof deploymentReserved==='function'?deploymentReserved():0)>MAXA)return false;
+  if(choice==='repair'){
+    const panels=COOP.sections.map((s,k)=>({k,h:s.hp/s.maxHp})).sort((a,b)=>a.h-b.h||a.k-b.k);
+    panels.slice(0,2).forEach(p=>raidRepairPanel(p.k,240));
+  }else if(choice==='recruit'){
+    if(!raidSpawn('goose',6,RAID.nextApproach,true))return false;
+    TALE.bought.goose=(TALE.bought.goose||0)+6;
+  }else CMD.pts=Math.min(PTS_CAP,CMD.pts+18);
+  RAID.choice=choice;RAID.choices.push({wave:RAID.wave,choice,tick:BATTLE.tick});
+  coopEvent('supply',choice==='repair'?'Two fence panels reinforced':choice==='recruit'?'Six geese joined the next defense':'18 supplies banked');
+  return true;
+}
+function raidCheckWin(){
+  if(!RAID.active)return false;
+  if(BATTLE.over)return true;
+  if(!coopHensAlive()){
+    RAID.phase='complete';RAID.threats=[];COOP.reason='Both hens were lost';verdict('coons',COOP.reason);return true;
+  }
+  if(RAID.phase==='combat'&&aliveB<=0&&RAID.pendingRemaining===0){
+    if(RAID.wave===3){
+      RAID.phase='complete';RAID.threats=[];COOP.reason='All three waves stopped';verdict('birds',COOP.reason);
+    }else{
+      RAID.phase='prep';RAID.prepLeft=8;RAID.choice=null;RAID.threats=[];
+      RAID.nextApproach=raidAngle(RAID.wave+1);
+      coopEvent('wave-clear','Wave '+RAID.wave+' held · choose your supplies');
+    }
+  }
+  return true;
+}
+// The large fence strike is telegraphed; killing the bear cancels it completely.
+function raidBearStrike(i,k){
+  const section=COOP.sections[k];
+  if(section.hp<=0||BATTLE.t<RAID.bearReady[i])return;
+  if(RAID.bearSection[i]!==k){
+    RAID.bearSection[i]=k;RAID.bearWind[i]=0;
+    coopEvent('warning','Bear winding up · defend the marked fence',A.x[i],A.z[i]);return;
+  }
+  if(RAID.bearWind[i]<1.8-1e-6)return;
+  RAID.bearSection[i]=-1;RAID.bearWind[i]=0;RAID.bearReady[i]=BATTLE.t+3;
+  // A braced bear commits its existing strength to a panel rather than a unit.
+  const damage=Math.min(300,UNITS[A.kind[i]].dmg*.6)*(CMD.light>0?(1-.45*floodPower()):1);
+  section.hp=Math.max(0,section.hp-damage);section.hit=.45;A.sw[i]=UNITS[A.kind[i]].swC;
+  if(!COOP.firstHit){COOP.firstHit=true;coopEvent('fence-hit','Predators reached the run',A.x[i],A.z[i]);}
+  if(section.hp<=0){COOP.breaches++;coopEvent('breach',COOP_SIDES[k]+' fence breached by the bear',A.x[i],A.z[i]);}
+  sfx('thud',A.x[i],A.z[i],'key');
 }
 
 
@@ -5253,6 +5678,8 @@ const HIGHLIGHT_RULES={
   fencehit:{priority:90,limit:1},breach:{priority:105,limit:2},
   henlost:{priority:105,limit:2},moralebreak:{priority:90,limit:1},
   loss25:{priority:55,limit:1},loss50:{priority:65,limit:1},loss75:{priority:75,limit:1},
+  wave:{priority:80,limit:3},waveclear:{priority:80,limit:2},
+  flank:{priority:75,limit:1},boss:{priority:110,limit:1},warning:{priority:85,limit:1},supply:{priority:40,limit:2},
   deploy:{priority:40,limit:2},command:{priority:35,limit:2},final:{priority:120,limit:1}
 };
 function highlightTimestamp(tick){
@@ -5418,7 +5845,7 @@ function renderHighlights(){
 }
 
 
-/* Central objective scenery. All resources belong to the supplied arena group.
+/* Judge Dean LLC — central objective scenery. All resources belong to the supplied arena group.
    Hoisted functions are intentional: the first arena builds during 06_ui boot.
    Visual state never writes COOP or consumes the simulation random stream. */
 function coopViewMaterial(color,extra){
@@ -5458,7 +5885,7 @@ function buildCoopView(parent){
   const earth=coopViewMaterial('#b69a69');
   const floorGeo=new THREE.CircleGeometry(radius-.08,64);floorGeo.rotateX(-Math.PI/2);
   const floor=new THREE.Mesh(floorGeo,earth);floor.position.y=.045;floor.receiveShadow=true;root.add(floor);
-  const staticParts=[],panels=[];
+  const staticParts=[],panels=[],warmParts=[];
 
   /* Dark earth rim and substantial corner posts establish the protected area
      even when the wire itself is sub-pixel in the overview. */
@@ -5536,6 +5963,36 @@ function buildCoopView(parent){
     coopViewBeam(staticParts,'#ded0ad',[side*1.96,2.68,hz+1.80],[0,3.30,hz+1.80],.105);
   }
   staticParts.push(P(G.box,'#84918a',0,3.28,hz,0,0,0,.14,.10,3.65));
+  for(const side of [-1,1])for(let j=0;j<7;j++){
+    const x=side*(.14+j*.28),y=3.30-Math.abs(x)*.315;
+    staticParts.push(P(G.box,'#748c84',x,y,hz,0,0,-side*.30,.035,.035,3.55));
+  }
+  // Warm doorway lanterns and framed windows make the objective feel inhabited.
+  for(const side of [-1,1]){
+    const x=side*1.13,z=hz+1.62;
+    staticParts.push(P(G.box,'#e0c39a',x,1.98,z,0,0,0,.62,.62,.12));
+    warmParts.push(P(G.box,'#ffc66b',x,1.98,z+.07,0,0,0,.47,.46,.045));
+    staticParts.push(P(G.box,'#785134',x,1.98,z+.11,0,0,0,.045,.52,.055));
+    staticParts.push(P(G.box,'#785134',x,1.98,z+.11,0,0,0,.52,.045,.055));
+  }
+  for(const a of [TAU/16,TAU/16+Math.PI]){
+    const x=Math.cos(a)*(radius+.08),z=Math.sin(a)*(radius+.08);
+    staticParts.push(P(G.box,'#384540',x,2.14,z,0,-a,0,.36,.52,.36));
+    warmParts.push(P(G.box,'#ffd38b',x,2.16,z,0,-a,0,.28,.37,.38));
+    staticParts.push(P(G.cone,'#46554c',x,2.48,z,0,0,0,.30,.20,.30));
+    staticParts.push(P(G.box,'#46554c',x,1.91,z,0,0,0,.38,.06,.38));
+  }
+  // A slatted hay rack and stepping stones add scale without blocking combat.
+  for(let j=0;j<5;j++){
+    const z=2.6+j*.52;
+    staticParts.push(P(G.sphLo,j%2?'#b9b29b':'#a49d85',.15*Math.sin(j),.06,z,0,j*.47,0,.55,.06,.29));
+  }
+  for(let j=0;j<46;j++){
+    const a=j*2.39996323,r=2.3+3.5*h2(j,9),x=Math.cos(a)*r,z=Math.sin(a)*r;
+    if(z<-1&&Math.abs(x)<2.6)continue;
+    staticParts.push(P(G.box,j%2?'#d9be77':'#bba467',x,.078,z,0,a,0,.025,.015,.18+h2(j,3)*.30));
+  }
+
   const rampStart=[0,1.04,hz+1.62],rampEnd=[0,.12,1.10];
   /* Ramp plank is oriented along its slope, with contrasting traction slats. */
   const rampLen=Math.hypot(rampEnd[1]-rampStart[1],rampEnd[2]-rampStart[2]);
@@ -5559,6 +6016,25 @@ function buildCoopView(parent){
   staticParts.push(P(G.cyl,'#9d6239',3.1,.13,2.5,0,0,0,.45,.18,.45));
   staticParts.push(P(G.cyl,'#d6b270',3.1,.23,2.5,0,0,0,.37,.025,.37));
   coopViewMerged(staticParts,timber,root);
+  const warmMat=coopViewMaterial('#ffffff',{vertexColors:true,
+    emissive:new THREE.Color('#edaa4f').convertSRGBToLinear(),emissiveIntensity:NIGHT?1.35:.30,roughness:.55});
+  coopViewMerged(warmParts,warmMat,root).castShadow=false;
+  const rimGeo=new THREE.RingGeometry(radius+.10,radius+.28,12,1,.025,TAU/sectorCount-.05);
+  rimGeo.rotateX(Math.PI/2);
+  const rimMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.46,depthWrite:false,side:THREE.DoubleSide});
+  const healthRim=new THREE.InstancedMesh(rimGeo,rimMat,sectorCount);healthRim.frustumCulled=false;
+  const rimDummy=new THREE.Object3D(),rimColor=new THREE.Color();
+  for(let i=0;i<sectorCount;i++){
+    rimDummy.position.set(0,.065,0);rimDummy.rotation.y=-i*TAU/sectorCount;rimDummy.updateMatrix();
+    healthRim.setMatrixAt(i,rimDummy.matrix);healthRim.setColorAt(i,rimColor.set('#769b88').convertSRGBToLinear());
+  }
+  root.add(healthRim);
+  // Two restrained amber pools use merged ground discs, no extra lights.
+  const pools=[],poolBase=new THREE.CircleGeometry(1,32);
+  for(const a of [TAU/16,TAU/16+Math.PI])pools.push(P(poolBase,'#edb667',Math.cos(a)*(radius-.45),.073,Math.sin(a)*(radius-.45),-Math.PI/2,0,0,1.4,1.4,1.4));
+  poolBase.dispose();
+  const poolMat=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:NIGHT?.19:.055,depthWrite:false});
+  coopViewMerged(pools,poolMat,root).castShadow=false;
 
   const hens=[];
   for(let i=0;i<COOP.hens.length;i++){
@@ -5571,7 +6047,7 @@ function buildCoopView(parent){
     const nest=coopViewMerged(nestParts,nestMat,group);nest.castShadow=false;
     hens.push({group:group,mesh:hen,skin:sk,material:mat,nest:nest,nestMaterial:nestMat,angle:hen.rotation.y,index:i});
   }
-  buildCoopView.state={root:root,panels:panels,hens:hens,time:0};
+  buildCoopView.state={root:root,panels:panels,hens:hens,time:0,healthRim:healthRim,rimColor:rimColor};
   updateCoopView(0);
 }
 
@@ -5605,7 +6081,11 @@ function updateCoopView(dt){
     visual.wood.emissive.set(visual.pulse>0?'#d38b24':'#000000').convertSRGBToLinear();
     visual.wood.emissiveIntensity=visual.pulse>0?.22:0;
     visual.breached=breached;
+    const rimColor=state.rimColor.set(breached?'#ef7150':health<.35?'#efa555':health<.7?'#ceba7b':'#769b88').convertSRGBToLinear();
+    state.healthRim.setColorAt(i,rimColor);
+
   }
+  state.healthRim.instanceColor.needsUpdate=true;
   for(const hen of state.hens){
     const data=COOP.hens[hen.index];if(!data)continue;
     const alive=data.hp>0,health=clamp(data.hp/Math.max(1,data.maxHp),0,1);
@@ -5716,6 +6196,271 @@ function initFinaleUI(){
 }
 
 
+/* Judge Dean LLC — read-only tactical scenery for Save the Coop.
+   All cues are pooled. This module never changes a unit, timer or random stream. */
+function disposeRaidView(){
+  const state=buildRaidView.state;if(!state)return;
+  const geos=new Set(),mats=new Set(),maps=new Set();
+  state.root.traverse(o=>{
+    if(o.geometry)geos.add(o.geometry);
+    if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material]){
+      mats.add(m);if(m.map)maps.add(m.map);
+    }
+  });
+  geos.forEach(g=>g.dispose());mats.forEach(m=>m.dispose());maps.forEach(t=>t.dispose());
+  scene.remove(state.root);buildRaidView.state=null;
+}
+function buildRaidView(){
+  disposeRaidView();
+  const root=new THREE.Group();root.name='raid-tactical-cues';scene.add(root);
+  const cap=12,dummy=new THREE.Object3D(),color=new THREE.Color();
+  const ring=new THREE.RingGeometry(.91,1,48);ring.rotateX(-Math.PI/2);
+  const disk=new THREE.CircleGeometry(1,48);disk.rotateX(-Math.PI/2);
+  function instances(geo,opacity){
+    const mat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide});
+    const mesh=new THREE.InstancedMesh(geo,mat,cap);mesh.count=0;mesh.frustumCulled=false;mesh.renderOrder=2;root.add(mesh);return mesh;
+  }
+  const arrivals=instances(ring,.86),arrivalFill=instances(disk,.12);
+  const threats=instances(ring,.84),threatFill=instances(disk,.15);
+  const preview=new THREE.Group();root.add(preview);
+  const previewRing=new THREE.Mesh(ring,new THREE.MeshBasicMaterial({color:new THREE.Color('#b7e6c2').convertSRGBToLinear(),transparent:true,opacity:.88,depthWrite:false,side:THREE.DoubleSide}));
+  previewRing.scale.setScalar(2.2);preview.add(previewRing);
+  const previewDisk=new THREE.Mesh(disk,new THREE.MeshBasicMaterial({color:new THREE.Color('#b7e6c2').convertSRGBToLinear(),transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide}));
+  previewDisk.scale.setScalar(2.2);preview.add(previewDisk);
+  preview.position.y=.14;preview.visible=false;
+
+  // Three inward chevrons remain visible against both soil and grass.
+  const entrance=new THREE.Group();root.add(entrance);
+  const shape=new THREE.Shape();shape.moveTo(-.85,.50);shape.lineTo(0,-.50);shape.lineTo(.85,.50);
+  shape.lineTo(.85,1);shape.lineTo(0,0);shape.lineTo(-.85,1);shape.closePath();
+  const arrowGeo=new THREE.ShapeGeometry(shape);arrowGeo.rotateX(Math.PI/2);
+  const arrowMat=new THREE.MeshBasicMaterial({color:new THREE.Color('#ffd18b').convertSRGBToLinear(),transparent:true,opacity:.82,side:THREE.DoubleSide,depthWrite:false});
+  for(let j=0;j<3;j++){
+    const arrow=new THREE.Mesh(arrowGeo,arrowMat);arrow.position.set(0,.12,j*1.45);entrance.add(arrow);
+  }
+  const beacon=new THREE.Mesh(ring,new THREE.MeshBasicMaterial({color:new THREE.Color('#ffd18b').convertSRGBToLinear(),transparent:true,opacity:.38,side:THREE.DoubleSide,depthWrite:false}));
+  beacon.position.set(0,.10,1.4);beacon.scale.setScalar(2.45);entrance.add(beacon);
+
+  const labels=[];
+  for(let i=0;i<cap;i++){
+    const canvas=document.createElement('canvas');canvas.width=128;canvas.height=64;
+    const texture=new THREE.CanvasTexture(canvas);texture.minFilter=THREE.LinearFilter;texture.generateMipmaps=false;
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,depthWrite:false,depthTest:false}));
+    sprite.scale.set(2.3,1.15,1);sprite.renderOrder=4;sprite.visible=false;root.add(sprite);
+    labels.push({canvas,texture,sprite,text:''});
+  }
+  buildRaidView.state={root,arrivals,arrivalFill,threats,threatFill,preview,entrance,arrowMat,beacon,
+    labels,dummy,color,cap,time:0,arena:arenaGroup};
+  updateRaidView(0);
+}
+function raidViewInstance(mesh,index,x,z,radius,tint,y){
+  const state=buildRaidView.state,d=state.dummy;
+  d.position.set(x,y,z);d.rotation.set(0,0,0);d.scale.set(radius,1,radius);d.updateMatrix();
+  mesh.setMatrixAt(index,d.matrix);mesh.setColorAt(index,state.color.set(tint).convertSRGBToLinear());
+}
+function updateRaidView(dt){
+  let state=buildRaidView.state;
+  if(!state){buildRaidView();return;}
+  if(state.arena!==arenaGroup){buildRaidView();return;}
+  const reduced=typeof VIEW!=='undefined'&&VIEW.reducedMotion,paused=typeof VIEW!=='undefined'&&VIEW.paused;
+  if(!paused)state.time+=Math.min(.1,Math.max(0,Number(dt)||0));
+  const active=typeof RAID!=='undefined'&&RAID.active;
+  const playing=typeof BATTLE!=='undefined'&&BATTLE.running&&!BATTLE.over;
+  state.entrance.visible=active&&playing&&RAID.phase!=='complete';
+  if(state.entrance.visible){
+    const angle=RAID.phase==='prep'&&Number.isFinite(RAID.nextApproach)?RAID.nextApproach:RAID.approach;
+    const a=Number.isFinite(angle)?angle:0;
+    state.entrance.position.set(Math.cos(a)*ARENA_R*.83,0,Math.sin(a)*ARENA_R*.83);
+    state.entrance.rotation.y=Math.PI/2-a;
+    state.arrowMat.opacity=reduced?.85:.67+.18*Math.sin(state.time*2.4);
+    state.beacon.material.opacity=RAID.phase==='prep'?.28:.40;
+  }
+  const deployment=typeof DEPLOYMENT!=='undefined'?DEPLOYMENT:null;
+  const hover=deployment&&deployment.hover;
+  state.preview.visible=playing&&!!(deployment&&deployment.selected&&hover)&&Number.isFinite(hover.x)&&Number.isFinite(hover.z);
+  if(state.preview.visible)state.preview.position.set(hover.x,.14,hover.z);
+  const pending=deployment&&Array.isArray(deployment.pending)?deployment.pending:[];
+  let n=0;
+  for(const packet of pending){
+    if(n>=state.cap)break;
+    if(!Number.isFinite(packet.x)||!Number.isFinite(packet.z))continue;
+    const remaining=Math.max(0,Number(packet.remaining)||0),total=Math.max(.01,Number(packet.total)||2);
+    const progress=clamp(1-remaining/total,0,1),radius=2.2;
+    raidViewInstance(state.arrivals,n,packet.x,packet.z,radius,'#a4e8be',.13);
+    raidViewInstance(state.arrivalFill,n,packet.x,packet.z,radius*(.32+.68*progress),'#a4e8be',.12);
+    const label=state.labels[n],text=Math.max(1,Math.ceil(remaining))+'s';
+    if(text!==label.text){
+      const ctx=label.canvas.getContext('2d');ctx.clearRect(0,0,128,64);
+      ctx.fillStyle='rgba(18,34,28,.90)';ctx.beginPath();ctx.moveTo(17,6);ctx.lineTo(111,6);ctx.quadraticCurveTo(120,6,120,15);
+      ctx.lineTo(120,49);ctx.quadraticCurveTo(120,58,111,58);ctx.lineTo(17,58);ctx.quadraticCurveTo(8,58,8,49);ctx.lineTo(8,15);ctx.quadraticCurveTo(8,6,17,6);ctx.fill();
+      ctx.strokeStyle='#a4e8be';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#e6f8df';ctx.font='bold 36px system-ui, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,64,33);
+      label.texture.needsUpdate=true;label.text=text;
+    }
+    label.sprite.position.set(packet.x,1.9,packet.z);label.sprite.visible=playing;n++;
+  }
+  state.arrivals.count=state.arrivalFill.count=playing?n:0;
+  for(let i=n;i<state.cap;i++)state.labels[i].sprite.visible=false;
+  let count=0;
+  if(active&&playing&&Array.isArray(RAID.threats))for(const threat of RAID.threats){
+    if(count>=state.cap)break;
+    if(!Number.isFinite(threat.x)||!Number.isFinite(threat.z))continue;
+    const progress=clamp(Number(threat.progress)||0,0,1),radius=Math.max(.2,Number(threat.radius)||2.8);
+    const tint=progress>.68?'#f1724c':'#f7bb62';
+    raidViewInstance(state.threats,count,threat.x,threat.z,radius,tint,.115);
+    raidViewInstance(state.threatFill,count,threat.x,threat.z,radius*progress,tint,.105);count++;
+  }
+  state.threats.count=state.threatFill.count=count;
+  for(const mesh of [state.arrivals,state.arrivalFill,state.threats,state.threatFill])if(mesh.count){
+    mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+  }
+}
+
+
+/* Judge Dean LLC — raid controls, daily challenges and earned survivor awards. */
+const RAID_DIRECTIONS=['East','Southeast','South','Southwest','West','Northwest','North','Northeast'];
+function raidDirection(angle){return RAID_DIRECTIONS[((Math.round(angle/(Math.PI/4))%8)+8)%8];}
+function cancelDeployment(){DEPLOYMENT.selected=null;DEPLOYMENT.hover=null;raidHud();}
+function beginDeployment(d){
+  if(!canDeploy(d)||VIEW.paused||REPLAY.playback||RAID.phase==='prep')return false;
+  DEPLOYMENT.selected=d.k;DEPLOYMENT.hover=null;
+  document.body.classList.remove('deployOpen');$('btnDeploy').setAttribute('aria-expanded','false');
+  DIR.drag=false;raidHud();$('deployCancel').focus({preventScroll:true});
+  return true;
+}
+function commitDeployment(point){
+  if(!DEPLOYMENT.selected||VIEW.paused||REPLAY.playback)return false;
+  const k=DEPLOYMENT.selected;
+  if(!queueBattleAction('deploy',k,point))return false;
+  track('reinforcement_ordered',{unit:k,mode:CFG.mode});cancelDeployment();return true;
+}
+function arrivalPoint(angle){return {x:Math.round(Math.cos(angle)*ARENA_R*.88*100)/100,z:Math.round(Math.sin(angle)*ARENA_R*.88*100)/100};}
+let raidRay=null,raidPlane=null,raidHit=null;
+function pointerArrival(event){
+  if(!raidRay){raidRay=new THREE.Raycaster();raidPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);raidHit=new THREE.Vector3();}
+  const rect=renderer.domElement.getBoundingClientRect();
+  raidRay.setFromCamera(new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1),camera);
+  if(!raidRay.ray.intersectPlane(raidPlane,raidHit))return null;
+  return arrivalPoint(Math.atan2(raidHit.z,raidHit.x));
+}
+function syncRaidSetup(){
+  const raid=CFG.mode==='raid';document.body.classList.toggle('raidMode',raid);
+  $('dailyBadge').textContent=CFG.challenge?'Daily raid · '+CFG.challenge+' · UTC':'Three waves. Two hens. One farm.';
+  $('dailyBadge').hidden=!raid;
+  $('go').textContent=raid?'Save the Coop':'Fight';
+  // Scripted predators have a fixed roster, visible in the wave preview.
+  const enemySlider=$('sB').closest('.row')||$('sB').parentElement;
+  $('sB').disabled=raid;$('sB').setAttribute('aria-label',raid?'Predators are set by the three waves':'Raccoons');
+  const foe=$('rosterFoe').closest('details');if(foe)foe.hidden=raid;
+  if(enemySlider)enemySlider.classList.toggle('scriptedRoster',raid);
+}
+function raidHud(){
+  document.body.classList.toggle('raid',RAID.active);
+  const active=RAID.active&&SEQ.phase!=='idle'&&!BATTLE.over;
+  $('raidHud').hidden=!active;
+  const prep=active&&RAID.phase==='prep';
+  document.body.classList.toggle('raidPreparing',prep);
+  $('raidPrep').hidden=!prep;
+  if(prep){DEPLOYMENT.selected=null;DEPLOYMENT.hover=null;}
+  if(active){
+    $('raidWave').textContent='Wave '+RAID.wave+' / 3';
+    $('raidTitle').textContent=RAID.waveLabel;
+    const incoming=RAID.pendingRemaining||0;
+    $('raidStatus').textContent=prep?'The farm holds. Choose your next move.':aliveB+' predators · '+incoming+' incoming';
+    $('raidDirection').textContent=(prep?'Next attack: ':'Approach: ')+raidDirection(prep?RAID.nextApproach:RAID.approach);
+    $('raidProgress').value=((RAID.wave-1)+(prep?1:Math.min(.95,(RAID.waveTime||0)/22)))/3*100;
+    $('raidPrepTitle').textContent='Wave '+RAID.wave+' held';
+    $('raidPrepHint').textContent=RAID.choice?({repair:'Fence repairs complete.',recruit:'Six geese have joined your defense.',save:'18 supplies banked.'}[RAID.choice]):'Choose one reward. Your survivors stay for the next attack.';
+    if($('raidPrepPause'))$('raidPrepPause').textContent=VIEW.paused?'Resume choices':'Pause choices';
+    $('raidPrepTimer').textContent=VIEW.paused?'Paused':REPLAY.playback?'Replaying your choice · '+Math.ceil(RAID.prepLeft)+'s':'Next wave in '+Math.ceil(RAID.prepLeft)+'s · no choice banks supplies';
+    document.querySelectorAll('[data-raid-choice]').forEach(b=>{
+      b.disabled=!!RAID.choice||REPLAY.playback||VIEW.paused;
+      b.classList.toggle('chosen',b.dataset.raidChoice===RAID.choice);b.setAttribute('aria-pressed',String(b.dataset.raidChoice===RAID.choice));
+    });
+  }
+  const placing=!!DEPLOYMENT.selected&&active&&!prep;
+  $('deployPlacement').hidden=!placing;
+  document.body.classList.toggle('placingReinforcements',placing);
+  if(placing){
+    const d=DEPLOY.find(d=>d.k===DEPLOYMENT.selected);
+    $('deployPlacementText').textContent=VIEW.paused?'Paused — resume to place reinforcements':d.n+' '+UNITS[UI_[d.k]].label+' · choose an arrival side · 1.8s ETA';
+  }
+  document.querySelectorAll('[data-deploy-sector]').forEach(b=>b.disabled=VIEW.paused||REPLAY.playback);
+  $('challengeShare').hidden=!CFG.challenge;
+  if(raidHud.prep!==prep){
+    raidHud.prep=prep;
+    if(typeof syncUIDialog==='function')queueMicrotask(()=>syncUIDialog());
+  }
+}
+function startDailyRaid(date=new Date().toISOString().slice(0,10)){
+  configureDaily(date);seedHeld=true;syncSliders();
+  document.body.classList.remove('story','storyIn','rules','rulesIn','about','aboutIn');
+  track('daily_raid_started',{date});startBattle({instant:true});
+}
+function copyChallenge(){
+  const date=CFG.challenge;if(!date)return;
+  const url=location.origin+location.pathname+'?daily='+encodeURIComponent(date);
+  const button=$('challengeShare');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>{button.textContent='Challenge link copied';},()=>{button.textContent='Copy unavailable — use Copy link';});
+  }else button.textContent='Copy unavailable — use Copy link';
+}
+function raidScore(){
+  return coopHensAlive()*1000000000+Math.round(COOP.hens.reduce((n,h)=>n+h.hp,0))*1000000+Math.floor(CMD.pts)*10000+Math.max(0,aliveA);
+}
+function renderRaidAwards(){
+  const box=$('raidAwards');box.replaceChildren();box.hidden=!RAID.active;if(!RAID.active)return;
+  const awards=[];let hero=-1,breach=-1,lastGoose=-1,gooseCount=0;
+  for(let i=0;i<N;i++)if(A.team[i]===0){
+    if(RAID_AWARDS.breachKills[i]>0&&(breach<0||RAID_AWARDS.breachKills[i]>RAID_AWARDS.breachKills[breach]))breach=i;
+    if(A.st[i]===2)continue;
+    if(hero<0||A.kills[i]>A.kills[hero])hero=i;
+    if(UNITS[A.kind[i]].k==='goose'){lastGoose=i;gooseCount++;}
+  }
+  const name=i=>A.name[i]||UNITS[A.kind[i]].label.replace(/s$/,'')+' #'+(i+1);
+  if(hero>=0&&A.kills[hero]>0)awards.push(['Farm Hero',name(hero)+' · '+A.kills[hero]+' kills · survived']);
+  if(breach>=0)awards.push(['Held the Breach',name(breach)+' stopped '+RAID_AWARDS.breachKills[breach]+' predators near the run']);
+  if(gooseCount===1)awards.push(['Last Goose Standing',name(lastGoose)+' lived to honk another day']);
+  if(coopHensAlive()===2&&BATTLE.winner==='birds')awards.push(['Both Hens Home','Three waves stopped. Two very unimpressed hens.']);
+  if(!awards.length)awards.push(['A Farm Worth Defending',coopHensAlive()+' hens survived · reached wave '+RAID.wave]);
+  for(const [label,detail] of awards.slice(0,3)){
+    const item=document.createElement('div');item.className='raidAward';
+    const title=document.createElement('strong');title.textContent=label;
+    const text=document.createElement('span');text.textContent=detail;item.append(title,text);box.appendChild(item);
+  }
+  if(CFG.challenge){
+    const score=raidScore(),key='com.judgedeanllc.chickens.daily.'+SIM_VERSION+'.'+CFG.challenge;
+    let best=score;
+    try{best=Math.max(score,Number(localStorage.getItem(key))||0);if(!REPLAY.playback)localStorage.setItem(key,String(best));}catch(e){}
+    const note=document.createElement('p');note.className='dailyScore';
+    note.textContent='Daily '+CFG.challenge+' · Score '+score.toLocaleString()+' · Personal best '+best.toLocaleString()+'. Hens, health, supplies, then survivors.';
+    box.appendChild(note);
+  }
+}
+function initRaidUI(){
+  $('playNow').addEventListener('click',()=>{
+    document.body.classList.remove('story','storyIn','rules','rulesIn');
+    track('play_now');startBattle({instant:true});
+  });
+  $('dailyChallenge').addEventListener('click',()=>startDailyRaid());
+  $('challengeShare').addEventListener('click',copyChallenge);
+  if($('raidPrepPause'))$('raidPrepPause').addEventListener('click',()=>setPaused(!VIEW.paused));
+  $('deployCancel').addEventListener('click',cancelDeployment);
+  document.querySelectorAll('[data-raid-choice]').forEach(b=>b.addEventListener('click',()=>{
+    if(queueBattleAction('choice',b.dataset.raidChoice))track('wave_reward',{choice:b.dataset.raidChoice,wave:RAID.wave});
+  }));
+  document.querySelectorAll('[data-deploy-sector]').forEach(b=>b.addEventListener('click',()=>commitDeployment(arrivalPoint(Number(b.dataset.deploySector)*Math.PI/4))));
+  let down=null;
+  renderer.domElement.addEventListener('pointerdown',e=>{if(DEPLOYMENT.selected){down={x:e.clientX,y:e.clientY};DEPLOYMENT.hover=pointerArrival(e);}});
+  renderer.domElement.addEventListener('pointermove',e=>{if(DEPLOYMENT.selected)DEPLOYMENT.hover=pointerArrival(e);});
+  renderer.domElement.addEventListener('pointerup',e=>{
+    if(!DEPLOYMENT.selected||!down)return;
+    const distance=Math.hypot(e.clientX-down.x,e.clientY-down.y);down=null;
+    if(distance<18){const point=pointerArrival(e);if(point)commitDeployment(point);}
+  });
+  renderer.domElement.addEventListener('pointercancel',()=>{down=null;});
+}
+
+
 
 /* ============================================================
    SEQUENCER — title card, countdown, battle, verdict
@@ -5750,7 +6495,7 @@ function flockBlurb(){ return CFG.mix?'Hens, roosters and warrior fowls. Everyth
    because that's the difficulty dial you set before you press fight. */
 const EXTRA_B=['possum','fox','coyote','hawk','bear'];
 const STEPS=[0,1,2,3,5,8,12,20,30,50,80,120,200];
-let CFG={mode:'defense',birds:260,coons:24,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
+let CFG={mode:'raid',challenge:null,birds:260,coons:24,kind:'rooster',arena:'field',foes:{},allies:{},mix:null,seed:0};
 EXTRA_B.forEach(k=>CFG.foes[k]=0);
 
 /* ============================================================
@@ -5769,10 +6514,11 @@ newSeed();
 let seedHeld=false;          // a seed that arrived in a link is used once, then released
 
 // Version both the transport and simulation. Old engines cannot promise this replay.
-const REPLAY_VERSION=2, SIM_VERSION='2026-09-17.1';
+const REPLAY_VERSION=2, SIM_VERSION='2026-10-21.1';
 const REPLAY={current:null,last:null,loaded:null,playback:false,pending:[],cursor:0,generation:0,error:'',seeking:false,seekTo:0};
 function copyFight(f){ return JSON.parse(JSON.stringify(f)); }
-function validateRoster(rows){
+function rosterLimit(mode){return mode==='raid'?MAXA-RAID_WAVES.reduce((n,w)=>n+w.packets.reduce((m,p)=>m+p.n,0),0):MAXA;}
+function validateRoster(rows,mode='battle'){
   if(!Array.isArray(rows)||!rows.length||rows.length>UNITS.length) throw Error('Choose at least one animal.');
   let total=0; const seen=new Set();
   for(const r of rows){
@@ -5780,26 +6526,31 @@ function validateRoster(rows){
       throw Error('Invalid army roster.');
     seen.add(r.k); total+=r.n;
   }
-  if(total>MAXA) throw Error('The field holds '+MAXA.toLocaleString()+' animals. Remove '+(total-MAXA).toLocaleString()+' before starting.');
+  const limit=rosterLimit(mode);
+  if(mode==='raid'&&rows.some(r=>UNITS[UI_[r.k]].team!==0))throw Error('Choose farm defenders; the raid supplies its predators.');
+  if(total>limit) throw Error('The field holds '+limit.toLocaleString()+' starting animals'+(mode==='raid'?' with space reserved for all three waves':'')+'. Remove '+(total-limit).toLocaleString()+' before starting.');
   return total;
 }
 function validateFight(f){
   if(!f||f.v!==REPLAY_VERSION||f.sim!==SIM_VERSION) throw Error('This replay uses a different simulator version.');
-  validateRoster(f.roster);
-  if(!['defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
+  validateRoster(f.roster,f.mode);
+  if(!['raid','defense','battle'].includes(f.mode))throw Error('Invalid battle objective.');
   if(!Number.isInteger(f.seed)||f.seed<0||f.seed>4294967295||!['field','coop'].includes(f.arena)) throw Error('Invalid replay settings.');
+  if(f.challenge&&( !validDailyDate(f.challenge)||f.mode!=='raid'||f.arena!=='field'||f.seed!==dailySeed(f.challenge)||JSON.stringify(f.roster)!==JSON.stringify([{k:'rooster',n:260}])))throw Error('Invalid daily challenge.');
   if(!Array.isArray(f.actions)||f.actions.length>512) throw Error('Invalid replay commands.');
   let tick=0;
   for(const a of f.actions){
-    if(!a||!Number.isInteger(a.tick)||a.tick<1||a.tick<tick||a.tick>7300||
-       !(a.type==='deploy'?DEPLOY.some(d=>d.k===a.k):a.type==='command'&&CMD_DEF.some(d=>d.k===a.k)))
+    if(!a||!Number.isInteger(a.tick)||a.tick<1||a.tick<tick||a.tick>216000||
+       !(a.type==='deploy'?DEPLOY.some(d=>d.k===a.k):a.type==='choice'?f.mode==='raid'&&['repair','recruit','save'].includes(a.k):a.type==='command'&&CMD_DEF.some(d=>d.k===a.k)))
       throw Error('Invalid replay command.');
+    if((a.x!==undefined||a.z!==undefined)&&(a.type!=='deploy'||f.mode!=='raid'||!Number.isFinite(a.x)||!Number.isFinite(a.z)||Math.abs(a.x)>90||Math.abs(a.z)>90))throw Error('Invalid arrival position.');
+    if(a.type==='deploy'&&f.mode==='raid'&&(a.x===undefined||a.z===undefined))throw Error('Raid reinforcements need an arrival point.');
     tick=a.tick;
   }
   return f;
 }
 function configFight(){
-  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,mode:CFG.mode,roster:rosterList(),actions:[]};
+  return {v:REPLAY_VERSION,sim:SIM_VERSION,seed:CFG.seed,arena:CFG.arena,mode:CFG.mode,challenge:CFG.challenge||null,roster:rosterList(),actions:[]};
 }
 function encodeFight(){
   const f=REPLAY.current||configFight();
@@ -5807,7 +6558,7 @@ function encodeFight(){
 }
 function fightURL(){ return location.origin+location.pathname+'?'+encodeFight(); }
 function applyFightConfig(f){
-  CFG.seed=f.seed; CFG.arena=f.arena; CFG.mode=f.mode||'battle';
+  CFG.seed=f.seed; CFG.arena=f.arena; CFG.mode=f.mode||'battle';CFG.challenge=f.challenge||null;
   Object.keys(CFG.foes).forEach(k=>delete CFG.foes[k]);
   CFG.allies={}; CFG.mix={};
   CFG.coons=0;
@@ -5834,9 +6585,14 @@ function decodeFight(){
       applyFightConfig(f); REPLAY.loaded=copyFight(f); seedHeld=true; return true;
     }catch(e){ REPLAY.error=e.message||'Could not read replay.'; return false; }
   }
+  if(q.has('daily')){
+    const date=q.get('daily');
+    if(!validDailyDate(date)){REPLAY.error='Invalid daily challenge date.';return false;}
+    configureDaily(date);seedHeld=true;return true;
+  }
   if(!q.has('s')&&!q.has('b')) return false;
   // Legacy links describe setup only; they omitted mixed armies and actions.
-  CFG.mode='battle'; CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
+  CFG.mode='battle';CFG.challenge=null; CFG.allies={}; CFG.mix=null; CFG.rosterOverride=null;
   const b=parseInt(q.get('b'),10); if(b>0) CFG.birds=clamp(b,1,4000);
   const c=parseInt(q.get('c'),10); if(c>=0) CFG.coons=clamp(c,0,600);
   const k=q.get('k'); if(k&&Object.hasOwn(UI_,k)&&UNITS[UI_[k]].team===0) CFG.kind=k;
@@ -5860,29 +6616,34 @@ function notifyBattle(message){
 }
 function resetReplayRuntime(){
   if(typeof resetFinale==='function')resetFinale();
+  resetDeployment();
   REPLAY.generation++; REPLAY.pending=[]; REPLAY.cursor=0;
   BATTLE.tick=0; VIEW.paused=false; REPLAY.seeking=false; REPLAY.seekTo=0;
 }
-function queueBattleAction(type,k){
-  if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback) return false;
+function queueBattleAction(type,k,position=null){
+  if(!BATTLE.running||BATTLE.over||VIEW.paused||REPLAY.playback||(RAID.active&&RAID.phase==='prep'&&type!=='choice')) return false;
   if(REPLAY.pending.length>=32||REPLAY.current.actions.length+REPLAY.pending.length>=512) return false;
   if(type==='deploy'){
     const d=DEPLOY.find(d=>d.k===k); if(!d||!canDeploy(d)) return false;
+    if(RAID.active&&(!position||!Number.isFinite(position.x)||!Number.isFinite(position.z)))return false;
+  }else if(type==='choice'){
+    if(!RAID.active||RAID.phase!=='prep'||RAID.choice||!['repair','recruit','save'].includes(k))return false;
   }else if(type!=='command'||!cmdReady(k)) return false;
-  REPLAY.pending.push({tick:BATTLE.tick+1,type,k}); return true;
+  if(REPLAY.pending.some(a=>a.type===type&&a.k===k))return false;
+  REPLAY.pending.push({tick:BATTLE.tick+1,type,k,...(position?{x:position.x,z:position.z}:{})}); return true;
 }
 function applyBattleActions(tick){
   let changed=false;
   const list=REPLAY.playback?REPLAY.current.actions:REPLAY.pending;
   while(REPLAY.playback?REPLAY.cursor<list.length&&list[REPLAY.cursor].tick<=tick:list.length&&list[0].tick<=tick){
     const a=REPLAY.playback?list[REPLAY.cursor++]:list.shift();
-    const ok=a.type==='deploy'?applyDeploy(DEPLOY.find(d=>d.k===a.k)):applyCommand(a.k);
-    if(ok&&!REPLAY.playback){ REPLAY.current.actions.push({tick,type:a.type,k:a.k}); changed=true; }
+    const ok=a.type==='deploy'?applyDeploy(DEPLOY.find(d=>d.k===a.k),a.x===undefined?null:{x:a.x,z:a.z}):a.type==='choice'?raidChoose(a.k):applyCommand(a.k);
+    if(ok&&!REPLAY.playback){ REPLAY.current.actions.push({...a,tick}); changed=true; }
     if(!ok&&REPLAY.playback){ notifyBattle('Replay command could not be applied at tick '+tick+'.'); setPaused(true); break; }
   }
   if(changed) pushFightURL();
 }
-function deploy(d){ return queueBattleAction('deploy',d.k); }
+function deploy(d){ return RAID.active?beginDeployment(d):queueBattleAction('deploy',d.k); }
 function cmdFire(k){ return queueBattleAction('command',k); }
 function setPaused(paused){
   VIEW.paused=!!paused&&BATTLE.running&&!BATTLE.over;
@@ -5892,6 +6653,20 @@ function setPaused(paused){
 function setPlaybackSpeed(speed){
   if([0.5,1,2].includes(Number(speed))) VIEW.speed=Number(speed);
   if(typeof syncControls==='function') syncControls();
+}
+// Judge Dean LLC — one shared UTC challenge per day; replays carry the full version.
+function validDailyDate(date){return typeof date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(date)&&Number.isFinite(Date.parse(date+'T00:00:00Z'))&&new Date(date+'T00:00:00Z').toISOString().slice(0,10)===date;}
+function dailySeed(date){let seed=2166136261;for(const c of 'coop-2026-10-21:'+date)seed=Math.imul(seed^c.charCodeAt(0),16777619);return seed>>>0;}
+function configureDaily(date){
+  CFG.mode='raid';CFG.challenge=date;CFG.seed=dailySeed(date);CFG.arena='field';CFG.birds=260;CFG.kind='rooster';CFG.coons=0;CFG.mix=null;CFG.allies={};
+  Object.keys(CFG.foes).forEach(k=>CFG.foes[k]=0);CFG.rosterOverride=[{k:'rooster',n:260}];
+  REPLAY.loaded=null;
+}
+function stepBattle(dt){
+  if(typeof raidStep==='function')raidStep(dt);
+  if(BATTLE.over)return;
+  deploymentStep(dt);
+  if(!RAID.active||RAID.phase!=='prep')stepSim(dt);
 }
 function teamCount(team){ return rosterList().filter(r=>UNITS[UI_[r.k]].team===team).reduce((n,r)=>n+r.n,0); }
 function teamName(team){
@@ -5912,7 +6687,7 @@ function rosterList(){
   EXTRA_B.forEach(k=>{ if(CFG.foes[k]>0)  L.push({k,n:CFG.foes[k]}); });
   /* presets can field the whole farm at the whistle, not just the flock */
   for(const k in CFG.allies) if(CFG.allies[k]>0) L.push({k,n:CFG.allies[k]});
-  return L.filter(r=>r.n>0);
+  return L.filter(r=>r.n>0&&(CFG.mode!=='raid'||UNITS[UI_[r.k]].team===0));
 }
 
 /* ============================================================
@@ -5983,8 +6758,8 @@ function setPhase(p){
   }
   if(p==='title'){
     showCard({kick:document.body.classList.contains('reel')?'Tonight, in a barnyard':'Matchup',
-      a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:teamCount(1)+' '+teamName(1).toUpperCase(),
-      sub:CFG.mode==='defense'?'Protect the hens · stop every predator':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
+      a:teamCount(0)+' '+teamName(0).toUpperCase(), vs:'VS', b:CFG.mode==='raid'?'3 WAVES':teamCount(1)+' '+teamName(1).toUpperCase(),
+      sub:CFG.mode==='raid'?'Save the Coop · three waves · two hens':CFG.mode==='defense'?'Protect the hens · stop every predator':CFG.arena==='coop'?'Night · open battle':'Daylight · open battle',
       call:true});
   }
   if(p==='count'){ musicCountIn(3.4); showCard({count:'3',call:true}); }
@@ -6025,6 +6800,7 @@ function showVerdict(who,how){
         BATTLE.totalKills+' dead in '+BATTLE.t.toFixed(1)+'s'
   });
   renderTale(who,how);
+  if(typeof renderRaidAwards==='function')renderRaidAwards();
   if(COOP.active){
     $('cardTale').textContent=coopHensAlive()+' of 2 hens survived. '+COOP.breaches+' fence section'+(COOP.breaches===1?' was':'s were')+' open when the raid ended.';
   }
@@ -6074,6 +6850,7 @@ function hud(dt){
   hudT-=dt; if(hudT>0 && !hudDirty) return; hudT=0.08; hudDirty=false;
   if(BATTLE.running) cmdHud();
   if(typeof coopHud==='function')coopHud();
+  if(typeof raidHud==='function')raidHud();
   const fleeing=farmFleeing();
   $('ctA').textContent=Math.max(0,aliveA);
   $('ctB').textContent=Math.max(0,aliveB);
@@ -6141,6 +6918,7 @@ function hudBlocked(l,t,r,b){
 let winT=0, routT=0, stallT=0, lastKills=-1;
 function checkWin(dt){
   if(!BATTLE.running||BATTLE.over) return;
+  if(typeof raidCheckWin==='function'&&raidCheckWin())return;
   if(typeof coopCheckWin==='function'&&coopCheckWin())return;
   winT-=dt; if(winT>0) return; winT=0.4;
   if(initA===0||initB===0){ verdict(initA?'birds':'coons','Uncontested'); return; }
@@ -6158,6 +6936,7 @@ function checkWin(dt){
    ============================================================ */
 let slowCool=0;
 function slowmo(dt){
+  if(RAID.active&&RAID.phase==='prep'){BATTLE.timeScale=1;BATTLE.slowT=0;$('slowmo').classList.remove('on');return;}
   if(FINALE.active){BATTLE.timeScale=VIEW.reducedMotion?1:.18;BATTLE.slowT=VIEW.reducedMotion?0:1;$('slowmo').classList.toggle('on',!VIEW.reducedMotion);return;}
   if(VIEW.reducedMotion||VIEW.tactical){ BATTLE.timeScale=1; BATTLE.slowT=0; $('slowmo').classList.remove('on'); return; }
   slowCool-=dt;
@@ -6188,7 +6967,7 @@ function startBattle(options={}){
   const saved=options.replay?(REPLAY.last||REPLAY.current):seedHeld?REPLAY.loaded:null;
   if(options.replay&&!saved) return notifyBattle('Finish a battle to replay it.');
   if(saved) applyFightConfig(saved);
-  try{ validateRoster(rosterList()); }catch(e){ return notifyBattle(e.message); }
+  try{ validateRoster(rosterList(),CFG.mode); }catch(e){ return notifyBattle(e.message); }
   resetReplayRuntime();
   if($('replaySeek'))$('replaySeek').hidden=true;
   clearTimeout(reSpawn);        // a queued standby must not wipe the sequence we're starting
@@ -6196,7 +6975,7 @@ function startBattle(options={}){
      simulated' number, and it carries the matchup so the answer to 'what do
      people actually play' comes free with it */
   track('battle_start',{flock:CFG.mix?'mixed':CFG.kind, birds:flockCount(),
-    raccoons:CFG.coons, arena:CFG.arena,
+    raccoons:CFG.coons, arena:CFG.arena, mode:CFG.mode,replay:!!saved,
     predators:EXTRA_B.filter(k=>CFG.foes[k]>0).join(',')||'none'});
   document.body.classList.add('live');   // slides the setup panel away immediately
   // the opening is a directed shot — if the viewer had grabbed the camera, take it back
@@ -6207,7 +6986,7 @@ function startBattle(options={}){
   clearParticles(); clearFeed(); champEl.classList.remove('on');
   /* a linked fight uses the seed it arrived with, exactly once; every run
      after that rolls a fresh one so "run it back" is a genuinely new fight */
-  if(saved) CFG.seed=saved.seed; else if(!seedHeld) newSeed();
+  if(saved) CFG.seed=saved.seed; else if(CFG.challenge)CFG.seed=dailySeed(CFG.challenge);else if(!seedHeld) newSeed();
   seedHeld=false; REPLAY.loaded=null; REPLAY.playback=!!saved;
   REPLAY.current=saved?copyFight(saved):configFight();
   REPLAY.error=''; seedSim(CFG.seed);
@@ -6216,7 +6995,7 @@ function startBattle(options={}){
   spawnRoster(rosterList(),CFG.arena==='coop');
   if(typeof highlightReset==='function')highlightReset();
   camPos.set(0,ARENA_R*0.45,-ARENA_R*1.5);
-  setPhase(VIEW.quick?'title':'introA');
+  setPhase(options.instant?'battle':VIEW.quick?'title':'introA');
   $('go').textContent='Reset'; $('go').classList.add('rst');
   audioResume();
   if(typeof syncControls==='function') syncControls();
@@ -6233,11 +7012,11 @@ function standby(){
   clearParticles(); clearFeed(); champEl.classList.remove('on'); hideCard();
   seedSim(CFG.seed);                 // standby is a preview of the fight you'd get
   callReset();
-  try{ validateRoster(rosterList()); spawnRoster(rosterList(),CFG.arena==='coop'); }
+  try{ validateRoster(rosterList(),CFG.mode); spawnRoster(rosterList(),CFG.arena==='coop'); }
   catch(e){ notifyBattle(e.message); }
   if(typeof highlightReset==='function')highlightReset();
   SEQ.phase='idle'; SEQ.t=0;
-  $('go').textContent='Fight'; $('go').classList.remove('rst');
+  $('go').textContent=CFG.mode==='raid'?'Save the Coop':'Fight'; $('go').classList.remove('rst');
   if(typeof syncControls==='function') syncControls();
 }
 
@@ -6311,7 +7090,7 @@ function cmdHud(){
     const live = (k==='horn'&&CMD.horn>0)||(k==='light'&&CMD.light>0)||(k==='feed'&&CMD.feedT>0)||(k==='rally'&&CMD.rally>0);
     const ready = cmdReady(k);
     b.classList.toggle('ready',ready);
-    b.disabled=!ready||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
+    b.disabled=!ready||REPLAY.playback||VIEW.paused||(RAID.active&&RAID.phase==='prep'); b.setAttribute('aria-disabled',String(b.disabled));
     const left=k==='feed'?CMD.feedT:CMD[k];
     b.querySelector('.ck').textContent=live?Math.ceil(left)+'s active':ready?'Key '+d.key:k==='repair'&&CMD.cd[k]<=0?'Intact':Math.ceil(CMD.cd[k])+'s';
     b.classList.toggle('live',live);
@@ -6324,7 +7103,7 @@ function cmdHud(){
     if(!b.dataset.k) continue;
     const d=DEPLOY.find(x=>x.k===b.dataset.k);
     b.classList.toggle('ok',canDeploy(d));
-    b.disabled=!canDeploy(d)||REPLAY.playback||VIEW.paused; b.setAttribute('aria-disabled',String(b.disabled));
+    b.disabled=!canDeploy(d)||REPLAY.playback||VIEW.paused||(RAID.active&&RAID.phase==='prep'); b.setAttribute('aria-disabled',String(b.disabled));
     b.querySelector('.dc').textContent=N+d.n>MAXA?'Field full':CMD.pts<d.cost?'Need '+Math.ceil(d.cost-CMD.pts)+' pts':d.cost+' pts';
   }
 }
@@ -6342,17 +7121,19 @@ function syncSliders(){
   document.querySelectorAll('#segArena button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.arena));
   syncRoster();
   document.querySelectorAll('#segMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===CFG.mode));
-  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair with 4. Rally nearby defenders to the coop with 5.':'An open battle: the last army standing wins.';
+  if($('objectiveHint'))$('objectiveHint').textContent=CFG.mode==='raid'?'Survive three waves. Choose a reward between attacks. Place reinforcements where you need them. Keep at least one hen alive.':CFG.mode==='defense'?'Stop every predator to win. A breach is not defeat: keep fighting while a hen lives. Repair with 4. Rally nearby defenders to the coop with 5.':'An open battle: the last army standing wins.';
+  if(typeof syncRaidSetup==='function')syncRaidSetup();
   const preview=$('rosterPreview');
   if(preview){
     const rows=rosterList(), total=rows.reduce((n,r)=>n+r.n,0);
     preview.textContent=total.toLocaleString()+' animals · '+rows.map(r=>r.n+' '+UNITS[UI_[r.k]].label).join(', ');
-    if(total>MAXA) preview.textContent+=' · Over capacity: remove '+(total-MAXA);
-    $('go').disabled=total>MAXA; $('go').setAttribute('aria-disabled',String(total>MAXA));
+    const limit=rosterLimit(CFG.mode);
+    if(total>limit) preview.textContent+=' · Over capacity: remove '+(total-limit);
+    $('go').disabled=total>limit; $('go').setAttribute('aria-disabled',String(total>limit));
   }
 }
 let reSpawn=null;
-function queueStandby(){ CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false; clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
+function queueStandby(){ CFG.challenge=null; CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false; clearTimeout(reSpawn); reSpawn=setTimeout(standby,220); }
 
 sA.addEventListener('input',()=>{CFG.birds=+sA.value;CFG.mix=null;queueStandby();syncSliders();});
 sB.addEventListener('input',()=>{CFG.coons=+sB.value;queueStandby();syncSliders();});
@@ -6368,6 +7149,7 @@ document.querySelectorAll('#segMode button').forEach(b=>b.addEventListener('clic
 }));
 
 const PRESETS={
+  raid:{birds:260,coons:0,kind:'rooster',arena:'field',mode:'raid',foes:{}},
   defense:{birds:260,coons:24,kind:'rooster',arena:'field',mode:'defense',foes:{}},
   classic :{birds:1000,coons:100,kind:'rooster', arena:'field',foes:{}},
   massacre:{birds:1200,coons:60, kind:'hen',     arena:'coop', foes:{possum:20}},
@@ -6397,7 +7179,7 @@ document.querySelectorAll('.mini button').forEach(b=>b.addEventListener('click',
   CFG.allies=P.allies||{};
   CFG.mix=P.mix||null;
   CFG.mode=P.mode||'battle';CFG.birds=P.birds; CFG.coons=P.coons; CFG.kind=P.kind; CFG.arena=P.arena;
-  CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false;
+  CFG.challenge=null; CFG.rosterOverride=null; REPLAY.loaded=null; seedHeld=false;
   syncSliders(); standby();
 }));
 
@@ -6560,6 +7342,7 @@ function grabCam(){
   DIR.manual=true; $('btnCam').classList.remove('on'); $('btnCam').textContent='Free Cam';
 }
 function down(e){
+  if(DEPLOYMENT.selected)return;
   if(e.touches){
     touchId=e.touches[0].identifier;
     if(e.touches.length>1){ pinchD=pinchGap(e); DIR.drag=false; return; }
@@ -6603,6 +7386,7 @@ addEventListener('keydown',e=>{
   if(e.key==='h'||e.key==='H')document.body.classList.toggle('hideui');
   if(e.key==='b'||e.key==='B')$('btnBlood').click();
   if(e.key==='Escape'){
+    if(DEPLOYMENT.selected){cancelDeployment();return;}
     const b=document.body.classList;
     if(b.contains('rules')) rulesHide();
     else if(b.contains('story')) storyHide();
@@ -6637,7 +7421,7 @@ function advanceReplaySeek(){
   // Sound and visual particles are suppressed only while reconstructing earlier ticks.
   while(BATTLE.tick<REPLAY.seekTo&&!BATTLE.over&&performance.now()-start<12){
     applyBattleActions(BATTLE.tick+1);if(VIEW.paused){REPLAY.seeking=false;break;}
-    BATTLE.tick++;BATTLE.t+=SIM_DT;stepSim(SIM_DT);
+    BATTLE.tick++;BATTLE.t+=SIM_DT;stepBattle(SIM_DT);
     if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);
   }
   $('replaySeek').textContent='Finding highlight · '+Math.min(100,Math.round(BATTLE.tick/Math.max(1,REPLAY.seekTo)*100))+'%';
@@ -6676,7 +7460,7 @@ function loop(now){
       applyBattleActions(BATTLE.tick+1);
       if(VIEW.paused) break;
       BATTLE.tick++; BATTLE.t+=SIM_DT;
-      stepSim(SIM_DT); if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);simAcc-=SIM_DT;
+      stepBattle(SIM_DT); if(typeof highlightTick==='function')highlightTick();checkWin(SIM_DT);simAcc-=SIM_DT;
     }
   }
   else if(SEQ.phase!=='battle'&&!FINALE.active){ idleSway(dt); }
@@ -6685,6 +7469,7 @@ function loop(now){
   stepGore(dt);
   renderAgents();
   if(typeof updateCoopView==='function')updateCoopView(dt);
+  if(typeof updateRaidView==='function')updateRaidView(dt);
   director(dt,real,wall);
   hud(real);
   if(!REPLAY.seeking)audioUpdate(real);
@@ -6714,6 +7499,7 @@ function idleSway(dt){
    ============================================================ */
 if(typeof initHighlightsUI==='function')initHighlightsUI();
 initFinaleUI();
+initRaidUI();
 buildRoster($('rosterFoe'), EXTRA_B,CFG.foes,true);
 /* a link that carries a fight skips the preamble and goes straight to it */
 const LINKED=decodeFight();
@@ -6985,6 +7771,7 @@ function syncControls(){
   document.body.classList.toggle('defense',COOP.active);
   if(!REPLAY.seeking)$('replaySeek').hidden=true;
   coopHud();
+  if(typeof raidHud==='function')raidHud();
   document.body.classList.toggle('reducedMotion',VIEW.reducedMotion);
   document.body.classList.toggle('finished',BATTLE.over);
   if(!playing){ document.body.classList.remove('deployOpen'); $('btnDeploy').setAttribute('aria-expanded','false'); }
@@ -7051,7 +7838,7 @@ let activeUIDialog=null, dialogReturnFocus=null;
 function syncUIDialog(){
   const body=document.body.classList;
   const next=body.contains('about')?$('about'):body.contains('story')?$('story'):
-    body.contains('rules')?$('rules'):$('card').classList.contains('on')&&$('card').classList.contains('result')?$('card'):null;
+    body.contains('rules')?$('rules'):!$('raidPrep').hidden?$('raidPrep'):$('card').classList.contains('on')&&$('card').classList.contains('result')?$('card'):null;
   for(const child of frame.children){
     const hiddenOverlay=['story','rules','about'].includes(child.id)&&child!==next;
     const hiddenHud=(body.contains('hideui')||body.contains('finishing'))&&['panel','tools','cmdbar','topui','feed','champ'].includes(child.id);
@@ -7089,6 +7876,7 @@ document.addEventListener('keydown',e=>{
   e.stopPropagation(); // background game shortcuts must not fire from a dialog
   if(e.key==='Escape'){
     e.preventDefault();
+    if(modal.id==='raidPrep'){setPaused(!VIEW.paused);return;}
     if(modal.id==='about') aboutHide();
     else if(modal.id==='story') storyHide();
     else if(modal.id==='rules') rulesHide();

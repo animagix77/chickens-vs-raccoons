@@ -1,4 +1,4 @@
-/* Central objective scenery. All resources belong to the supplied arena group.
+/* Judge Dean LLC — central objective scenery. All resources belong to the supplied arena group.
    Hoisted functions are intentional: the first arena builds during 06_ui boot.
    Visual state never writes COOP or consumes the simulation random stream. */
 function coopViewMaterial(color,extra){
@@ -38,7 +38,7 @@ function buildCoopView(parent){
   const earth=coopViewMaterial('#b69a69');
   const floorGeo=new THREE.CircleGeometry(radius-.08,64);floorGeo.rotateX(-Math.PI/2);
   const floor=new THREE.Mesh(floorGeo,earth);floor.position.y=.045;floor.receiveShadow=true;root.add(floor);
-  const staticParts=[],panels=[];
+  const staticParts=[],panels=[],warmParts=[];
 
   /* Dark earth rim and substantial corner posts establish the protected area
      even when the wire itself is sub-pixel in the overview. */
@@ -116,6 +116,36 @@ function buildCoopView(parent){
     coopViewBeam(staticParts,'#ded0ad',[side*1.96,2.68,hz+1.80],[0,3.30,hz+1.80],.105);
   }
   staticParts.push(P(G.box,'#84918a',0,3.28,hz,0,0,0,.14,.10,3.65));
+  for(const side of [-1,1])for(let j=0;j<7;j++){
+    const x=side*(.14+j*.28),y=3.30-Math.abs(x)*.315;
+    staticParts.push(P(G.box,'#748c84',x,y,hz,0,0,-side*.30,.035,.035,3.55));
+  }
+  // Warm doorway lanterns and framed windows make the objective feel inhabited.
+  for(const side of [-1,1]){
+    const x=side*1.13,z=hz+1.62;
+    staticParts.push(P(G.box,'#e0c39a',x,1.98,z,0,0,0,.62,.62,.12));
+    warmParts.push(P(G.box,'#ffc66b',x,1.98,z+.07,0,0,0,.47,.46,.045));
+    staticParts.push(P(G.box,'#785134',x,1.98,z+.11,0,0,0,.045,.52,.055));
+    staticParts.push(P(G.box,'#785134',x,1.98,z+.11,0,0,0,.52,.045,.055));
+  }
+  for(const a of [TAU/16,TAU/16+Math.PI]){
+    const x=Math.cos(a)*(radius+.08),z=Math.sin(a)*(radius+.08);
+    staticParts.push(P(G.box,'#384540',x,2.14,z,0,-a,0,.36,.52,.36));
+    warmParts.push(P(G.box,'#ffd38b',x,2.16,z,0,-a,0,.28,.37,.38));
+    staticParts.push(P(G.cone,'#46554c',x,2.48,z,0,0,0,.30,.20,.30));
+    staticParts.push(P(G.box,'#46554c',x,1.91,z,0,0,0,.38,.06,.38));
+  }
+  // A slatted hay rack and stepping stones add scale without blocking combat.
+  for(let j=0;j<5;j++){
+    const z=2.6+j*.52;
+    staticParts.push(P(G.sphLo,j%2?'#b9b29b':'#a49d85',.15*Math.sin(j),.06,z,0,j*.47,0,.55,.06,.29));
+  }
+  for(let j=0;j<46;j++){
+    const a=j*2.39996323,r=2.3+3.5*h2(j,9),x=Math.cos(a)*r,z=Math.sin(a)*r;
+    if(z<-1&&Math.abs(x)<2.6)continue;
+    staticParts.push(P(G.box,j%2?'#d9be77':'#bba467',x,.078,z,0,a,0,.025,.015,.18+h2(j,3)*.30));
+  }
+
   const rampStart=[0,1.04,hz+1.62],rampEnd=[0,.12,1.10];
   /* Ramp plank is oriented along its slope, with contrasting traction slats. */
   const rampLen=Math.hypot(rampEnd[1]-rampStart[1],rampEnd[2]-rampStart[2]);
@@ -139,6 +169,25 @@ function buildCoopView(parent){
   staticParts.push(P(G.cyl,'#9d6239',3.1,.13,2.5,0,0,0,.45,.18,.45));
   staticParts.push(P(G.cyl,'#d6b270',3.1,.23,2.5,0,0,0,.37,.025,.37));
   coopViewMerged(staticParts,timber,root);
+  const warmMat=coopViewMaterial('#ffffff',{vertexColors:true,
+    emissive:new THREE.Color('#edaa4f').convertSRGBToLinear(),emissiveIntensity:NIGHT?1.35:.30,roughness:.55});
+  coopViewMerged(warmParts,warmMat,root).castShadow=false;
+  const rimGeo=new THREE.RingGeometry(radius+.10,radius+.28,12,1,.025,TAU/sectorCount-.05);
+  rimGeo.rotateX(Math.PI/2);
+  const rimMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.46,depthWrite:false,side:THREE.DoubleSide});
+  const healthRim=new THREE.InstancedMesh(rimGeo,rimMat,sectorCount);healthRim.frustumCulled=false;
+  const rimDummy=new THREE.Object3D(),rimColor=new THREE.Color();
+  for(let i=0;i<sectorCount;i++){
+    rimDummy.position.set(0,.065,0);rimDummy.rotation.y=-i*TAU/sectorCount;rimDummy.updateMatrix();
+    healthRim.setMatrixAt(i,rimDummy.matrix);healthRim.setColorAt(i,rimColor.set('#769b88').convertSRGBToLinear());
+  }
+  root.add(healthRim);
+  // Two restrained amber pools use merged ground discs, no extra lights.
+  const pools=[],poolBase=new THREE.CircleGeometry(1,32);
+  for(const a of [TAU/16,TAU/16+Math.PI])pools.push(P(poolBase,'#edb667',Math.cos(a)*(radius-.45),.073,Math.sin(a)*(radius-.45),-Math.PI/2,0,0,1.4,1.4,1.4));
+  poolBase.dispose();
+  const poolMat=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:NIGHT?.19:.055,depthWrite:false});
+  coopViewMerged(pools,poolMat,root).castShadow=false;
 
   const hens=[];
   for(let i=0;i<COOP.hens.length;i++){
@@ -151,7 +200,7 @@ function buildCoopView(parent){
     const nest=coopViewMerged(nestParts,nestMat,group);nest.castShadow=false;
     hens.push({group:group,mesh:hen,skin:sk,material:mat,nest:nest,nestMaterial:nestMat,angle:hen.rotation.y,index:i});
   }
-  buildCoopView.state={root:root,panels:panels,hens:hens,time:0};
+  buildCoopView.state={root:root,panels:panels,hens:hens,time:0,healthRim:healthRim,rimColor:rimColor};
   updateCoopView(0);
 }
 
@@ -185,7 +234,11 @@ function updateCoopView(dt){
     visual.wood.emissive.set(visual.pulse>0?'#d38b24':'#000000').convertSRGBToLinear();
     visual.wood.emissiveIntensity=visual.pulse>0?.22:0;
     visual.breached=breached;
+    const rimColor=state.rimColor.set(breached?'#ef7150':health<.35?'#efa555':health<.7?'#ceba7b':'#769b88').convertSRGBToLinear();
+    state.healthRim.setColorAt(i,rimColor);
+
   }
+  state.healthRim.instanceColor.needsUpdate=true;
   for(const hen of state.hens){
     const data=COOP.hens[hen.index];if(!data)continue;
     const alive=data.hp>0,health=clamp(data.hp/Math.max(1,data.maxHp),0,1);

@@ -192,9 +192,36 @@ const DEPLOY=[
 const PTS_START=16, PTS_RATE=1/0.95, PTS_CAP=80;
 const CAP_T=125;   /* the referee calls it at 120s — this is the spending ceiling */
 function cmdReady(k){ if(k==='rally'&&!(typeof COOP!=='undefined'&&COOP.active))return false;if(k==='repair'&&(!(typeof COOP!=='undefined'&&COOP.active)||!COOP.sections.some(s=>s.hp<s.maxHp)))return false;return BATTLE.running && !BATTLE.over && Object.hasOwn(CMD.cd,k) && CMD.cd[k]<=0; }
-function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+d.n<=MAXA; }
-function applyDeploy(d){
-  if(!canDeploy(d)) return false;
+// Judge Dean LLC — recorded arrival orders and per-animal rescue awards.
+const DEPLOYMENT={selected:null,hover:null,pending:[]};
+const RAID_AWARDS={breachKills:new Uint16Array(MAXA),joinedAt:new Float32Array(MAXA)};
+function resetDeployment(){
+  DEPLOYMENT.selected=null;DEPLOYMENT.hover=null;DEPLOYMENT.pending=[];
+  RAID_AWARDS.breachKills.fill(0);RAID_AWARDS.joinedAt.fill(0);
+}
+function deploymentReserved(){return DEPLOYMENT.pending.reduce((n,p)=>n+p.n,0);}
+function deploymentStep(dt){
+  for(let i=DEPLOYMENT.pending.length-1;i>=0;i--){
+    const order=DEPLOYMENT.pending[i];order.remaining=Math.max(0,order.remaining-dt);
+    if(order.remaining<=1e-8){
+      DEPLOYMENT.pending.splice(i,1);
+      applyDeploy(DEPLOY.find(d=>d.k===order.k),order,true);
+    }
+  }
+}
+function canDeploy(d){ return !!d && BATTLE.running && !BATTLE.over && CMD.pts>=d.cost && N+deploymentReserved()+(typeof raidReserved==='function'?raidReserved():0)+d.n<=MAXA; }
+function applyDeploy(d,position=null,prepaid=false){
+  if(prepaid){if(!d||!BATTLE.running||BATTLE.over||N+d.n>MAXA)return false;}
+  else if(!canDeploy(d))return false;
+  if(position&&!prepaid){
+    if(!RAID.active||!Number.isFinite(position.x)||!Number.isFinite(position.z))return false;
+    const radius=Math.hypot(position.x,position.z);
+    if(radius<ARENA_R*.80||radius>ARENA_R*.96)return false;
+    CMD.pts-=d.cost;TALE.spent+=d.cost;
+    DEPLOYMENT.pending.push({k:d.k,n:d.n,x:position.x,z:position.z,remaining:1.8,total:1.8});
+    if(typeof highlightEvent==='function')highlightEvent('deploy','Incoming '+d.n+' '+UNITS[UI_[d.k]].label,position.x,position.z,BATTLE.tick+1);
+    return true;
+  }
   const u=UNITS[UI_[d.k]];
   /* a mid-fight fidelity upgrade only rebuilds what is on the field, so the
      squad for a packet nobody has called in yet may be standing down. Build it
@@ -213,13 +240,14 @@ function applyDeploy(d){
   }
   if(!SQUADS[u.i]) buildOneSquad(d.k);
   if(!SQUADS[u.i]) return false;
-  CMD.pts-=d.cost; TALE.spent+=d.cost;
+  if(!prepaid){CMD.pts-=d.cost; TALE.spent+=d.cost;}
   TALE.bought[d.k]=(TALE.bought[d.k]||0)+d.n;
-  const base=Math.atan2(TC.az,TC.ax)||-1.57;
+  const base=position?Math.atan2(position.z,position.x):Math.atan2(TC.az,TC.ax)||-1.57;
   for(let i=0;i<d.n;i++){
     const a=base+srnd(-0.30,0.30), r=ARENA_R*srnd(0.86,0.95);
     const j=addAgent(Math.cos(a)*r,Math.sin(a)*r,u.i,(SR()*VARIANTS[d.k])|0);
     A.yaw[j]=Math.atan2(-A.x[j],-A.z[j]);
+    RAID_AWARDS.joinedAt[j]=BATTLE.t;
     aliveA++; initA++;
     spawnPuff(A.x[j],0.2,A.z[j],0.3);
   }
@@ -459,7 +487,9 @@ function spawnRoster(list,night){
   TC.lead[0]=TC.lead[1]=0;
   BATTLE.conSeen=0; BATTLE.conAge=9; BATTLE.conN=0;
   enemyCentroids();
-  cmdReset();
+  cmdReset();resetDeployment();
+  if(typeof raidReset==='function')raidReset();
+  if(typeof buildRaidView==='function')buildRaidView();
 }
 function addAgent(x,z,kindIdx,vr){
   if(N>=MAXA) return -1;
@@ -984,6 +1014,7 @@ function hurt(j,dmg,by,crit){
     if(TALE.bought[bk]) TALE.boughtKills[bk]=(TALE.boughtKills[bk]||0)+1; }
   if(A.team[j]===0) aliveA--; else aliveB--;
   if(typeof rememberFinalDeath==='function')rememberFinalDeath(j);
+  if(by>=0&&A.team[by]===0&&COOP.active&&COOP.breaches>0&&Math.abs(Math.hypot(A.x[j],A.z[j])-COOP.radius)<4)RAID_AWARDS.breachKills[by]++;
   A.kills[by]++; BATTLE.totalKills++; BATTLE.deathsWindow++; recentKills+=1;
   const hy=0.5+(A.fy[j]||0);
   spawnFeathers(A.x[j],hy,A.z[j],u.build==='bird'?4:2,1.3);

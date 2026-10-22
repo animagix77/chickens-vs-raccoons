@@ -7,9 +7,10 @@ and animated in Blender and exported into the page.
 **Live:** https://chickensvraccoons.com
 **Repo:** https://github.com/animagix77/chickens-vs-raccoons (GitHub Pages serves `main`)
 **Working folder:** `LaCie ssd/vibe_coding/chics vs coons`
-**Simulation version:** `2026-09-17.1` (`SIM_VERSION` in `parts/06_ui.js`)
+**Developer:** Judge Dean LLC
+**Simulation version:** `2026-10-21.1` (`SIM_VERSION` in `parts/06_ui.js`)
 
-Last updated 2026-09-27. For what changed and when, see `RELEASE-NOTES.md`
+Last updated 2026-10-21. For what changed and when, see `RELEASE-NOTES.md`
 (newest first). This file covers how the project works and how to work on it.
 
 ---
@@ -31,7 +32,11 @@ is broken.
 
 ## What the game is now
 
-- **Two modes.** *Coop Defense* is the default. Two hens shelter in a central
+- **Three modes.** *Save the Coop* is the default: three escalating waves with
+  eight-second breaks to repair two panels, recruit six geese, or bank 18 supplies.
+  Defenders persist between waves. Foxes flank; the final bear warns before its
+  fence strike. Placed reinforcements take 1.8 simulated seconds to arrive.
+  *Coop Defense* is the single-attack sandbox. Two hens shelter in a central
   coop and roofed run, eight fence sections take damage and collapse into
   breaches, and you win by stopping every predator. You lose if both hens fall.
   *Open Battle* is the original flock-versus-raccoons fight: 1000 roosters
@@ -47,6 +52,10 @@ is broken.
   short steady hold instead.
 - **The animals** are 20 species on two Blender rigs, GPU-skinned, each with
   its own attack animation. See "Animals" below.
+- **Daily raid.** `?daily=YYYY-MM-DD` chooses a fixed UTC seed, field and 260-rooster
+  roster. Editing setup leaves daily mode. Personal bests live only in this
+  browser under `com.judgedeanllc.chickens.daily.<sim>.<date>`; there is no server
+  leaderboard. Recorded replay links retain their simulation version.
 
 ---
 
@@ -62,10 +71,13 @@ parts/03b_skin.js       GPU-skinned instanced renderer for the animals (SkinSqua
 parts/07_sky.js         Sky shader, environment, post-processing
 parts/04_sim.js         Combat, steering, morale, commander, deploys
 parts/04b_coop.js       Coop objective: fences, breaches, routes, repair, hen health, verdicts
+parts/04c_raid.js        Wave schedule, preparation rewards, fox/bear tactics, capacity reserves
 parts/05_view.js        Audio + music engine, renderAgents() (per-animal pose), camera director
 parts/09_highlights.js  Ranked battle moments and the replay timeline
 parts/10_coop_view.js   The coop, run, fence damage and the protected hens
 parts/11_finale.js      Final-casualty camera and slow visual clock
+parts/12_raid_view.js   Pooled arrival, placement and bear warning cues; presentation only
+parts/13_raid_ui.js     Wave HUD, reward choices, placement, daily challenge and awards
 parts/06_ui.js          Sequencer, seeds/links/replays, verdict, main loop
 parts/06b_tale.js       The after-action dispatch on the result card
 parts/08_controls.js    Pause, speed, tactical view, phone controls
@@ -205,6 +217,8 @@ The model data adds about 400 KB to the page, which is now about 1.36 MB
 | `node tests/regression.cjs --checks-only` | codecs, presets, capacity, replay across 1/2/4 steps per frame |
 | `node tests/regression.cjs --baseline-dir DIR` | six complete seeded battles vs another checkout |
 | `node tests/coop.cjs` | fences, breaches, repair, Rally, hen verdicts, defense replays |
+| `node tests/raid.cjs` | three waves, choices, predator tactics, reservations, full replay and balance samples |
+| `node tests/raid-controls.cjs` | arrival payment/delay/positions/reset, daily validation and input guards |
 | `node tests/targeting.cjs` | nearest-predator pursuit, fence routing, RNG isolation |
 | `node tests/finale.cjs` | final-casualty hooks, frozen outcome, reduced motion, seeking |
 | `node tests/highlights.cjs` | highlight ledger, bounds, determinism across frame rates |
@@ -271,6 +285,8 @@ Claude-Session: https://claude.ai/code/session_01TAWzqntXZAnyche3sKfSnk
 | Per-animal clip choice and body pose | `parts/05_view.js` — `renderAgents()` |
 | Reinforcement bar | `parts/04_sim.js` — `DEPLOY` |
 | Coop rules | `parts/04b_coop.js` |
+| Waves and predator tactics | `parts/04c_raid.js` |
+| Daily challenge and placement | `parts/13_raid_ui.js`, `parts/06_ui.js` |
 | Combat | `parts/04_sim.js` — `attack()`, `hurt()` |
 | Morale and panic | `parts/04_sim.js` — `moraleTick()` |
 | Replays and sim version | `parts/06_ui.js` — `REPLAY_VERSION`, `SIM_VERSION` |

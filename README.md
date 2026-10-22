@@ -6,7 +6,15 @@ So this is a simulator built to answer the question that comes after it: how man
 
 **[▶ Play it](https://chickensvraccoons.com/)**
 
-The game runs from one HTML file with Three.js inlined and models generated from primitives. Serve the folder to load the recorded soundtrack and sound effects; synthesized audio provides an offline fallback. No dependencies need to be installed to play.
+Developed by **Judge Dean LLC**. The game runs from one HTML file with Three.js and Blender animal models inlined. Serve the folder to load the recorded soundtrack and sound effects; synthesized audio provides an offline fallback. No dependencies need to be installed to play.
+
+## October 2026 update
+
+**Save the Coop** is the new default: defend two hens through three escalating waves of raccoons, flanking foxes, and a final bear. Between waves, choose a fence repair, six geese, or extra supplies. Surviving defenders stay with you. There is no timed victory: stop every wave to win, and keep fighting after a breach or the first hen is lost.
+
+Choose where reinforcements arrive by clicking the battlefield or selecting a compass direction. Supplies are charged when ordered and the squad arrives after 1.8 simulated seconds. The bear marks its intended fence strike before attacking. Every accepted choice, arrival position, and command is included in the replay.
+
+**Today's raid** gives everyone the same starting roster and seed for the UTC date. Results include earned animal awards and a personal best saved on the current device; challenge links let a friend try the same start. The farm has blended pasture and soil, a detailed barn and coop, warm windows and lanterns, fence-health accents, and clear arrival and danger markers. Coop Defense and Open Battle remain available.
 
 ## September 2026 update
 
@@ -133,12 +141,15 @@ That writes identical `index.html` and `chickens-vs-raccoons.html` entry points.
 | `parts/03b_skin.js` | GPU-skinned instanced renderer that draws the Blender animals |
 | `parts/04_sim.js` | Combat, steering, morale, the commander and deploy system |
 | `parts/04b_coop.js` | Deterministic coop objective, fencing, routes, repairs, and victory rules |
+| `parts/04c_raid.js` | Three-wave schedule, preparation choices, predator tactics and victory |
 | `parts/05_view.js` | Sound engine and its iOS unlock, music engine, kill feed, camera director |
 | `parts/06_ui.js` | Sequencer, seeds and links, calling the winner, controls, main loop |
 | `parts/07_sky.js` | Sky shader, environment bake, post-processing chain |
 | `parts/09_highlights.js` | Ranked battle moments and replay timeline |
 | `parts/10_coop_view.js` | Coop, roofed run, hens, and visible fence damage |
 | `parts/11_finale.js` | Final casualty camera, slow visual clock, and result transition |
+| `parts/12_raid_view.js` | Pooled arrival cues, placement preview and bear strike warnings |
+| `parts/13_raid_ui.js` | Wave controls, daily challenge, placement and survivor awards |
 
 The animals are modelled, rigged and animated in Blender. `blender/animals.py` builds them into `blender/animals.blend` and exports `parts/02d_models.js`. That file is committed, so an ordinary build needs only Python. See `blender/README.md` to change an animal.
 

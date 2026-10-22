@@ -1,3 +1,17 @@
+# Save the Coop: three waves and a richer farm — October 21, 2026
+
+Developed by Judge Dean LLC.
+
+- Save the Coop is the default mode, with a direct Play now opening. Three staged attacks escalate from 18 raccoons to 12 raccoons and four flanking foxes, then eight raccoons, two foxes and one bear. Single-attack Coop Defense and Open Battle remain available.
+- Between waves, an eight-second break offers repairs to the two weakest panels, six free geese, or 18 supplies. Survivors persist. No selection banks supplies automatically; the pause control allows more reading time. All three waves must be cleared to win. A breach or first hen casualty leaves the rescue window open; both hens lost ends the raid.
+- Paid reinforcements can be placed by battlefield click or eight accessible arrival directions. Supplies are charged on order, with a visible 1.8-second arrival delay. Future predators and pending reinforcements reserve capacity. Foxes favor openings; the bear gives a 1.8-second fence-strike warning that is cancelled if killed.
+- Today's raid uses a shared UTC date, fixed roster and seed. Challenge links share a fresh start. Scores prioritize hens, hen health, supplies and surviving defenders, with personal bests stored locally. There is no global leaderboard. Earned result awards recognize surviving heroes and defenders who stopped predators near a breach.
+- Blended pasture and soil, a detailed pitched-roof barn, warm coop windows and lanterns, roof seams, straw and stepping stones improve the farm. Fence-health accents, entrance chevrons, arrival rings and bear warning zones clarify the action. Existing Blender animals and animations are retained.
+- Replays record reward choices, reinforcement positions and commands. Raid events join the highlight timeline; the final-casualty cinematic remains at the true end of the fight. The simulation version is `2026-10-21.1`; older recorded engine versions are explicitly rejected.
+- Mobile layouts keep the battlefield fixed when controls receive focus, provide scrollable preparation choices, and make room for wave and hen status in short landscape screens.
+
+Validation: raid engine and controls suites cover complete accepted-action playback, deterministic 1/2/4-tick presentation batches, reward/reset/capacity behavior, fox tactics, bear warnings and cancellation, arrival charging/delay, and daily-link validation. Assisted sample seeds 1/3/7 protected both hens in 81.6/81.5/82.4 simulated seconds; this is a sample, not a time limit or an exhaustive balance sweep. All six Open Battle baselines matched the preceding release at intermediate and final checkpoints. Coop, targeting, finale, highlight and audio suites passed. Actual browser checks covered daily setup, directional deployment, command recording and responsive layouts. Rendering checks confirmed finite geometry, cue cleanup and no simulation mutation.
+
 # Every animal rebuilt in Blender — September 27, 2026
 
 - All 20 animals are remodelled in Blender as chunky low-poly, with real joints: thighs and toes, two-part wings, jaws that open, two-bone tails, and upper and lower legs. They share two rigs (birds and four-legged animals) and 23 animation clips: idle, walk, run, flinch, death, being thrown, flying and gliding for the hawk, and a signature attack for each kind. The gamecock leaps and spur-kicks, the goose lunges with its wings spread, the donkey kicks backwards, the bear, cat and raccoon rear up and swipe, the goat, pig and bull head-butt, the llama spits, and the hawk strikes with its talons.

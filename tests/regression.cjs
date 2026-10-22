@@ -24,14 +24,15 @@ function runtime(dir){
     const detailFor=()=>2,setDetail=()=>false;
     function buildArena(r,n){ARENA_R=r;NIGHT=n;}
   `+core.slice(core.indexOf('function mulberry('),core.indexOf('const spick'))+core.slice(core.indexOf('const spick'),core.indexOf('\n',core.indexOf('const spick')))+
-  read('02c_units.js')+read('04_sim.js')+(fs.existsSync(path.join(dir,'parts','04b_coop.js'))?read('04b_coop.js'):'')+ui.slice(0,ui.indexOf('const CALL='))+
+  read('02c_units.js')+read('04_sim.js')+(fs.existsSync(path.join(dir,'parts','04b_coop.js'))?read('04b_coop.js'):'')+(fs.existsSync(path.join(dir,'parts','04c_raid.js'))?read('04c_raid.js'):'')+ui.slice(0,ui.indexOf('const CALL='))+
   ui.slice(ui.indexOf('const PRESETS='),ui.indexOf("document.querySelectorAll('.mini button')"))+
   ui.slice(ui.indexOf('let winT='),ui.indexOf('let slowCool=')),c);
   vm.runInContext(`
     function buildSquads(need){SQUAD_NEED=need;SQUADS=UNITS.map(()=>({dispose(){}}));KIT_PIV=UNITS.map(()=>[{y:0,z:0},{y:0,z:0}]);}
+    function buildOneSquad(k){SQUADS[UI_[k]]={dispose(){}};}
     function verdict(winner,reason){BATTLE.over=true; BATTLE.running=false; BATTLE.winner=winner;BATTLE.reason=reason||'';}
     function bootTest(rows,seed,actions=[],mode='battle'){
-      CFG.mode=mode;
+      CFG.mode=mode;CFG.seed=seed;CFG.challenge=null;
       seedSim(seed); BATTLE.running=false; BATTLE.over=false; BATTLE.t=0; BATTLE.tick=0; BATTLE.winner='';BATTLE.reason='';
       winT=0;routT=0;stallT=0;lastKills=-1;
       if(typeof REPLAY!=='undefined'){
@@ -44,10 +45,11 @@ function runtime(dir){
       if(BATTLE.over||(typeof VIEW!=='undefined'&&VIEW.paused)) return;
       if(typeof applyBattleActions==='function') applyBattleActions(BATTLE.tick+1);
       if(typeof VIEW!=='undefined'&&VIEW.paused)return;
-      BATTLE.tick++;BATTLE.t+=1/60;stepSim(1/60);checkWin(1/60);
+      BATTLE.tick++;BATTLE.t+=1/60;if(typeof stepBattle==='function')stepBattle(1/60);else stepSim(1/60);checkWin(1/60);
     }
     function snapshot(){return {aliveA,aliveB,kills:BATTLE.totalKills,panic:panicCount,tick:BATTLE.tick,winner:BATTLE.winner,reason:BATTLE.reason,
       ...(typeof COOP!=='undefined'&&COOP.active?{coop:{sections:COOP.sections,hens:COOP.hens,breaches:COOP.breaches,entered:COOP.entered,firstHit:COOP.firstHit,intruders:COOP.intruders,insideX:COOP.insideX,insideZ:COOP.insideZ,reason:COOP.reason,rally:CMD.rally,rallyCooldown:CMD.cd.rally,pressure:Array.from(COOP.pressure)}}:{}),
+      ...(typeof RAID!=='undefined'&&RAID.active?{raid:JSON.parse(JSON.stringify(RAID)),pending:JSON.parse(JSON.stringify(DEPLOYMENT.pending))}:{}),
       cx:BATTLE.cx,cz:BATTLE.cz,arrays:['x','z','vx','vz','hp','st','cd','tgt','panicT','fy','rev','vy','kills'].map(k=>Buffer.from(A[k].buffer,0,N*A[k].BYTES_PER_ELEMENT))};}
   `,c);
   return {c,eval:code=>vm.runInContext(code,c),flushTimers:()=>timers.splice(0).forEach(fn=>fn()),audioCalls:()=>audioCalls};

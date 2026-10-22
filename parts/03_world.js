@@ -1,6 +1,6 @@
 
 /* ============================================================
-   ARENA
+   ARENA — visual direction by Judge Dean LLC
    ============================================================ */
 let arenaGroup=null, ARENA_R=30, NIGHT=false;
 
@@ -86,29 +86,44 @@ function buildArena(R,night){
   const tMesh=new THREE.Mesh(tGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1.0}));
   tMesh.receiveShadow=true; g.add(tMesh);
 
-  // the trodden pan itself
-  const groundGeo=new THREE.CircleGeometry(R+12,72); groundGeo.rotateX(-Math.PI/2);
-  const gm=new THREE.Mesh(groundGeo,new THREE.MeshStandardMaterial({
-    color:new THREE.Color(night?0x3d2f20:0x6f6047).convertSRGBToLinear(),roughness:1.0}));
-  gm.position.y=0.004; gm.receiveShadow=true; g.add(gm);
-
-  const patch=new THREE.CircleGeometry(R*0.74,56); patch.rotateX(-Math.PI/2);
-  const pm=new THREE.Mesh(patch,new THREE.MeshStandardMaterial({
-    color:new THREE.Color(night?0x4a3826:0x827152).convertSRGBToLinear(),roughness:1.0}));
-  pm.position.y=0.009; pm.receiveShadow=true; g.add(pm);
+  /* A worn yard with soft soil/pasture transitions. Vertex colour keeps the
+     surface self-contained and avoids texture fetches or transparent decals. */
+  const groundGeo=new THREE.RingGeometry(0,R+12,96,18); groundGeo.rotateX(-Math.PI/2);
+  const groundPos=groundGeo.attributes.position,groundColors=new Float32Array(groundPos.count*3);
+  const soilLight=new THREE.Color(night?'#55442e':'#a58b62').convertSRGBToLinear();
+  const soilDark=new THREE.Color(night?'#302b20':'#7f7150').convertSRGBToLinear();
+  const pasture=new THREE.Color(night?'#293720':'#637c40').convertSRGBToLinear();
+  for(let i=0;i<groundPos.count;i++){
+    const x=groundPos.getX(i),z=groundPos.getZ(i),r=Math.hypot(x,z);
+    const grain=vnoise(x*.36,z*.36),broad=vnoise(x*.10+18,z*.10-9);
+    const worn=clamp(.40+grain*.24+broad*.40,0,1);
+    const edge=clamp((r-R*.79)/(R*.26)+broad*.40-.16,0,1);
+    // A clear trodden ring leaves the coop and fighting silhouettes readable.
+    const lane=1-clamp(Math.abs(r-10.3)/2.2,0,1);
+    const outerBlend=clamp((r-R-7)/5,0,1),terrainMix=clamp(.5+(vnoise(x*.09,z*.09)-.5)*.6,0,1);
+    for(let c=0;c<3;c++){
+      const key=['r','g','b'][c];
+      const dirt=lerp(soilDark[key],soilLight[key],Math.max(worn,lane*.87));
+      const yard=lerp(dirt,pasture[key],edge*.87),country=lerp(cGrass[key],cDry[key],terrainMix);
+      groundColors[i*3+c]=lerp(yard,country,outerBlend);
+    }
+  }
+  groundGeo.setAttribute('color',new THREE.BufferAttribute(groundColors,3));
+  const gm=new THREE.Mesh(groundGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}));
+  gm.position.y=.009;gm.receiveShadow=true;g.add(gm);
 
   /* ---- scatter: grass tufts or straw ---- */
   const bits=[];
   const N=Math.min(2600,(R*R*0.9)|0);
   for(let i=0;i<N;i++){
-    const a=Math.random()*TAU, r=Math.sqrt(Math.random())*(R+11);
+    const a=VR()*TAU, r=Math.sqrt(VR())*(R+11);
     const x=Math.cos(a)*r, z=Math.sin(a)*r;
     if(night){
-      bits.push(P(G.box,i%3?'#a8862f':'#8d6f26', x,0.02,z, 0,Math.random()*TAU,0, rnd(.03,.06),.02,rnd(.25,.6)));
+      bits.push(P(G.box,i%3?'#a8862f':'#8d6f26', x,0.02,z, 0,VR()*TAU,0, rnd(.03,.06),.02,rnd(.25,.6)));
     }else{
       const inner=r<R*0.75;
-      bits.push(P(G.cone,inner?(i%4?'#6d6234':'#7d7040'):(i%3?'#4e6b32':'#5d7a3a'),
-        x,rnd(.05,.14),z, rnd(-.2,.2),Math.random()*TAU,rnd(-.2,.2), rnd(.05,.12),rnd(.18,.42),rnd(.05,.12)));
+      bits.push(P(G.cone,inner?(i%4?'#8e8354':'#aa9967'):(i%3?'#547640':'#719149'),
+        x,rnd(.05,.14),z, rnd(-.2,.2),VR()*TAU,rnd(-.2,.2), rnd(.05,.12),rnd(.18,.42),rnd(.05,.12)));
     }
   }
   if(bits.length){
@@ -151,7 +166,23 @@ function buildArena(R,night){
     // barn, silo, water trough, bales
     const by=terrainY(-R*1.35,-R*1.05,R);
     props.push(P(G.box,'#7a2a22', -R*1.35,by+4.2,-R*1.05, 0,.5,0, 13,8.4,9));
-    props.push(P(G.box,'#4a1c16', -R*1.35,by+8.9,-R*1.05, 0,.5,0, 13.6,1.6,9.4));
+    // Pitched roof, white trim and siding give the background barn a silhouette.
+    const barnX=-R*1.35,barnZ=-R*1.05,ba=.5;
+    function barnPart(color,x,y,z,rx,rz,sx,sy,sz){
+      props.push(P(G.box,color,barnX+Math.cos(ba)*x+Math.sin(ba)*z,by+y,barnZ-Math.sin(ba)*x+Math.cos(ba)*z,rx,ba,rz,sx,sy,sz));
+    }
+    for(const side of [-1,1]){
+      barnPart('#3c4542',0,9.05,side*2.42,side*.38,0,13.9,.27,5.38);
+      barnPart('#d8c6a0',side*6.52,4.25,4.55,0,0,.24,8.5,.16);
+    }
+    barnPart('#d8c6a0',0,8.32,4.55,0,0,13.2,.22,.16);
+    barnPart('#59605a',0,10.05,0,0,0,14,.20,.30);
+    for(let j=-5;j<=5;j++)barnPart(j%2?'#8d3e2c':'#853629',j,4.2,4.53,0,0,.065,8.1,.07);
+    for(const x of [-3.9,3.9]){
+      barnPart('#b6c4b1',x,5.45,4.57,0,0,1.5,1.55,.13);
+      barnPart('#d9d0ad',x,5.45,4.66,0,0,.10,1.68,.12);
+      barnPart('#d9d0ad',x,5.45,4.66,0,0,1.68,.10,.12);
+    }
     props.push(P(G.box,'#2e120e', -R*1.35+3.2,by+2.2,-R*1.05+4.3, 0,.5,0, 2.6,4.4,.3));
     const sy=terrainY(R*1.25,-R*0.9,R);
     props.push(P(G.cyl,'#8a9aa8', R*1.25,sy+3.2,-R*0.9, 0,0,0, 2.4,6.4,2.4));
@@ -160,23 +191,30 @@ function buildArena(R,night){
     props.push(P(G.box,'#5a5f66', R*0.55,.28,-R*0.72, 0,.7,0, 3.2,.55,.9));
     props.push(P(G.box,'#3f444a', R*0.55,.48,-R*0.72, 0,.7,0, 2.9,.12,.7));
     for(let i=0;i<14;i++){
-      const a=Math.random()*TAU, r=R+rnd(3,26);
+      const a=VR()*TAU, r=R+rnd(3,26);
       const x=Math.cos(a)*r, z=Math.sin(a)*r;
-      props.push(P(G.box,'#c4aa24', x,terrainY(x,z,R)+.5,z, 0,Math.random()*TAU,0, 1.5,1.0,1.0));
+      props.push(P(G.box,'#bda060', x,terrainY(x,z,R)+.5,z, 0,VR()*TAU,0, 1.5,1.0,1.0));
     }
+  }
+  /* Small stones and discarded straw mark the yard without introducing
+     visual walls or new collision obstacles. All pieces merge into one draw. */
+  for(let i=0;i<90;i++){
+    const a=i*2.39996323,r=R*(.72+.22*h2(i,7));
+    const x=Math.cos(a)*r,z=Math.sin(a)*r;
+    props.push(P(G.sphLo,i%3?'#9d987e':'#b4ad90',x,.025,z,0,a,0,.09+h2(i,5)*.14,.055,.08+h2(i,2)*.10));
   }
   /* ---- treeline: a broken hedgerow band sitting on the terrain ---- */
   const trees=[];
   const TN=night?70:150;
   for(let i=0;i<TN;i++){
-    const a=Math.random()*TAU, rr=R+rnd(24,R*2.4);
+    const a=VR()*TAU, rr=R+rnd(24,R*2.4);
     const x=Math.cos(a)*rr, z=Math.sin(a)*rr;
     const y=terrainY(x,z,R);
     const hgt=rnd(4.5,11), wid=hgt*rnd(0.26,0.40);
     trees.push(P(G.cyl,night?'#1a1410':'#3d2c1c', x,y+hgt*0.22,z, 0,0,0, hgt*.045,hgt*.45,hgt*.045));
     const cCol=night?(i%3?'#141f18':'#101a14'):(i%3?'#2f4a24':'#3a5a2b');
-    trees.push(P(G.cone,cCol, x,y+hgt*0.55,z, 0,Math.random()*TAU,0, wid,hgt*.55,wid));
-    trees.push(P(G.cone,cCol, x,y+hgt*0.82,z, 0,Math.random()*TAU,0, wid*.72,hgt*.42,wid*.72));
+    trees.push(P(G.cone,cCol, x,y+hgt*0.55,z, 0,VR()*TAU,0, wid,hgt*.55,wid));
+    trees.push(P(G.cone,cCol, x,y+hgt*0.82,z, 0,VR()*TAU,0, wid*.72,hgt*.42,wid*.72));
   }
   const tm=new THREE.Mesh(mergeAll(trees),MAT); tm.castShadow=!night; g.add(tm);
   const pmn=new THREE.Mesh(mergeAll(props),MAT); pmn.castShadow=true; pmn.receiveShadow=true; g.add(pmn);
@@ -291,11 +329,11 @@ function spawnFeathers(x,y,z,n,force){
   for(let i=0;i<n;i++){
     const k=fHead++%FEATHER_MAX;
     F.x[k]=x; F.y[k]=y+rnd(-.1,.3); F.z[k]=z;
-    const a=Math.random()*TAU, sp=rnd(.35,1.7)*force;
+    const a=VR()*TAU, sp=rnd(.35,1.7)*force;
     F.vx[k]=Math.cos(a)*sp; F.vz[k]=Math.sin(a)*sp;
     F.vy[k]=rnd(1.7,3.6)*force;          // kicked up, not launched
-    F.rx[k]=Math.random()*TAU; F.ry[k]=Math.random()*TAU;
-    F.ph[k]=Math.random()*TAU;
+    F.rx[k]=VR()*TAU; F.ry[k]=VR()*TAU;
+    F.ph[k]=VR()*TAU;
     F.sp[k]=rnd(-5,5); F.life[k]=rnd(2.6,4.6); F.g[k]=0;
   }
 }
@@ -326,7 +364,7 @@ function stepParticles(dt){
       F.x[i]+=F.vx[i]*dt; F.y[i]+=F.vy[i]*dt; F.z[i]+=F.vz[i]*dt;
       if(F.y[i]<0.022){
         F.y[i]=0.022; F.g[i]=1; F.vx[i]=F.vy[i]=F.vz[i]=0;
-        F.rx[i]=Math.PI/2*(Math.random()<.5?1:-1)+rnd(-.25,.25);   // flat on the dirt
+        F.rx[i]=Math.PI/2*(VR()<.5?1:-1)+rnd(-.25,.25);   // flat on the dirt
         if(F.life[i]>2.6) F.life[i]=2.6;
       }
       F.rx[i]+=F.sp[i]*dt; F.ry[i]+=F.sp[i]*0.5*dt;
@@ -366,9 +404,9 @@ const STAIN_MAX=3400;
 function splatGeo(seed){
   const bits=[];
   for(let i=0;i<6;i++){
-    const a=Math.random()*TAU, r=Math.random()*0.55;
+    const a=VR()*TAU, r=VR()*0.55;
     const c=new THREE.CircleGeometry(rnd(.22,.5),7); c.rotateX(-Math.PI/2);
-    bits.push(P(c,'#000000', Math.cos(a)*r,0,Math.sin(a)*r, 0,Math.random()*TAU,0, 1,1,rnd(.7,1.3)));
+    bits.push(P(c,'#000000', Math.cos(a)*r,0,Math.sin(a)*r, 0,VR()*TAU,0, 1,1,rnd(.7,1.3)));
   }
   return mergeAll(bits);
 }
@@ -387,7 +425,7 @@ function addStain(x,z,scale){
   if(typeof REPLAY!=='undefined'&&REPLAY.seeking)return;
   if(!GORE) return;
   const v=stainHead%3, i=stainW[v]%STAIN_MAX;
-  _v.set(x,0.014+v*0.0012,z); _e.set(0,Math.random()*TAU,0); _q.setFromEuler(_e);
+  _v.set(x,0.014+v*0.0012,z); _e.set(0,VR()*TAU,0); _q.setFromEuler(_e);
   const s=scale*rnd(.75,1.35);
   _s.set(s,1,s*rnd(.8,1.25));
   _m2.compose(_v,_q,_s);
@@ -416,7 +454,7 @@ function spawnBlood(x,y,z,n,force,dx,dz){
   for(let i=0;i<n;i++){
     const k=dHead++%DROP_MAX;
     D.x[k]=x; D.y[k]=y+rnd(-.1,.2); D.z[k]=z;
-    const a=Math.random()*TAU, sp=rnd(.6,2.5)*force;
+    const a=VR()*TAU, sp=rnd(.6,2.5)*force;
     D.vx[k]=Math.cos(a)*sp+(dx||0)*rnd(.8,2.6)*force;
     D.vz[k]=Math.sin(a)*sp+(dz||0)*rnd(.8,2.6)*force;
     D.vy[k]=rnd(1.1,3.3)*force;
@@ -459,7 +497,7 @@ function stepGore(dt){
     D.x[i]+=D.vx[i]*dt; D.y[i]+=D.vy[i]*dt; D.z[i]+=D.vz[i]*dt;
     if(D.y[i]<=0.02){                       // it landed — most drops leave a mark
       D.life[i]=0;
-      if(Math.random()<0.30) addStain(D.x[i],D.z[i],D.sc[i]*rnd(.13,.30));
+      if(VR()<0.30) addStain(D.x[i],D.z[i],D.sc[i]*rnd(.13,.30));
       continue;
     }
     if(n<DROP_MAX){

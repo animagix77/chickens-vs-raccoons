@@ -13,6 +13,7 @@ function syncControls(){
   document.body.classList.toggle('defense',COOP.active);
   if(!REPLAY.seeking)$('replaySeek').hidden=true;
   coopHud();
+  if(typeof raidHud==='function')raidHud();
   document.body.classList.toggle('reducedMotion',VIEW.reducedMotion);
   document.body.classList.toggle('finished',BATTLE.over);
   if(!playing){ document.body.classList.remove('deployOpen'); $('btnDeploy').setAttribute('aria-expanded','false'); }
@@ -79,7 +80,7 @@ let activeUIDialog=null, dialogReturnFocus=null;
 function syncUIDialog(){
   const body=document.body.classList;
   const next=body.contains('about')?$('about'):body.contains('story')?$('story'):
-    body.contains('rules')?$('rules'):$('card').classList.contains('on')&&$('card').classList.contains('result')?$('card'):null;
+    body.contains('rules')?$('rules'):!$('raidPrep').hidden?$('raidPrep'):$('card').classList.contains('on')&&$('card').classList.contains('result')?$('card'):null;
   for(const child of frame.children){
     const hiddenOverlay=['story','rules','about'].includes(child.id)&&child!==next;
     const hiddenHud=(body.contains('hideui')||body.contains('finishing'))&&['panel','tools','cmdbar','topui','feed','champ'].includes(child.id);
@@ -117,6 +118,7 @@ document.addEventListener('keydown',e=>{
   e.stopPropagation(); // background game shortcuts must not fire from a dialog
   if(e.key==='Escape'){
     e.preventDefault();
+    if(modal.id==='raidPrep'){setPaused(!VIEW.paused);return;}
     if(modal.id==='about') aboutHide();
     else if(modal.id==='story') storyHide();
     else if(modal.id==='rules') rulesHide();

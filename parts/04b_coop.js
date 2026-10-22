@@ -4,7 +4,7 @@ const COOP={active:false,radius:7.5,sections:[],hens:[],breaches:0,firstHit:fals
   entered:false,intruders:0,insideX:0,insideZ:0,reason:'',pressure:new Uint8Array(8)};
 const COOP_SIDES=['East','Southeast','South','Southwest','West','Northwest','North','Northeast'];
 function coopReset(){
-  COOP.active=typeof CFG!=='undefined'&&CFG.mode==='defense';
+  COOP.active=typeof CFG!=='undefined'&&(CFG.mode==='defense'||CFG.mode==='raid');
   COOP.sections=Array.from({length:8},()=>({hp:480,maxHp:480,hit:0}));
   COOP.hens=[{x:-1.4,z:1.4,hp:100,maxHp:100},{x:1.4,z:1.4,hp:100,maxHp:100}];
   COOP.breaches=0;COOP.firstHit=false;COOP.entered=false;COOP.intruders=0;COOP.insideX=0;COOP.insideZ=0;COOP.reason='';COOP.pressure.fill(0);
@@ -66,7 +66,11 @@ function coopHeading(i,tg){
   const rally=u.team===0&&CMD.rally>0&&r<=24;
   const engage=rally&&tg>=0?u.reach+UNITS[A.kind[tg]].rad*.5:u.team===0?12:3;
   const enemyNear=tg>=0&&(A.x[tg]-x)**2+(A.z[tg]-z)**2<=engage*engage;
-  if(enemyNear&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
+  const raidPredator=typeof RAID!=='undefined'&&RAID.active&&u.team===1;
+  // Raid foxes exploit openings; bears commit to the fence before brawling inside.
+  const breachRunner=raidPredator&&u.k==='fox'&&coopNearestBreach(i)>=0;
+  const fenceBear=raidPredator&&u.k==='bear'&&!inside;
+  if(enemyNear&&!breachRunner&&!fenceBear&&!coopBlocks(x,z,A.x[tg],A.z[tg]))return null;
   if(u.team===1){
     if(inside){
       if(!COOP.entered){COOP.entered=true;coopEvent('intruder','A predator entered the run',x,z);}
@@ -83,7 +87,8 @@ function coopHeading(i,tg){
     const approach=COOP.radius+(intact?u.rad*.5+.5:-1.2);
     const tx=Math.cos(a)*approach,tz=Math.sin(a)*approach;
     if(intact&&Math.hypot(tx-x,tz-z)<1.1){
-      if(COOP.pressure[k]<3){COOP.pressure[k]++;coopStrike(i,s,false);}
+      if(fenceBear)raidBearStrike(i,k);
+      else if(COOP.pressure[k]<3){COOP.pressure[k]++;coopStrike(i,s,false);}
       return {x:-x,z:-z,stop:true};
     }
     // Go around the outside instead of attempting to walk through another panel.
